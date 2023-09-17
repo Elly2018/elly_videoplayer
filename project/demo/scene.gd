@@ -1,6 +1,5 @@
-extends Node
+extends MyNode
 
 func _ready() -> void:
 	print("Hello GDScript!")
-	$MyNode.hello_node()
-	MySingleton.hello_singleton()
+	MySingleton.hello_singleton();

@@ -6,3 +6,4 @@
 script = ExtResource("1_lih0m")
 
 [node name="MyNode" type="MyNode" parent="."]
+script = ExtResource("1_lih0m")
