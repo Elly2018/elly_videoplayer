@@ -3,6 +3,26 @@
 entry_symbol = "gdextension_init"
 compatibility_minimum = "4.1"
 
+[dependencies]
+
+macos = { }
+windows.x86_64 = { }
+linux.x86_64 = { }
+
+android.arm32 = { }
+android.arm64 = { }
+android.x86_32 = { }
+android.x86_64 = { }
+
+macos.template_release = { }
+windows.template_release.x86_64 = { }
+linux.template_release.x86_64 = { }
+
+android.template_release.arm32 = { }
+android.template_release.arm64 = { }
+android.template_release.x86_32 = { }
+android.template_release.x86_64 = { }
+
 [libraries]
 
 windows.debug.x86_64 = "bin/libexample.windows.debug.x86_64.dll"
