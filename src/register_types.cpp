@@ -5,7 +5,7 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/godot.hpp>
 
-#include "my_node.hpp"
+#include "FFmpegVideoPlayer.hpp"
 #include "my_singleton.hpp"
 
 using namespace godot;
@@ -16,7 +16,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
-		ClassDB::register_class<MyNode>();
+		ClassDB::register_class<FFmpegVideoPlayer>();
 		ClassDB::register_class<MySingleton>();
 
 		_my_singleton = memnew(MySingleton);

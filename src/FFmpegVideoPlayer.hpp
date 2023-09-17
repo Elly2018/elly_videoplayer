@@ -4,15 +4,15 @@
 
 using namespace godot;
 
-class MyNode : public Node
+class FFmpegVideoPlayer : public Node
 {
-	GDCLASS(MyNode, Node);
+	GDCLASS(FFmpegVideoPlayer, Node);
 protected:
 	static void _bind_methods();
 
 public:
-	MyNode();
-	~MyNode();
+	FFmpegVideoPlayer();
+	~FFmpegVideoPlayer();
 
 	void _ready() override;
 	void _process(double delta) override;
