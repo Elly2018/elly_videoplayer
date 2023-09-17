@@ -1,7 +1,7 @@
 # gdextension
 
 GDExtension template that automatically builds into a self-contained addon for the Godot Asset Library.
-
+ 
 ### Getting started:
 1. Clone this repository (or a new repository with this template) with submodules.
     - `git clone --recurse-submodules https://github.com/nathanfranke/gdextension.git` \
