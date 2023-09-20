@@ -5,9 +5,14 @@ from pathlib import Path
 # TODO: Do not copy environment after godot-cpp/test is updated <https://github.com/godotengine/godot-cpp/blob/master/test/SConstruct>.
 env = SConscript("godot-cpp/SConstruct")
 
+if env['platform'] == "windows" and not env["use_mingw"]:
+    env.msvc = True
+else:
+    env.msvc = False
+
 # Add source files.
 env.Append(CPPPATH=["src/"])
-sources = Glob("src/*.cpp")
+sources = Glob("src/*.cpp") + Glob("src/*.c") + Glob("ffmpeg/*.c")
 
 # Find gdextension path even if the directory or extension is renamed (e.g. project/addons/example/example.gdextension).
 (extension_path,) = glob("project/addons/*/*.gdextension")
