@@ -12,7 +12,7 @@ else:
 
 # Add source files.
 env.Append(CPPPATH=["src/"])
-sources = Glob("src/*.cpp") + Glob("src/*.c") + Glob("ffmpeg/*.c")
+sources = Glob("src/*.cpp") + Glob("src/*.c")
 
 # Find gdextension path even if the directory or extension is renamed (e.g. project/addons/example/example.gdextension).
 (extension_path,) = glob("project/addons/*/*.gdextension")

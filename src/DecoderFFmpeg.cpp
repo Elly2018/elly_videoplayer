@@ -3,17 +3,575 @@
 #include "DecoderFFmpeg.h"
 #include "Logger.h"
 #include <fstream>
+#include <condition_variable>
 #include <string>
+#include <mutex>
+#include <chrono>
+
+#include "libavutil/fifo.h"
+#include "libavutil/tx.h"
+
+#include "libavfilter/avfilter.h"
+#include "libavfilter/buffersink.h"
+#include "libavfilter/buffersrc.h"
+
+/* Synchronization functions which can time out return this value, if they time out. */
+#define MUTEX_TIMEDOUT  1
+/* This is the timeout value which corresponds to never time out. */
+#define MUTEX_MAXWAIT   -1
+
+#define MAX_QUEUE_SIZE (15 * 1024 * 1024)
+#define MIN_FRAMES 25
+#define EXTERNAL_CLOCK_MIN_FRAMES 2
+#define EXTERNAL_CLOCK_MAX_FRAMES 10
+
+/* Minimum SDL audio buffer size, in samples. */
+#define SDL_AUDIO_MIN_BUFFER_SIZE 512
+/* Calculate actual buffer size keeping in mind not cause too frequent audio callbacks */
+#define SDL_AUDIO_MAX_CALLBACKS_PER_SEC 30
+
+/* Step size for volume control in dB */
+#define SDL_VOLUME_STEP (0.75)
+
+/* no AV sync correction is done if below the minimum AV sync threshold */
+#define AV_SYNC_THRESHOLD_MIN 0.04
+/* AV sync correction is done if above the maximum AV sync threshold */
+#define AV_SYNC_THRESHOLD_MAX 0.1
+/* If a frame duration is longer than this, it will not be duplicated to compensate AV sync */
+#define AV_SYNC_FRAMEDUP_THRESHOLD 0.1
+/* no AV correction is done if too big error */
+#define AV_NOSYNC_THRESHOLD 10.0
+
+/* maximum audio speed change to get correct sync */
+#define SAMPLE_CORRECTION_PERCENT_MAX 10
+
+/* external clock speed adjustment constants for realtime sources based on buffer fullness */
+#define EXTERNAL_CLOCK_SPEED_MIN  0.900
+#define EXTERNAL_CLOCK_SPEED_MAX  1.010
+#define EXTERNAL_CLOCK_SPEED_STEP 0.001
+
+/* we use about AUDIO_DIFF_AVG_NB A-V differences to make the average */
+#define AUDIO_DIFF_AVG_NB   20
+
+/* polls for possible required screen refresh at least this often, should be less than 1/fps */
+#define REFRESH_RATE 0.01
+
+/* NOTE: the size must be big enough to compensate the hardware audio buffersize size */
+/* TODO: We assume that a decoded and resampled frame fits into this buffer */
+#define SAMPLE_ARRAY_SIZE (8 * 65536)
+
+#define CURSOR_HIDE_DELAY 1000000
+
+#define USE_ONEPASS_SUBTITLE_RENDER 1
+
+typedef struct RTexture {
+	int w, h, d;
+	void* rawdata;
+} RTexture;
+
+typedef struct MyAVPacketList {
+    AVPacket *pkt;
+    int serial;
+} MyAVPacketList;
+
+typedef struct PacketQueue {
+    AVFifo *pkt_list;
+    int nb_packets;
+    int size;
+    int64_t duration;
+    int abort_request;
+    int serial;
+    std::recursive_mutex *mutex;
+    std::condition_variable_any *cond;
+} PacketQueue;
+
+#define VIDEO_PICTURE_QUEUE_SIZE 3
+#define SUBPICTURE_QUEUE_SIZE 16
+#define SAMPLE_QUEUE_SIZE 9
+#define FRAME_QUEUE_SIZE FFMAX(SAMPLE_QUEUE_SIZE, FFMAX(VIDEO_PICTURE_QUEUE_SIZE, SUBPICTURE_QUEUE_SIZE))
+
+typedef struct AudioParams {
+    int freq;
+    AVChannelLayout ch_layout;
+    enum AVSampleFormat fmt;
+    int frame_size;
+    int bytes_per_sec;
+} AudioParams;
+
+typedef struct Clock {
+    double pts;           /* clock base */
+    double pts_drift;     /* clock base minus time at which we updated the clock */
+    double last_updated;
+    double speed;
+    int serial;           /* clock is based on a packet with this serial */
+    int paused;
+    int *queue_serial;    /* pointer to the current packet queue serial, used for obsolete clock detection */
+} Clock;
+
+typedef struct FrameData {
+    int64_t pkt_pos;
+} FrameData;
+
+/* Common struct for handling all types of decoded data and allocated render buffers. */
+typedef struct Frame {
+    AVFrame *frame;
+    AVSubtitle sub;
+    int serial;
+    double pts;           /* presentation timestamp for the frame */
+    double duration;      /* estimated duration of the frame */
+    int64_t pos;          /* byte position of the frame in the input file */
+    int width;
+    int height;
+    int format;
+    AVRational sar;
+    int uploaded;
+    int flip_v;
+} Frame;
+
+typedef struct FrameQueue {
+    Frame queue[FRAME_QUEUE_SIZE];
+    int rindex;
+    int windex;
+    int size;
+    int max_size;
+    int keep_last;
+    int rindex_shown;
+    std::recursive_mutex *mutex;
+    std::condition_variable_any *cond;
+    PacketQueue *pktq;
+} FrameQueue;
+
+enum {
+    AV_SYNC_AUDIO_MASTER, /* default choice */
+    AV_SYNC_VIDEO_MASTER,
+    AV_SYNC_EXTERNAL_CLOCK, /* synchronize to an external clock */
+};
+
+typedef struct Decoder {
+    AVPacket *pkt;
+    PacketQueue *queue;
+    AVCodecContext *avctx;
+    int pkt_serial;
+    int finished;
+    int packet_pending;
+    std::condition_variable_any *empty_queue_cond;
+    int64_t start_pts;
+    AVRational start_pts_tb;
+    int64_t next_pts;
+    AVRational next_pts_tb;
+    std::thread *decoder_tid;
+} Decoder;
+
+typedef struct VideoState {
+    std::thread *read_tid;
+    const AVInputFormat *iformat;
+    int abort_request;
+    int force_refresh;
+    int paused;
+    int last_paused;
+    int queue_attachments_req;
+    int seek_req;
+    int seek_flags;
+    int64_t seek_pos;
+    int64_t seek_rel;
+    int read_pause_return;
+    AVFormatContext *ic;
+    int realtime;
+
+    Clock audclk;
+    Clock vidclk;
+    Clock extclk;
+
+    FrameQueue pictq;
+    FrameQueue subpq;
+    FrameQueue sampq;
+
+    Decoder auddec;
+    Decoder viddec;
+    Decoder subdec;
+
+    int audio_stream;
+
+    int av_sync_type;
+
+    double audio_clock;
+    int audio_clock_serial;
+    double audio_diff_cum; /* used for AV difference average computation */
+    double audio_diff_avg_coef;
+    double audio_diff_threshold;
+    int audio_diff_avg_count;
+    AVStream *audio_st;
+    PacketQueue audioq;
+    int audio_hw_buf_size;
+    uint8_t *audio_buf;
+    uint8_t *audio_buf1;
+    unsigned int audio_buf_size; /* in bytes */
+    unsigned int audio_buf1_size;
+    int audio_buf_index; /* in bytes */
+    int audio_write_buf_size;
+    int audio_volume;
+    int muted;
+    struct AudioParams audio_src;
+    struct AudioParams audio_filter_src;
+    struct AudioParams audio_tgt;
+    struct SwrContext *swr_ctx;
+    int frame_drops_early;
+    int frame_drops_late;
+
+    enum ShowMode {
+        SHOW_MODE_NONE = -1, SHOW_MODE_VIDEO = 0, SHOW_MODE_WAVES, SHOW_MODE_RDFT, SHOW_MODE_NB
+    } show_mode;
+    int16_t sample_array[SAMPLE_ARRAY_SIZE];
+    int sample_array_index;
+    int last_i_start;
+    AVTXContext *rdft;
+    av_tx_fn rdft_fn;
+    int rdft_bits;
+    float *real_data;
+    AVComplexFloat *rdft_data;
+    int xpos;
+    double last_vis_time;
+    RTexture *vis_texture;
+    RTexture *sub_texture;
+    RTexture *vid_texture;
+
+    int subtitle_stream;
+    AVStream *subtitle_st;
+    PacketQueue subtitleq;
+
+    double frame_timer;
+    double frame_last_returned_time;
+    double frame_last_filter_delay;
+    int video_stream;
+    AVStream *video_st;
+    PacketQueue videoq;
+    double max_frame_duration;      // maximum duration of a frame - above this, we consider the jump a timestamp discontinuity
+    struct SwsContext *sub_convert_ctx;
+    int eof;
+
+    char *filename;
+    int width, height, xleft, ytop;
+    int step;
+
+    int vfilter_idx;
+    AVFilterContext *in_video_filter;   // the first filter in the video chain
+    AVFilterContext *out_video_filter;  // the last filter in the video chain
+    AVFilterContext *in_audio_filter;   // the first filter in the audio chain
+    AVFilterContext *out_audio_filter;  // the last filter in the audio chain
+    AVFilterGraph *agraph;              // audio filter graph
+
+    int last_video_stream, last_audio_stream, last_subtitle_stream;
+
+    std::condition_variable_any *continue_read_thread;
+} VideoState;
+
+std::condition_variable_any* CreateCondition(void)
+{
+    /* Allocate and initialize the condition variable */
+    try {
+        std::condition_variable_any *cond = new std::condition_variable_any();
+        return cond;
+    } catch (std::system_error &ex) {
+        LOG("unable to create a C++ condition variable: code=%d; %s", ex.code(), ex.what());
+        return NULL;
+    } catch (std::bad_alloc &) {
+        LOG("out of memory");
+        return NULL;
+    }
+}
+
+/* Destroy a condition variable */
+void DestroyCondition(std::condition_variable_any *cond)
+{
+    if (cond != NULL) {
+        delete cond;
+    }
+}
+
+/* Restart one of the threads that are waiting on the condition variable */
+int SignalCondition(std::condition_variable_any *cond)
+{
+    if (cond == NULL) {
+		LOG("Invaild param error cond");
+        return -1;
+    }
+
+    cond->notify_one();
+    return 0;
+}
+
+/* Restart all threads that are waiting on the condition variable */
+int BroadcastCondition(std::condition_variable_any *cond)
+{
+    if (cond == NULL) {
+        LOG("Invaild param error cond");
+        return -1;
+    }
+
+    cond->notify_all();
+    return 0;
+}
+
+int WaitConditionTimeoutNS(std::condition_variable_any *cond, std::recursive_mutex *mutex, int64_t timeoutNS)
+{
+    if (cond == NULL) {
+        LOG("Invaild param error cond");
+        return -1;
+    }
+
+    if (mutex == NULL) {
+        LOG("Invaild param error mutex");
+        return -1;
+    }
+
+    try {
+        std::unique_lock<std::recursive_mutex> cpp_lock(mutex->cpp_mutex, std::adopt_lock_t());
+        if (timeoutNS < 0) {
+            cond->wait(
+                cpp_lock);
+            cpp_lock.release();
+            return 0;
+        } else {
+            auto wait_result = cond->cpp_cond.wait_for(
+                cpp_lock,
+                std::chrono::duration<int64_t, std::nano>(timeoutNS));
+            cpp_lock.release();
+            if (wait_result == std::cv_status::timeout) {
+                return MUTEX_TIMEDOUT;
+            } else {
+                return 0;
+            }
+        }
+    } catch (std::system_error &ex) {
+        LOG("Unable to wait on a C++ condition variable: code=%d; %s", ex.code(), ex.what());
+		return -1;
+    }
+}
+
+std::recursive_mutex * CreateMutex(void)
+{
+    /* Allocate and initialize the mutex */
+    try {
+        std::recursive_mutex *mutex = new std::recursive_mutex();
+        return mutex;
+    } catch (std::system_error &ex) {
+        LOG("unable to create a C++ mutex: code=%d; %s", ex.code(), ex.what());
+        return NULL;
+    } catch (std::bad_alloc &) {
+        LOG("out of memory");
+        return NULL;
+    }
+}
+
+/* Free the mutex */
+void DestroyMutex(std::recursive_mutex *mutex)
+{
+    if (mutex != NULL) {
+        delete mutex;
+    }
+}
+
+/* Lock the mutex */
+int LockMutex(std::recursive_mutex *mutex) /* clang doesn't know about NULL mutexes */
+{
+    if (mutex == NULL) {
+        return 0;
+    }
+
+    try {
+        mutex->lock();
+        return 0;
+    } catch (std::system_error &ex) {
+        LOG("unable to lock a C++ mutex: code=%d; %s", ex.code(), ex.what());
+		return -1;
+    }
+}
+
+/* TryLock the mutex */
+int TryLockMutex(std::recursive_mutex *mutex)
+{
+    int retval = 0;
+
+    if (mutex == NULL) {
+        return 0;
+    }
+
+    if (mutex->try_lock() == false) {
+        retval = MUTEX_TIMEDOUT;
+    }
+    return retval;
+}
+
+/* Unlock the mutex */
+int UnlockMutex(std::recursive_mutex *mutex) /* clang doesn't know about NULL mutexes */
+{
+    if (mutex == NULL) {
+        return 0;
+    }
+
+    mutex->unlock();
+    return 0;
+}
+
+static int packet_queue_put_private(PacketQueue *q, AVPacket *pkt)
+{
+    MyAVPacketList pkt1;
+    int ret;
+
+    if (q->abort_request)
+       return -1;
+
+
+    pkt1.pkt = pkt;
+    pkt1.serial = q->serial;
+
+    ret = av_fifo_write(q->pkt_list, &pkt1, 1);
+    if (ret < 0)
+        return ret;
+    q->nb_packets++;
+    q->size += pkt1.pkt->size + sizeof(pkt1);
+    q->duration += pkt1.pkt->duration;
+    /* XXX: should duplicate packet data in DV case */
+    SignalCondition(q->cond);
+    return 0;
+}
+
+static int packet_queue_put(PacketQueue *q, AVPacket *pkt)
+{
+    AVPacket *pkt1;
+    int ret;
+
+    pkt1 = av_packet_alloc();
+    if (!pkt1) {
+        av_packet_unref(pkt);
+        return -1;
+    }
+    av_packet_move_ref(pkt1, pkt);
+
+    LockMutex(q->mutex);
+    ret = packet_queue_put_private(q, pkt1);
+    UnlockMutex(q->mutex);
+
+    if (ret < 0)
+        av_packet_free(&pkt1);
+
+    return ret;
+}
+
+static int packet_queue_put_nullpacket(PacketQueue *q, AVPacket *pkt, int stream_index)
+{
+    pkt->stream_index = stream_index;
+    return packet_queue_put(q, pkt);
+}
+
+/* packet queue handling */
+static int packet_queue_init(PacketQueue *q)
+{
+    memset(q, 0, sizeof(PacketQueue));
+    q->pkt_list = av_fifo_alloc2(1, sizeof(MyAVPacketList), AV_FIFO_FLAG_AUTO_GROW);
+    if (!q->pkt_list)
+        return AVERROR(ENOMEM);
+    q->mutex = CreateMutex();
+    if (!q->mutex) {
+        av_log(NULL, AV_LOG_FATAL, "CreateMutex(): %s\n", -1);
+        return AVERROR(ENOMEM);
+    }
+    q->cond = CreateCondition();
+    if (!q->cond) {
+        av_log(NULL, AV_LOG_FATAL, "CreateCond(): %s\n", -1);
+        return AVERROR(ENOMEM);
+    }
+    q->abort_request = 1;
+    return 0;
+}
+
+static void packet_queue_flush(PacketQueue *q)
+{
+    MyAVPacketList pkt1;
+
+    LockMutex(q->mutex);
+    while (av_fifo_read(q->pkt_list, &pkt1, 1) >= 0)
+        av_packet_free(&pkt1.pkt);
+    q->nb_packets = 0;
+    q->size = 0;
+    q->duration = 0;
+    q->serial++;
+    UnlockMutex(q->mutex);
+}
+
+static void packet_queue_destroy(PacketQueue *q)
+{
+    packet_queue_flush(q);
+    av_fifo_freep2(&q->pkt_list);
+    DestroyMutex(q->mutex);
+    DestroyCondition(q->cond);
+}
+
+static void packet_queue_abort(PacketQueue *q)
+{
+    LockMutex(q->mutex);
+
+    q->abort_request = 1;
+
+    SignalCondition(q->cond);
+
+    UnlockMutex(q->mutex);
+}
+
+static void packet_queue_start(PacketQueue *q)
+{
+    LockMutex(q->mutex);
+    q->abort_request = 0;
+    q->serial++;
+    UnlockMutex(q->mutex);
+}
+
+/* return < 0 if aborted, 0 if no packet and > 0 if packet.  */
+static int packet_queue_get(PacketQueue *q, AVPacket *pkt, int block, int *serial)
+{
+    MyAVPacketList pkt1;
+    int ret;
+
+    LockMutex(q->mutex);
+
+    for (;;) {
+        if (q->abort_request) {
+            ret = -1;
+            break;
+        }
+
+        if (av_fifo_read(q->pkt_list, &pkt1, 1) >= 0) {
+            q->nb_packets--;
+            q->size -= pkt1.pkt->size + sizeof(pkt1);
+            q->duration -= pkt1.pkt->duration;
+            av_packet_move_ref(pkt, pkt1.pkt);
+            if (serial)
+                *serial = pkt1.serial;
+            av_packet_free(&pkt1.pkt);
+            ret = 1;
+            break;
+        } else if (!block) {
+            ret = 0;
+            break;
+        } else {
+            WaitConditionTimeoutNS(q->cond, q->mutex, 0);
+        }
+    }
+    UnlockMutex(q->mutex);
+    return ret;
+}
+
+
 
 DecoderFFmpeg::DecoderFFmpeg() {
 	mAVFormatContext = nullptr;
 	mVideoStream = nullptr;
 	mAudioStream = nullptr;
-	mVideoCodec = nullptr;
-	mAudioCodec = nullptr;
+	//mVideoCodec = nullptr;
+	//mAudioCodec = nullptr;
 	mVideoCodecContext = nullptr;
 	mAudioCodecContext = nullptr;
-	av_init_packet(&mPacket);
+	av_init_packet(mPacket);
 
 	mSwrContext = nullptr;
 
@@ -50,6 +608,8 @@ bool DecoderFFmpeg::init(const char* filePath) {
 #endif
     avformat_network_init();
 
+	mPacket = av_packet_alloc();
+
 	if (mAVFormatContext == nullptr) {
 		mAVFormatContext = avformat_alloc_context();
 	}
@@ -85,6 +645,9 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		return false;
 	}
 
+	if (mAVFormatContext->pb)
+        mAVFormatContext->pb->eof_reached = 0; // FIXME hack, ffplay maybe should not use avio_feof() to test for the end
+
 	double ctxDuration = (double)(mAVFormatContext->duration) / AV_TIME_BASE;
 
 	/* Video initialization */
@@ -95,17 +658,18 @@ bool DecoderFFmpeg::init(const char* filePath) {
 	} else {
 		mVideoInfo.isEnabled = true;
 		mVideoStream = mAVFormatContext->streams[videoStreamIndex];
-		mVideoCodecContext = mVideoStream->codec;
+		//mVideoCodecContext->codec = mAVFormatContext->video_codec;
 		mVideoCodecContext->refs = 1;
-		mVideoCodec = avcodec_find_decoder(mVideoCodecContext->codec_id);
+		const AVCodec *video_codec = avcodec_find_decoder(mVideoCodecContext->codec_id);
+		//mVideoCodec = &codec;
 		
-		if (mVideoCodec == nullptr) {
+		if (video_codec == nullptr) {
 			LOG("Video codec not available. \n");
 			return false;
 		}
 		AVDictionary *autoThread = nullptr;
 		av_dict_set(&autoThread, "threads", "auto", 0);
-		errorCode = avcodec_open2(mVideoCodecContext, mVideoCodec, &autoThread);
+		errorCode = avcodec_open2(mVideoCodecContext, video_codec, &autoThread);
 		av_dict_free(&autoThread);
 		if (errorCode < 0) {
 			LOG("Could not open video codec(%x). \n", errorCode);
@@ -130,8 +694,8 @@ bool DecoderFFmpeg::init(const char* filePath) {
 	} else {
 		mAudioInfo.isEnabled = true;
 		mAudioStream = mAVFormatContext->streams[audioStreamIndex];
-		mAudioCodecContext = mAudioStream->codec;
-		mAudioCodec = avcodec_find_decoder(mAudioCodecContext->codec_id);
+		//mAudioCodecContext = mAVFormatContext->audio_codec.;
+		const AVCodec* mAudioCodec = avcodec_find_decoder(mAudioCodecContext->codec_id);
 
 		if (mAudioCodec == nullptr) {
 			LOG("Audio codec not available. \n");
@@ -168,19 +732,19 @@ bool DecoderFFmpeg::decode() {
 	}
 
 	if (!isBuffBlocked()) {
-		if (av_read_frame(mAVFormatContext, &mPacket) < 0) {
+		if (av_read_frame(mAVFormatContext, mPacket) < 0) {
 			updateVideoFrame();
 			LOG("End of file.\n");
 			return false;
 		}
 
-		if (mVideoInfo.isEnabled && mPacket.stream_index == mVideoStream->index) {
+		if (mVideoInfo.isEnabled && mPacket->stream_index == mVideoStream->index) {
 			updateVideoFrame();
-		} else if (mAudioInfo.isEnabled && mPacket.stream_index == mAudioStream->index) {
+		} else if (mAudioInfo.isEnabled && mPacket->stream_index == mAudioStream->index) {
 			updateAudioFrame();
 		}
 
-		av_packet_unref(&mPacket);
+		av_packet_unref(mPacket);
 	}
 
 	return true;
@@ -370,12 +934,12 @@ void DecoderFFmpeg::destroy() {
 	flushBuffer(&mVideoFrames, &mVideoMutex);
 	flushBuffer(&mAudioFrames, &mAudioMutex);
 	
-	mVideoCodec = nullptr;
-	mAudioCodec = nullptr;
+	//mVideoCodec = nullptr;
+	//mAudioCodec = nullptr;
 	
 	mVideoStream = nullptr;
 	mAudioStream = nullptr;
-	av_packet_unref(&mPacket);
+	av_packet_unref(mPacket);
 	
 	memset(&mVideoInfo, 0, sizeof(VideoInfo));
 	memset(&mAudioInfo, 0, sizeof(AudioInfo));
