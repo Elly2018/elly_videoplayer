@@ -1,0 +1,2 @@
+scons platform=windows
+pause

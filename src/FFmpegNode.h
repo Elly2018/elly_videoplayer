@@ -10,11 +10,23 @@
 
 using namespace godot;
 
+
+/**
+ * The control node for godot video player
+*/
 class FFmpegNode : public Node {
 	GDCLASS(FFmpegNode, Node);
 
 private:
+/**
+ * The different stage for this video player,
+ * each stage will change under behaviour of decoding processing
+*/
 	enum State {
+		/**
+		 * This means the media does not initialize yet.
+		 * It will trying to get the information it needs in order to start the decoding process.
+		*/
 		LOADING,
 		UNINITIALIZED,
 		INITIALIZED,
