@@ -325,14 +325,14 @@ int WaitConditionTimeoutNS(std::condition_variable_any *cond, std::recursive_mut
     }
 
     try {
-        std::unique_lock<std::recursive_mutex> cpp_lock(mutex->cpp_mutex, std::adopt_lock_t());
+        std::unique_lock<std::recursive_mutex> cpp_lock(*mutex, std::adopt_lock_t());
         if (timeoutNS < 0) {
             cond->wait(
                 cpp_lock);
             cpp_lock.release();
             return 0;
         } else {
-            auto wait_result = cond->cpp_cond.wait_for(
+            auto wait_result = cond->wait_for(
                 cpp_lock,
                 std::chrono::duration<int64_t, std::nano>(timeoutNS));
             cpp_lock.release();
@@ -577,6 +577,14 @@ DecoderFFmpeg::DecoderFFmpeg() {
 
 	mVideoBuffMax = 64;
 	mAudioBuffMax = 128;
+
+	decoder_reorder_pts = -1;
+	av_sync_type = AV_SYNC_AUDIO_MASTER;
+	seek_interval = 10;
+	framedrop = -1;
+	infinite_buffer = -1;
+	afilters = NULL;
+	find_stream_info = 1;
 
 	memset(&mVideoInfo, 0, sizeof(VideoInfo));
 	memset(&mAudioInfo, 0, sizeof(AudioInfo));
@@ -933,16 +941,19 @@ void DecoderFFmpeg::destroy() {
 	
 	flushBuffer(&mVideoFrames, &mVideoMutex);
 	flushBuffer(&mAudioFrames, &mAudioMutex);
+	flushBuffer(&mSubtitleFrames, &mSubtitleMutex);
 	
 	//mVideoCodec = nullptr;
 	//mAudioCodec = nullptr;
 	
 	mVideoStream = nullptr;
 	mAudioStream = nullptr;
+	mSubtitleStream = nullptr;
 	av_packet_unref(mPacket);
 	
 	memset(&mVideoInfo, 0, sizeof(VideoInfo));
 	memset(&mAudioInfo, 0, sizeof(AudioInfo));
+
 	
 	mIsInitialized = false;
 	mIsAudioAllChEnabled = false;
@@ -1099,7 +1110,10 @@ int DecoderFFmpeg::loadConfig() {
 	}
 
 	enum CONFIG { NONE, USE_TCP, BUFF_MIN, BUFF_MAX };
-	int buffVideoMax = 0, buffAudioMax = 0, tcp = 0, seekAny = 0;
+	int buffVideoMax = 0;
+	int buffAudioMax = 0
+	int buffSubtitleMax = 0;
+	bool tcp = 0, seekAny = 0;
 	std::string line;
 	while (configFile >> line) {
 		std::string token = line.substr(0, line.find("="));
@@ -1109,6 +1123,7 @@ int DecoderFFmpeg::loadConfig() {
 			if (token == "USE_TCP") { tcp = stoi(value); }
 			else if (token == "BUFF_VIDEO_MAX") { buffVideoMax = stoi(value); }
 			else if (token == "BUFF_AUDIO_MAX") { buffAudioMax = stoi(value); }
+			else if (token == "BUFF_SUBTITLE_MAX") { buffAudioMax = stoi(value); }
 			else if (token == "SEEK_ANY") { seekAny = stoi(value); }
 		
 		} catch (...) {

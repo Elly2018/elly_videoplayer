@@ -43,16 +43,20 @@ private:
 	AVFormatContext* mAVFormatContext;
 	AVStream*		mVideoStream;
 	AVStream*		mAudioStream;
+	AVStream*		mSubtitleStream;
 	//AVCodec*		mVideoCodec;
 	//AVCodec*		mAudioCodec;
 	AVCodecContext*	mVideoCodecContext;
 	AVCodecContext*	mAudioCodecContext;
+	AVCodecContext*	mSubtitleCodecContext;
 
 	AVPacket*	mPacket;
 	std::queue<AVFrame*> mVideoFrames;
 	std::queue<AVFrame*> mAudioFrames;
+	std::queue<AVFrame*> mSubtitleFrames;
 	unsigned int mVideoBuffMax;
 	unsigned int mAudioBuffMax;
+	unsigned int mSubtitleBuffMax;
 
 	SwrContext*	mSwrContext;
 	int initSwrContext();
@@ -62,6 +66,23 @@ private:
 	void updateBufferState();
 
 	int mFrameBufferNum;
+	float seek_interval;
+	int audio_disable;
+	int video_disable;
+	int subtitle_disable;
+	int av_sync_type;
+	int fast;
+	int genpts;
+	int decoder_reorder_pts;
+	int framedrop;
+	int infinite_buffer;
+	const char* audio_codec_name;
+	const char* subtitle_codec_name;
+	const char* video_codec_name;
+	int nb_vtiler;
+	char *afilters;
+	int find_stream_info;
+	int filter_nbthreads;
 
 	bool isBuffBlocked();
 	void updateVideoFrame();
@@ -70,6 +91,9 @@ private:
 	void flushBuffer(std::queue<AVFrame*>* frameBuff, std::mutex* mutex);
 	std::mutex mVideoMutex;
 	std::mutex mAudioMutex;
+	std::mutex mSubtitleMutex;
+
+	VideoState *is;
 
 	bool mIsSeekToAny;
 
