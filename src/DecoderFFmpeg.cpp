@@ -740,7 +740,12 @@ bool DecoderFFmpeg::init(const char* filePath) {
     init_clock(&is->audclk, &is->audioq.serial);
     init_clock(&is->extclk, &is->extclk.serial);
 
+	if (!is->read_tid) {
+        av_log(NULL, AV_LOG_FATAL, "SDL_CreateThread(): %s\n", -1);
 fail:
+        stream_close(is);
+        return NULL;
+    }
 
 	mPacket = av_packet_alloc();
 
