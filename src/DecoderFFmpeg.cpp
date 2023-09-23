@@ -8,6 +8,7 @@
 #include <mutex>
 #include <chrono>
 
+#include "libavutil/time.h"
 #include "libavutil/fifo.h"
 #include "libavutil/tx.h"
 
@@ -562,6 +563,94 @@ static int packet_queue_get(PacketQueue *q, AVPacket *pkt, int block, int *seria
 }
 
 
+static void frame_queue_unref_item(Frame *vp)
+{
+    av_frame_unref(vp->frame);
+    avsubtitle_free(&vp->sub);
+}
+
+static int frame_queue_init(FrameQueue *f, PacketQueue *pktq, int max_size, int keep_last)
+{
+    int i;
+    memset(f, 0, sizeof(FrameQueue));
+    if (!(f->mutex = CreateMutex())) {
+        av_log(NULL, AV_LOG_FATAL, "SDL_CreateMutex(): %s\n", -1);
+        return AVERROR(ENOMEM);
+    }
+    if (!(f->cond = CreateCondition())) {
+        av_log(NULL, AV_LOG_FATAL, "SDL_CreateCond(): %s\n", -1);
+        return AVERROR(ENOMEM);
+    }
+    f->pktq = pktq;
+    f->max_size = FFMIN(max_size, FRAME_QUEUE_SIZE);
+    f->keep_last = !!keep_last;
+    for (i = 0; i < f->max_size; i++)
+        if (!(f->queue[i].frame = av_frame_alloc()))
+            return AVERROR(ENOMEM);
+    return 0;
+}
+
+static void frame_queue_destroy(FrameQueue *f)
+{
+    int i;
+    for (i = 0; i < f->max_size; i++) {
+        Frame *vp = &f->queue[i];
+        frame_queue_unref_item(vp);
+        av_frame_free(&vp->frame);
+    }
+    DestroyMutex(f->mutex);
+    DestroyCondition(f->cond);
+}
+
+static void frame_queue_signal(FrameQueue *f)
+{
+    LockMutex(f->mutex);
+    SignalCondition(f->cond);
+    UnlockMutex(f->mutex);
+}
+
+
+static double get_clock(Clock *c)
+{
+    if (*c->queue_serial != c->serial)
+        return NAN;
+    if (c->paused) {
+        return c->pts;
+    } else {
+        double time = av_gettime_relative() / 1000000.0;
+        return c->pts_drift + time - (time - c->last_updated) * (1.0 - c->speed);
+    }
+}
+
+static void set_clock_at(Clock *c, double pts, int serial, double time)
+{
+    c->pts = pts;
+    c->last_updated = time;
+    c->pts_drift = c->pts - time;
+    c->serial = serial;
+}
+
+static void set_clock(Clock *c, double pts, int serial)
+{
+    double time = av_gettime_relative() / 1000000.0;
+    set_clock_at(c, pts, serial, time);
+}
+
+static void set_clock_speed(Clock *c, double speed)
+{
+    set_clock(c, get_clock(c), c->serial);
+    c->speed = speed;
+}
+
+
+static void init_clock(Clock *c, int *queue_serial)
+{
+    c->speed = 1.0;
+    c->paused = 0;
+    c->queue_serial = queue_serial;
+    set_clock(c, NAN, -1);
+}
+
 
 DecoderFFmpeg::DecoderFFmpeg() {
 	mAVFormatContext = nullptr;
@@ -592,6 +681,11 @@ DecoderFFmpeg::DecoderFFmpeg() {
 	mIsAudioAllChEnabled = false;
 	mUseTCP = false;
 	mIsSeekToAny = false;
+
+#if CONFIG_AVDEVICE
+    avdevice_register_all();
+#endif
+    avformat_network_init();
 }
 
 DecoderFFmpeg::~DecoderFFmpeg() {
@@ -609,12 +703,44 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		return false;
 	}
 
-	int ret;
+	VideoState *is;
 
-#if CONFIG_AVDEVICE
-    avdevice_register_all();
-#endif
-    avformat_network_init();
+    is = (VideoState*) av_mallocz(sizeof(VideoState));
+	if (!is)
+        return NULL;
+    is->last_video_stream = is->video_stream = -1;
+    is->last_audio_stream = is->audio_stream = -1;
+    is->last_subtitle_stream = is->subtitle_stream = -1;
+	is->filename = av_strdup(filePath);
+    if (!is->filename)
+        goto fail;
+    is->iformat = nullptr;
+    is->ytop    = 0;
+    is->xleft   = 0;
+
+/* start video display */
+    if (frame_queue_init(&is->pictq, &is->videoq, VIDEO_PICTURE_QUEUE_SIZE, 1) < 0)
+        goto fail;
+    if (frame_queue_init(&is->subpq, &is->subtitleq, SUBPICTURE_QUEUE_SIZE, 0) < 0)
+        goto fail;
+    if (frame_queue_init(&is->sampq, &is->audioq, SAMPLE_QUEUE_SIZE, 1) < 0)
+        goto fail;
+
+	if (packet_queue_init(&is->videoq) < 0 ||
+        packet_queue_init(&is->audioq) < 0 ||
+        packet_queue_init(&is->subtitleq) < 0)
+        goto fail;
+
+    if (!(is->continue_read_thread = CreateCondition())) {
+        av_log(NULL, AV_LOG_FATAL, "SDL_CreateCond(): %s\n", -1);
+        goto fail;
+    }
+
+	init_clock(&is->vidclk, &is->videoq.serial);
+    init_clock(&is->audclk, &is->audioq.serial);
+    init_clock(&is->extclk, &is->extclk.serial);
+
+fail:
 
 	mPacket = av_packet_alloc();
 
@@ -655,77 +781,6 @@ bool DecoderFFmpeg::init(const char* filePath) {
 
 	if (mAVFormatContext->pb)
         mAVFormatContext->pb->eof_reached = 0; // FIXME hack, ffplay maybe should not use avio_feof() to test for the end
-
-	double ctxDuration = (double)(mAVFormatContext->duration) / AV_TIME_BASE;
-
-	/* Video initialization */
-	int videoStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
-	if (videoStreamIndex < 0) {
-		LOG("video stream not found. \n");
-		mVideoInfo.isEnabled = false;
-	} else {
-		mVideoInfo.isEnabled = true;
-		mVideoStream = mAVFormatContext->streams[videoStreamIndex];
-		//mVideoCodecContext->codec = mAVFormatContext->video_codec;
-		mVideoCodecContext->refs = 1;
-		const AVCodec *video_codec = avcodec_find_decoder(mVideoCodecContext->codec_id);
-		//mVideoCodec = &codec;
-		
-		if (video_codec == nullptr) {
-			LOG("Video codec not available. \n");
-			return false;
-		}
-		AVDictionary *autoThread = nullptr;
-		av_dict_set(&autoThread, "threads", "auto", 0);
-		errorCode = avcodec_open2(mVideoCodecContext, video_codec, &autoThread);
-		av_dict_free(&autoThread);
-		if (errorCode < 0) {
-			LOG("Could not open video codec(%x). \n", errorCode);
-			printErrorMsg(errorCode);
-			return false;
-		}
-
-		//	Save the output video format
-		//	Duration / time_base = video time (seconds)
-		mVideoInfo.width = mVideoCodecContext->width;
-		mVideoInfo.height = mVideoCodecContext->height;
-		mVideoInfo.totalTime = mVideoStream->duration <= 0 ? ctxDuration : mVideoStream->duration * av_q2d(mVideoStream->time_base);
-
-		//mVideoFrames.swap(decltype(mVideoFrames)());
-	}
-
-	/* Audio initialization */
-	int audioStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-	if (audioStreamIndex < 0) {
-		LOG("audio stream not found. \n");
-		mAudioInfo.isEnabled = false;
-	} else {
-		mAudioInfo.isEnabled = true;
-		mAudioStream = mAVFormatContext->streams[audioStreamIndex];
-		//mAudioCodecContext = mAVFormatContext->audio_codec.;
-		const AVCodec* mAudioCodec = avcodec_find_decoder(mAudioCodecContext->codec_id);
-
-		if (mAudioCodec == nullptr) {
-			LOG("Audio codec not available. \n");
-			return false;
-		}
-
-		errorCode = avcodec_open2(mAudioCodecContext, mAudioCodec, nullptr);
-		if (errorCode < 0) {
-			LOG("Could not open audio codec(%x). \n", errorCode);
-			printErrorMsg(errorCode);
-			return false;
-		}
-
-		errorCode = initSwrContext();
-		if (errorCode < 0) {
-			LOG("Init SwrContext error.(%x) \n", errorCode);
-			printErrorMsg(errorCode);
-			return false;
-		}
-
-		//mAudioFrames.swap(decltype(mAudioFrames)());
-	}
 
 	mIsInitialized = true;
 
