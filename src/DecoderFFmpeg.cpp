@@ -1109,32 +1109,24 @@ int DecoderFFmpeg::loadConfig() {
 		return -1;
 	}
 
-	enum CONFIG { NONE, USE_TCP, BUFF_MIN, BUFF_MAX };
-	int buffVideoMax = 0;
-	int buffAudioMax = 0
-	int buffSubtitleMax = 0;
-	bool tcp = 0, seekAny = 0;
 	std::string line;
 	while (configFile >> line) {
 		std::string token = line.substr(0, line.find("="));
-		CONFIG config = NONE;
 		std::string value = line.substr(line.find("=") + 1);
 		try {
-			if (token == "USE_TCP") { tcp = stoi(value); }
-			else if (token == "BUFF_VIDEO_MAX") { buffVideoMax = stoi(value); }
-			else if (token == "BUFF_AUDIO_MAX") { buffAudioMax = stoi(value); }
-			else if (token == "BUFF_SUBTITLE_MAX") { buffAudioMax = stoi(value); }
-			else if (token == "SEEK_ANY") { seekAny = stoi(value); }
+			if (token == "USE_TCP") { mUseTCP = stoi(value) != 0; }
+			else if (token == "BUFF_VIDEO_MAX") { mVideoBuffMax = stoi(value); }
+			else if (token == "BUFF_AUDIO_MAX") { mAudioBuffMax = stoi(value); }
+			else if (token == "BUFF_SUBTITLE_MAX") { mSubtitleBuffMax = stoi(value); }
+			else if (token == "VIDEO_disable") { mSubtitleBuffMax = stoi(value); }
+			else if (token == "BUFF_SUBTITLE_MAX") { mSubtitleBuffMax = stoi(value); }
+			else if (token == "BUFF_SUBTITLE_MAX") { mSubtitleBuffMax = stoi(value); }
+			else if (token == "SEEK_ANY") { mIsSeekToAny = stoi(value) != 0; }
 		
 		} catch (...) {
 			return -1;
 		}
 	}
-
-	mUseTCP = tcp != 0;
-	mVideoBuffMax = buffVideoMax;
-	mAudioBuffMax = buffAudioMax;
-	mIsSeekToAny = seekAny != 0;
 	LOG("config loading success.\n");
 	LOG("USE_TCP=%s\n", mUseTCP ? "true" : "false");
 	LOG("BUFF_VIDEO_MAX=%d\n", mVideoBuffMax);
