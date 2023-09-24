@@ -5,7 +5,7 @@
 #include <fstream>
 #include <string>
 
-#include "libavcodec/libavutil/imgutils.h"
+#include "libavutil/imgutils.h"
 
 DecoderFFmpeg::DecoderFFmpeg() {
 	mAVFormatContext = nullptr;
