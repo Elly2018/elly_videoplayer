@@ -12,6 +12,17 @@ extern "C" {
 #include "libswscale/swscale.h"
 }
 
+typedef struct RTexture RTexture;
+typedef struct MyAVPacketList MyAVPacketList;
+typedef struct PacketQueue PacketQueue;
+typedef struct AudioParams AudioParams;
+typedef struct Clock Clock;
+typedef struct FrameData FrameData;
+typedef struct Frame Frame;
+typedef struct FrameQueue FrameQueue;
+typedef struct Decoder Decoder;
+typedef struct VideoState VideoState;
+
 class DecoderFFmpeg : public virtual IDecoder
 {
 public:
@@ -40,10 +51,6 @@ private:
 	bool mIsAudioAllChEnabled;
 	bool mUseTCP;				//	For RTSP stream.
 
-	AVFormatContext* mAVFormatContext;
-	AVStream*		mVideoStream;
-	AVStream*		mAudioStream;
-	AVStream*		mSubtitleStream;
 	//AVCodec*		mVideoCodec;
 	//AVCodec*		mAudioCodec;
 	AVCodecContext*	mVideoCodecContext;
@@ -65,6 +72,11 @@ private:
 	AudioInfo	mAudioInfo;
 	void updateBufferState();
 
+	int64_t start_time = AV_NOPTS_VALUE;
+	int64_t duration = AV_NOPTS_VALUE;
+	int eof;
+	int paused;
+	int muted;
 	int mFrameBufferNum;
 	float seek_interval;
 	int audio_disable;
@@ -75,6 +87,7 @@ private:
 	int genpts;
 	int decoder_reorder_pts;
 	int framedrop;
+	int startup_volume;
 	int infinite_buffer;
 	const char* audio_codec_name;
 	const char* subtitle_codec_name;
@@ -98,5 +111,10 @@ private:
 	bool mIsSeekToAny;
 
 	int loadConfig();
+	int read_thread(void *arg);
+	int stream_has_enough_packets(AVStream *st, int stream_id, PacketQueue *queue);
+	int frame_queue_nb_remaining(FrameQueue *f);
+	void stream_component_close(VideoState *is, int stream_index);
+	void stream_close(VideoState *is);
 	void printErrorMsg(int errorCode);
 };

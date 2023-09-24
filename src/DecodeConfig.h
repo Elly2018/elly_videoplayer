@@ -48,6 +48,8 @@
 
 #define USE_ONEPASS_SUBTITLE_RENDER 1
 
+#define MIX_MAXVOLUME 128
+
 enum {
     AV_SYNC_AUDIO_MASTER, /* default choice */
     AV_SYNC_VIDEO_MASTER,
