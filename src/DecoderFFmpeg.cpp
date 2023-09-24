@@ -5,6 +5,8 @@
 #include <fstream>
 #include <string>
 
+#include "libavcodec/libavutil/imgutils.h"
+
 DecoderFFmpeg::DecoderFFmpeg() {
 	mAVFormatContext = nullptr;
 	mVideoStream = nullptr;
@@ -43,7 +45,7 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		return false;
 	}
 
-	av_register_all();
+	//av_register_all();
 
 	if (mAVFormatContext == nullptr) {
 		mAVFormatContext = avformat_alloc_context();
@@ -90,10 +92,10 @@ bool DecoderFFmpeg::init(const char* filePath) {
 	} else {
 		mVideoInfo.isEnabled = true;
 		mVideoStream = mAVFormatContext->streams[videoStreamIndex];
-		mVideoCodecContext = mVideoStream->codec;
-		mVideoCodecContext->refcounted_frames = 1;
-		mVideoCodec = avcodec_find_decoder(mVideoCodecContext->codec_id);
-		
+        mVideoCodecContext = avcodec_alloc_context3(NULL);
+        mVideoCodecContext->refs = 1;
+        avcodec_parameters_to_context(mVideoCodecContext, mVideoStream->codecpar);
+		mVideoCodec = const_cast<AVCodec*>(mVideoCodecContext->codec);
 		if (mVideoCodec == nullptr) {
 			LOG("Video codec not available. \n");
 			return false;
@@ -125,9 +127,9 @@ bool DecoderFFmpeg::init(const char* filePath) {
 	} else {
 		mAudioInfo.isEnabled = true;
 		mAudioStream = mAVFormatContext->streams[audioStreamIndex];
-		mAudioCodecContext = mAudioStream->codec;
-		mAudioCodec = avcodec_find_decoder(mAudioCodecContext->codec_id);
-
+		mAudioCodecContext = avcodec_alloc_context3(NULL);
+        avcodec_parameters_to_context(mAudioCodecContext, mAudioStream->codecpar);
+        mAudioCodec = const_cast<AVCodec*>(mAudioCodecContext->codec);
 		if (mAudioCodec == nullptr) {
 			LOG("Audio codec not available. \n");
 			return false;
@@ -261,7 +263,7 @@ double DecoderFFmpeg::getVideoFrame(void** frameData) {
 	AVFrame* frame = mVideoFrames.front();
 	*frameData = frame->data[0];
 
-	int64_t timeStamp = av_frame_get_best_effort_timestamp(frame);
+	int64_t timeStamp = frame->best_effort_timestamp;
 	double timeInSec = av_q2d(mVideoStream->time_base) * timeStamp;
 	mVideoInfo.lastTime = timeInSec;
 
@@ -281,7 +283,7 @@ double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize)
 	AVFrame* frame = mAudioFrames.front();
 	*outputFrame = frame->data[0];
 	frameSize = frame->nb_samples;
-	int64_t timeStamp = av_frame_get_best_effort_timestamp(frame);
+	int64_t timeStamp = frame->best_effort_timestamp;
 	double timeInSec = av_q2d(mAudioStream->time_base) * timeStamp;
 	mAudioInfo.lastTime = timeInSec;
 
@@ -399,10 +401,15 @@ void DecoderFFmpeg::updateVideoFrame() {
 	int isFrameAvailable = 0;
 	AVFrame* srcFrame = av_frame_alloc();
 	clock_t start = clock();
-	if (avcodec_decode_video2(mVideoCodecContext, srcFrame, &isFrameAvailable, &mPacket) < 0) {
-		LOG("Error processing data. \n");
+	if (avcodec_send_packet(mVideoCodecContext, &mPacket) < 0) {
+		LOG("Error processing data. avcodec_send_packet\n");
 		return;
 	}
+
+    if (avcodec_receive_frame(mVideoCodecContext, srcFrame) < 0){
+        LOG("Error processing data. avcodec_receive_frame\n");
+		return;
+    }
 
 	if (isFrameAvailable) {
         int width = srcFrame->width;
@@ -415,9 +422,10 @@ void DecoderFFmpeg::updateVideoFrame() {
         dstFrame->format = dstFormat;
 
         //av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
-        int numBytes = avpicture_get_size(dstFormat, width, height);
+        int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
         AVBufferRef* buffer = av_buffer_alloc(numBytes*sizeof(uint8_t));
-        avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
+        //avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
+        av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width,height, 1);
         dstFrame->buf[0] = buffer;
 
         SwsContext* conversion = sws_getContext(width,
@@ -450,10 +458,13 @@ void DecoderFFmpeg::updateVideoFrame() {
 void DecoderFFmpeg::updateAudioFrame() {
 	int isFrameAvailable = 0;
 	AVFrame* frameDecoded = av_frame_alloc();
-	if (avcodec_decode_audio4(mAudioCodecContext, frameDecoded, &isFrameAvailable, &mPacket) < 0) {
-		LOG("Error processing data. \n");
+
+    //if (avcodec_decode_audio4(mAudioCodecContext, frameDecoded, &isFrameAvailable, &mPacket < 0)
+    if (avcodec_send_packet(mAudioCodecContext, &mPacket) != 0){
+        LOG("Error processing data. avcodec_send_packet\n");
 		return;
-	}
+    }
+    
 
 	AVFrame* frame = av_frame_alloc();
 	frame->sample_rate = frameDecoded->sample_rate;
