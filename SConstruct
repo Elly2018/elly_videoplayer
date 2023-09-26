@@ -12,9 +12,9 @@ else:
     env.msvc = False
 
 # Add source files.
-env.Append(CPPPATH=["ffmpeg", "ffmpeg/libavcodec", "ffmpeg/libavformat", "ffmpeg/libavutil", "ffmpeg/libswresample", "ffmpeg/libswscale"])
+env.Append(CPPPATH=["ffmpeg"])
 # env.Append(LIBPATH=["ffmpeg/libavcodec", "ffmpeg/libavformat", "ffmpeg/libavutil", "ffmpeg/libswresample", "ffmpeg/libswscale"])
-sources = Glob("src/**.cpp") + Glob("src/**.c")
+sources = Glob("src/**.cpp")
 
 # Find gdextension path even if the directory or extension is renamed (e.g. project/addons/example/example.gdextension).
 (extension_path,) = glob("project/addons/*/*.gdextension")

@@ -7,7 +7,6 @@ ARCH=$(uname -m)
 ./configure \
 	--enable-cross-compile \
 	--enable-shared \
-	--disable-static \
 	--disable-zlib \
 	--disable-programs \
 	--disable-doc \

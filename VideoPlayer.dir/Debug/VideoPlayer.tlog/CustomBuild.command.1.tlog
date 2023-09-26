@@ -1,0 +1,10 @@
+^C:\MSYS64\HOME\CHUEL\GD_VIDEOPLAYER\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/msys64/home/chuel/gd_videoplayer -BC:/msys64/home/chuel/gd_videoplayer --check-stamp-file C:/msys64/home/chuel/gd_videoplayer/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

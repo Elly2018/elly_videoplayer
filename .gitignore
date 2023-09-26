@@ -2,6 +2,8 @@
 .scons-cache/
 *.os
 
+GDExtensionTemplate-build/
+
 # SConstruct
 .sconf_temp
 .sconsign.dblite

@@ -1,0 +1,9 @@
+﻿  Checking Build System
+  CMake is re-running because C:/msys64/home/chuel/gd_videoplayer/CMakeFiles/generate.stamp is out-of-date.
+    the file 'C:/msys64/home/chuel/gd_videoplayer/CMakeLists.txt'
+    is newer than 'C:/msys64/home/chuel/gd_videoplayer/CMakeFiles/generate.stamp.depend'
+    result='-1'
+  -- Selecting Windows SDK version 10.0.22621.0 to target Windows 10.0.19045.
+  -- Configuring done
+  -- Generating done
+  -- Build files have been written to: C:/msys64/home/chuel/gd_videoplayer
