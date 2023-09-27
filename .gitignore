@@ -12,6 +12,9 @@ GDExtensionTemplate-build/
 # MacOS
 .DS_Store
 
+x64/
+VideoPlayer.dir/
+
 # Editors
 .vscode/
 /SDL-main
