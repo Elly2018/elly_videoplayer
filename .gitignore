@@ -14,6 +14,8 @@ GDExtensionTemplate-build/
 
 x64/
 VideoPlayer.dir/
+FFmpeg/
+godot-cpp/
 
 # Editors
 .vscode/
