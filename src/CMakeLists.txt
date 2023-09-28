@@ -10,6 +10,10 @@ target_sources( ${PROJECT_NAME}
 	${SRC}
 )
 
+target_link_directories( ${PROJECT_NAME} PUBLIC
+  "ffmpeg/lib"
+)
+
 target_include_directories( ${PROJECT_NAME}
     PRIVATE
         "src"

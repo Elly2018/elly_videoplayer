@@ -277,6 +277,10 @@ FFmpegNode::~FFmpegNode() {
 	nativeScheduleDestroyDecoder(id);
 }
 
+void FFmpegNode::_notification(int p_what)
+{
+}
+
 void FFmpegNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("load_path", "path"), &FFmpegNode::load_path);
 	ClassDB::bind_method(D_METHOD("load_path_async", "path"), &FFmpegNode::load_path_async);
