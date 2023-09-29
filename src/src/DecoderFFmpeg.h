@@ -48,7 +48,7 @@ private:
 	AVCodecContext*	mVideoCodecContext;
 	AVCodecContext*	mAudioCodecContext;
 
-	AVPacket	mPacket;
+	AVPacket*	mPacket;
 	std::queue<AVFrame*> mVideoFrames;
 	std::queue<AVFrame*> mAudioFrames;
 	unsigned int mVideoBuffMax;

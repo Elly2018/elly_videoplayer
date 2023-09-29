@@ -3,10 +3,10 @@
 
 #include <cstring>
 
-//#include <godot_cpp/classes/audio_stream_generator.hpp>
+#include <godot_cpp/classes/audio_stream_generator.hpp>
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
-//#include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
@@ -214,16 +214,13 @@ void FFmpegNode::_process(float delta) {
 
 				if (frame_ready) {
 					PackedByteArray image_data;
+					LOG("data size: %d \n", data_size);
 					image_data.resize(data_size);
 					memcpy(image_data.ptrw(), frame_data, data_size);
-					image->create_from_data(width, height, false, Image::FORMAT_RGB8, image_data);
-
-					if (first_frame) {
-						texture->create_from_image(image);
-						first_frame = false;
-					} else {
-						texture->update(image);
-					}
+					LOG("actual data size: %d \n", image_data.size());
+					image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, image_data);
+					texture->set_deferred("image", image);
+					first_frame = false;
 
 					nativeReleaseVideoFrame(id);
 				}
@@ -258,37 +255,39 @@ void FFmpegNode::_process(float delta) {
 
 // TODO: Implement audio.
 
-// void FFmpegNode::_physics_process(float delta) {
-// 	if (!audio_playback || paused || state == UNINITIALIZED || state == EOF) {
-// 		return;
-// 	}
-//
-// 	unsigned char *frame_data = nullptr;
-// 	int frame_length = 0;
-// 	double audio_time = nativeGetAudioData(id, &frame_data, frame_length);
-//
-// 	if (audio_time > 0.0f) {
-// 		if (state != SEEK && frame_length != 0 && frame_data != nullptr) { }
-//
-// 		nativeFreeAudioData(id);
-// 	}
-//
-// 	if (state == DECODING && frame_data != nullptr && !player->is_playing()) {
-// 		audio_current_time = Time::get_singleton()->get_unix_time_from_system() - global_start_time;
-// 	}
-// }
+void FFmpegNode::_physics_process(float delta) {
+  	if (!audio_playback || paused || state == UNINITIALIZED || state == EOF) {
+  		return;
+  	}
+ 
+  	unsigned char *frame_data = nullptr;
+  	int frame_length = 0;
+  	double audio_time = nativeGetAudioData(id, &frame_data, frame_length);
+ 
+  	if (audio_time > 0.0f) {
+  		if (state != SEEK && frame_length != 0 && frame_data != nullptr) { }
+ 
+  		nativeFreeAudioData(id);
+  	}
+ 
+  	if (state == DECODING && frame_data != nullptr && !player->is_playing()) {
+  		audio_current_time = Time::get_singleton()->get_unix_time_from_system() - global_start_time;
+  	}
+  }
 
 FFmpegNode::FFmpegNode() {
-	texture = Ref<ImageTexture>(memnew(ImageTexture));
-	image = Ref<Image>(memnew(Image()));
+	image = Image::create(1,1,false, Image::FORMAT_RGB8);
+	texture = ImageTexture::create_from_image(image);
+
 	auto temp = Logger::instance();
 	// TODO: Implement audio.
 
-// 	player = memnew(AudioStreamPlayer);
-// 	add_child(player);
-// 	Ref<AudioStreamGenerator> generator = Ref<AudioStreamGenerator>(memnew(AudioStreamGenerator));
-// 	player->set_stream(generator);
-// 	playback = player->get_stream_playback();
+	player = new AudioStreamPlayer();
+	player->set_autoplay(true);
+  	add_child(player);
+  	Ref<AudioStreamGenerator> generator = new AudioStreamGenerator();
+  	player->set_stream(generator);
+  	playback = player->get_stream_playback();
 }
 
 FFmpegNode::~FFmpegNode() {

@@ -3,8 +3,8 @@
 #include "ViveMediaDecoder.h"
 #include <string>
 
-//#include <godot_cpp/classes/audio_stream_playback.hpp>
-//#include <godot_cpp/classes/audio_stream_player.hpp>
+#include <godot_cpp/classes/audio_stream_playback.hpp>
+#include <godot_cpp/classes/audio_stream_player.hpp>
 #include <godot_cpp/classes/global_constants.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/node.hpp>
@@ -38,8 +38,8 @@ private:
 	};
 
 	// TODO: Implement audio.
-// 	AudioStreamPlayer *player;
-// 	Ref<AudioStreamPlayback> playback;
+ 	AudioStreamPlayer *player;
+ 	Ref<AudioStreamPlayback> playback;
 
 	Ref<ImageTexture> texture;
 	Ref<Image> image;
@@ -96,7 +96,7 @@ public:
 	void seek(float p_time);
 
 	void _process(float delta);
-// 	void _physics_process(float delta);
+ 	void _physics_process(float delta);
 
 	FFmpegNode();
 	~FFmpegNode();

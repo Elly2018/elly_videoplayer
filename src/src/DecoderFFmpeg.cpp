@@ -17,7 +17,7 @@ DecoderFFmpeg::DecoderFFmpeg() {
 	mAudioCodec = nullptr;
 	mVideoCodecContext = nullptr;
 	mAudioCodecContext = nullptr;
-	av_init_packet(&mPacket);
+	mPacket = av_packet_alloc();
 
 	mSwrContext = nullptr;
 
@@ -173,19 +173,19 @@ bool DecoderFFmpeg::decode() {
 	}
 
 	if (!isBuffBlocked()) {
-		if (av_read_frame(mAVFormatContext, &mPacket) < 0) {
+		if (av_read_frame(mAVFormatContext, mPacket) < 0) {
 			updateVideoFrame();
 			LOG("End of file.\n");
 			return false;
 		}
 
-		if (mVideoInfo.isEnabled && mPacket.stream_index == mVideoStream->index) {
+		if (mVideoInfo.isEnabled && mPacket->stream_index == mVideoStream->index) {
 			updateVideoFrame();
-		} else if (mAudioInfo.isEnabled && mPacket.stream_index == mAudioStream->index) {
+		} else if (mAudioInfo.isEnabled && mPacket->stream_index == mAudioStream->index) {
 			updateAudioFrame();
 		}
 
-		av_packet_unref(&mPacket);
+		av_packet_unref(mPacket);
 	}
 
 	return true;
@@ -380,7 +380,7 @@ void DecoderFFmpeg::destroy() {
 	
 	mVideoStream = nullptr;
 	mAudioStream = nullptr;
-	av_packet_unref(&mPacket);
+	av_packet_unref(mPacket);
 	
 	memset(&mVideoInfo, 0, sizeof(VideoInfo));
 	memset(&mAudioInfo, 0, sizeof(AudioInfo));
@@ -407,73 +407,79 @@ bool DecoderFFmpeg::isBuffBlocked() {
 }
 
 void DecoderFFmpeg::updateVideoFrame() {
-	int isFrameAvailable = 0;
 	AVFrame* srcFrame = av_frame_alloc();
 	clock_t start = clock();
-	if (avcodec_send_packet(mVideoCodecContext, &mPacket) < 0) {
-		LOG("Error processing data. avcodec_send_packet\n");
+	int ret = avcodec_send_packet(mVideoCodecContext, mPacket);
+	if (ret != 0) {
+		LOG("Video frame update failed: avcodec_send_packet, %d \n", ret);
+		return;
+	}
+	ret = avcodec_receive_frame(mVideoCodecContext, srcFrame);
+	if (ret != 0) {
+		LOG("Video frame update failed: avcodec_receive_frame, %d \n", ret);
 		return;
 	}
 
-    if (avcodec_receive_frame(mVideoCodecContext, srcFrame) < 0){
-        LOG("Error processing data. avcodec_receive_frame\n");
-		return;
-    }
+	int width = srcFrame->width;
+	int height = srcFrame->height;
 
-	if (isFrameAvailable) {
-        int width = srcFrame->width;
-        int height = srcFrame->height;
+	const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
+	LOG("Video format w:%d h:%d f:%d \n", width, height, dstFormat);
+	AVFrame* dstFrame = av_frame_alloc();
+	av_frame_copy_props(dstFrame, srcFrame);
 
-        const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
-        AVFrame* dstFrame = av_frame_alloc();
-        av_frame_copy_props(dstFrame, srcFrame);
+	dstFrame->format = dstFormat;
 
-        dstFrame->format = dstFormat;
+	//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
+	int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
+	LOG("Number of bytes: %d \n", numBytes);
+	AVBufferRef* buffer = av_buffer_alloc(numBytes * sizeof(uint8_t));
+	//avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
+	LOG("Video image fill arrays \n");
+	av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
+	dstFrame->buf[0] = buffer;
 
-        //av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
-        int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
-        AVBufferRef* buffer = av_buffer_alloc(numBytes*sizeof(uint8_t));
-        //avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
-        av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width,height, 1);
-        dstFrame->buf[0] = buffer;
+	LOG("SWS Start \n");
+	SwsContext* conversion = sws_getContext(width,
+		height,
+		(AVPixelFormat)srcFrame->format,
+		width,
+		height,
+		dstFormat,
+		SWS_FAST_BILINEAR,
+		nullptr,
+		nullptr,
+		nullptr);
+	LOG("SWS End \n");
+	sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
+	sws_freeContext(conversion);
 
-        SwsContext* conversion = sws_getContext(width,
-                                                height,
-                                                (AVPixelFormat)srcFrame->format,
-                                                width,
-                                                height,
-                                                dstFormat,
-                                                SWS_FAST_BILINEAR,
-                                                nullptr,
-                                                nullptr,
-                                                nullptr);
-        sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
-        sws_freeContext(conversion);
+	dstFrame->format = dstFormat;
+	dstFrame->width = srcFrame->width;
+	dstFrame->height = srcFrame->height;
 
-        dstFrame->format = dstFormat;
-        dstFrame->width = srcFrame->width;
-        dstFrame->height = srcFrame->height;
+	av_frame_free(&srcFrame);
 
-        av_frame_free(&srcFrame);
+	LOG("updateVideoFrame = %f\n", (float)(clock() - start) / CLOCKS_PER_SEC);
 
-        LOG("updateVideoFrame = %f\n", (float)(clock() - start) / CLOCKS_PER_SEC);
-
-		std::lock_guard<std::mutex> lock(mVideoMutex);
-		mVideoFrames.push(dstFrame);
-		updateBufferState();
-	}
+	std::lock_guard<std::mutex> lock(mVideoMutex);
+	mVideoFrames.push(dstFrame);
+	updateBufferState();
 }
 
 void DecoderFFmpeg::updateAudioFrame() {
-	int isFrameAvailable = 0;
 	AVFrame* frameDecoded = av_frame_alloc();
 
-    //if (avcodec_decode_audio4(mAudioCodecContext, frameDecoded, &isFrameAvailable, &mPacket < 0)
-    if (avcodec_send_packet(mAudioCodecContext, &mPacket) != 0){
-        LOG("Error processing data. avcodec_send_packet\n");
+	int ret = avcodec_send_packet(mAudioCodecContext, mPacket);
+	if (ret != 0) {
+		LOG("Audio frame update failed: avcodec_send_packet, %d \n", ret);
 		return;
-    }
-    
+	}
+	ret = avcodec_receive_frame(mAudioCodecContext, frameDecoded);
+	if (ret != 0) {
+		LOG("Audio frame update failed: avcodec_receive_frame, %d \n", ret);
+		return;
+	}
 
 	AVFrame* frame = av_frame_alloc();
 	frame->sample_rate = frameDecoded->sample_rate;

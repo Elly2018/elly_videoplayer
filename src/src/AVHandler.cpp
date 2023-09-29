@@ -41,8 +41,11 @@ bool AVHandler::isDecoderRunning() const {
 }
 
 double AVHandler::getVideoFrame(void** frameData) {
-	if (mIDecoder == nullptr || !mIDecoder->getVideoInfo().isEnabled || mDecoderState == SEEK) {
-		LOG("Video is not available. \n");
+	bool decoder_null = mIDecoder == nullptr;
+	bool decoder_disable = !mIDecoder->getVideoInfo().isEnabled;
+	bool decoder_seek = mDecoderState == SEEK;
+	if (decoder_null || decoder_disable || decoder_seek) {
+		LOG("Video is not available. %d %d %d \n", decoder_null, decoder_disable, decoder_seek);
 		*frameData = nullptr;
 		return -1;
 	}
