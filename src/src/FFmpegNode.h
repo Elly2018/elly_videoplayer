@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ViveMediaDecoder.h"
+#include <string>
 
 //#include <godot_cpp/classes/audio_stream_playback.hpp>
 //#include <godot_cpp/classes/audio_stream_player.hpp>

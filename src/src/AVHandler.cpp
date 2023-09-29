@@ -1,13 +1,13 @@
 //========= Copyright 2015-2019, HTC Corporation. All rights reserved. ===========
 
 #include "AVHandler.h"
-//#include "DecoderFFmpeg.h"
+#include "DecoderFFmpeg.h"
 #include "Logger.h"
 
 AVHandler::AVHandler() {
 	mDecoderState = UNINITIALIZED;
 	mSeekTime = 0.0;
-	//mIDecoder = std::make_unique<DecoderFFmpeg>();
+	mIDecoder = std::make_unique<DecoderFFmpeg>();
 }
 
 void AVHandler::init(const char* filePath) {

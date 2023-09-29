@@ -1,10 +1,10 @@
 //========= Copyright 2015-2019, HTC Corporation. All rights reserved. ===========
-
 #include "Logger.h"
 
 #pragma warning(disable:4996)
 
 Logger* Logger::_instance;
+
 Logger::Logger() {
 	fclose(stdout);
 	freopen("NativeLog.txt", "a", stdout);

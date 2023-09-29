@@ -1,4 +1,5 @@
 #include "FFmpegNode.h"
+#include "Logger.h"
 
 #include <cstring>
 
@@ -10,6 +11,7 @@
 using namespace godot;
 
 void FFmpegNode::_init_media() {
+	emit_signal("message", "start init media");
 	video_playback = nativeIsVideoEnabled(id);
 	if (video_playback) {
 		first_frame = true;
@@ -27,7 +29,10 @@ void FFmpegNode::_init_media() {
 }
 
 bool FFmpegNode::load_path(String path) {
-	if (nativeGetDecoderState(id) > 1) {
+	emit_signal("message", String("start load path: ") + path);
+	int d_state = nativeGetDecoderState(id);
+	if (d_state > 1) {
+		emit_signal("error", String("Decoder state: ") + String(std::to_string(d_state).c_str()));
 		return false;
 	}
 
@@ -40,6 +45,7 @@ bool FFmpegNode::load_path(String path) {
 	if (is_loaded) {
 		_init_media();
 	} else {
+		emit_signal("message", String("State change to UNINITIALIZED"));
 		state = UNINITIALIZED;
 	}
 
@@ -47,7 +53,10 @@ bool FFmpegNode::load_path(String path) {
 }
 
 void FFmpegNode::load_path_async(String path) {
-	if (nativeGetDecoderState(id) > 1) {
+	emit_signal("message", String("start load path: ") + path);
+	int d_state = nativeGetDecoderState(id);
+	if (d_state > 1) {
+		emit_signal("error", String("Decoder state: ") + String(std::to_string(d_state).c_str()));
 		emit_signal("async_loaded", false);
 		return;
 	}
@@ -57,11 +66,13 @@ void FFmpegNode::load_path_async(String path) {
 
 	nativeCreateDecoderAsync(cstr, id);
 
+	emit_signal("message", String("State change to LOADING"));
 	state = LOADING;
 }
 
 void FFmpegNode::play() {
 	if (state != INITIALIZED) {
+		emit_signal("message", String("play func failed, because state is not INITIALIZED"));
 		return;
 	}
 
@@ -263,7 +274,7 @@ void FFmpegNode::_process(float delta) {
 FFmpegNode::FFmpegNode() {
 	texture = Ref<ImageTexture>(memnew(ImageTexture));
 	image = Ref<Image>(memnew(Image()));
-
+	auto temp = Logger::instance();
 	// TODO: Implement audio.
 
 // 	player = memnew(AudioStreamPlayer);
@@ -297,4 +308,6 @@ void FFmpegNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("seek", "time"), &FFmpegNode::seek);
 
 	ADD_SIGNAL(MethodInfo("async_loaded", PropertyInfo(Variant::BOOL, "successful")));
+	ADD_SIGNAL(MethodInfo("message", PropertyInfo(Variant::STRING, "message")));
+	ADD_SIGNAL(MethodInfo("error", PropertyInfo(Variant::STRING, "message")));
 }
