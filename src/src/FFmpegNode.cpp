@@ -11,7 +11,7 @@
 using namespace godot;
 
 void FFmpegNode::_init_media() {
-	emit_signal("message", "start init media");
+	emit_signal("message", String("start init media"));
 	video_playback = nativeIsVideoEnabled(id);
 	if (video_playback) {
 		first_frame = true;
@@ -26,6 +26,7 @@ void FFmpegNode::_init_media() {
 	}
 
 	state = INITIALIZED;
+	emit_signal("message", String("start change to INITIALIZED"));
 }
 
 bool FFmpegNode::load_path(String path) {
@@ -45,6 +46,7 @@ bool FFmpegNode::load_path(String path) {
 	if (is_loaded) {
 		_init_media();
 	} else {
+		emit_signal("message", String("nativeGetDecoderState is false"));
 		emit_signal("message", String("State change to UNINITIALIZED"));
 		state = UNINITIALIZED;
 	}
@@ -84,6 +86,7 @@ void FFmpegNode::play() {
 
 	global_start_time = Time::get_singleton()->get_unix_time_from_system();
 
+	emit_signal("message", String("start change to Decoding"));
 	state = DECODING;
 }
 
@@ -98,6 +101,7 @@ void FFmpegNode::stop() {
 	audio_current_time = 0.0f;
 	paused = false;
 
+	emit_signal("message", String("start change to INITIALIZED"));
 	state = INITIALIZED;
 }
 
@@ -174,8 +178,11 @@ void FFmpegNode::_process(float delta) {
 			if (nativeGetDecoderState(id) == INITIALIZED) {
 				_init_media();
 				emit_signal("async_loaded", true);
+				emit_signal("message", String("Loading successful"));
 			} else if (nativeGetDecoderState(id) == -1) {
 				state = UNINITIALIZED;
+				emit_signal("error", String("Main loop, async loading failed, nativeGetDecoderState == -1"));
+				emit_signal("error", String("Init failed"));
 				emit_signal("async_loaded", false);
 			}
 		} break;

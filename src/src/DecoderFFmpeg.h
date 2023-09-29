@@ -43,8 +43,8 @@ private:
 	AVFormatContext* mAVFormatContext;
 	AVStream*		mVideoStream;
 	AVStream*		mAudioStream;
-	AVCodec*		mVideoCodec;
-	AVCodec*		mAudioCodec;
+	const AVCodec*		mVideoCodec;
+	const AVCodec*		mAudioCodec;
 	AVCodecContext*	mVideoCodecContext;
 	AVCodecContext*	mAudioCodecContext;
 

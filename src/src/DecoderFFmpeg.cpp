@@ -47,6 +47,8 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		return false;
 	}
 
+	LOG("Network init \n");
+	avformat_network_init();
 	//av_register_all();
 
 	if (mAVFormatContext == nullptr) {
@@ -87,6 +89,7 @@ bool DecoderFFmpeg::init(const char* filePath) {
 	double ctxDuration = (double)(mAVFormatContext->duration) / AV_TIME_BASE;
 
 	/* Video initialization */
+	LOG("Video initialization  \n");
 	int videoStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
 	if (videoStreamIndex < 0) {
 		LOG("video stream not found. \n");
@@ -97,7 +100,8 @@ bool DecoderFFmpeg::init(const char* filePath) {
         mVideoCodecContext = avcodec_alloc_context3(NULL);
         mVideoCodecContext->refs = 1;
         avcodec_parameters_to_context(mVideoCodecContext, mVideoStream->codecpar);
-		mVideoCodec = const_cast<AVCodec*>(mVideoCodecContext->codec);
+		LOG("Video codec id: (%d) \n", mVideoCodecContext->codec_id);
+		mVideoCodec = avcodec_find_decoder(mVideoCodecContext->codec_id);
 		if (mVideoCodec == nullptr) {
 			LOG("Video codec not available. \n");
 			return false;
@@ -122,6 +126,7 @@ bool DecoderFFmpeg::init(const char* filePath) {
 	}
 
 	/* Audio initialization */
+	LOG("Audio initialization  \n");
 	int audioStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
 	if (audioStreamIndex < 0) {
 		LOG("audio stream not found. \n");
@@ -131,7 +136,8 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		mAudioStream = mAVFormatContext->streams[audioStreamIndex];
 		mAudioCodecContext = avcodec_alloc_context3(NULL);
         avcodec_parameters_to_context(mAudioCodecContext, mAudioStream->codecpar);
-        mAudioCodec = const_cast<AVCodec*>(mAudioCodecContext->codec);
+		LOG("Audio codec id: (%d) \n", mAudioCodecContext->codec_id);
+        mAudioCodec = avcodec_find_decoder(mAudioCodecContext->codec_id);
 		if (mAudioCodec == nullptr) {
 			LOG("Audio codec not available. \n");
 			return false;
@@ -154,6 +160,7 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		//mAudioFrames.swap(decltype(mAudioFrames)());
 	}
 
+	LOG("Finished initialization \n");
 	mIsInitialized = true;
 
 	return true;
