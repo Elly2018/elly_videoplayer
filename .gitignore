@@ -2,6 +2,8 @@
 .scons-cache/
 *.os
 
+GDExtensionTemplate-build/
+
 # SConstruct
 .sconf_temp
 .sconsign.dblite
@@ -10,5 +12,11 @@
 # MacOS
 .DS_Store
 
+x64/
+VideoPlayer.dir/
+FFmpeg/
+godot-cpp/
+
 # Editors
 .vscode/
+/SDL-main

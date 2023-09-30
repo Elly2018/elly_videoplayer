@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 from glob import glob
 from pathlib import Path
+import platform
 
 # TODO: Do not copy environment after godot-cpp/test is updated <https://github.com/godotengine/godot-cpp/blob/master/test/SConstruct>.
 env = SConscript("godot-cpp/SConstruct")
 
+if env['platform'] == "windows" and not env["use_mingw"]:
+    env.msvc = True
+else:
+    env.msvc = False
+
 # Add source files.
-env.Append(CPPPATH=["src/"])
-sources = Glob("src/*.cpp")
+env.Append(CPPPATH=["ffmpeg"])
+# env.Append(LIBPATH=["ffmpeg/libavcodec", "ffmpeg/libavformat", "ffmpeg/libavutil", "ffmpeg/libswresample", "ffmpeg/libswscale"])
+sources = Glob("src/**.cpp")
 
 # Find gdextension path even if the directory or extension is renamed (e.g. project/addons/example/example.gdextension).
 (extension_path,) = glob("project/addons/*/*.gdextension")
@@ -48,5 +55,7 @@ else:
         ),
         source=sources,
     )
+
+# env.Prepend(LIB=["libavcodec", "libavformat", "libavutil", "libswresample", "libswscale"])
 
 Default(library)
