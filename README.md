@@ -1,26 +1,39 @@
-# gdextension
+# gd-videoplayer
 
-GDExtension template that automatically builds into a self-contained addon for the Godot Asset Library.
+A GDExtension for godot 4.x to play video, this is a wrapper of ffmpeg for decode
+
  
 ### Getting started:
-1. Clone this repository (or a new repository with this template) with submodules.
-    - `git clone --recurse-submodules https://github.com/nathanfranke/gdextension.git` \
-    - `cd gdextension`
-2. Update to the latest `godot-cpp`.
-    - `git submodule update --remote`
-2. Build a debug binary for the current platform.
-    - `scons`
-3. Import, edit, and play `project/` using Godot Engine 4+.
-    - Alternatively, run the project using the terminal.
-      - Either alias an existing executable to godot4: `alias godot4="~/workspace/godot/bin/godot.linuxbsd.tools.x86_64"`
-      - Or, on Arch Linux, install `godot4-bin` from the AUR (`yay -S aur/godot4-bin`).
-    - Finally, `godot4 --path project/`
-4. Check the output:
-   ```
-   Hello GDScript!
-   Hello GDExtension Node!
-   Hello GDExtension Singleton!
-   ```
+
+##### Requirement
+
+- [git](https://git-scm.com) tools
+- cURL tool
+	- Which for windows you can use powershell (admin) to download: `choco install curl`
+
+#### 1. Open build/windows_pull_submodule.bat
+- This will clone the godot-cpp 4.1 in the root folder
+- And it will download the ffmpeg 6.0 windows build from github and unzip in the src folder
+- In the end your file structure will looks like below
+
+- root
+	- build
+	- src
+		- src
+		- ffmpeg (Add)
+	- godot-cpp (Add)
+	
+#### 2. Open build/windows_codegen.bat.
+
+- This will generate the solution in the `GDExtensionTemplate-build` folder
+
+#### 3. Open GDExtensionTemplate-build/GDExtensionTemplate.sln.
+
+- You cannot just build the solution for some reason, I can't find a way to change Runtime library from /MDd to /MD
+- So first, open property of GDExtensionTemplate project
+- Change C/C++ -> Code Generation -> Runtime Library from /MDd to /MD
+	- If you don't change this options you will getting bunch of link error
+- After build is finish and success, the output will be in the `GDExtensionTemplate-build\GDExtensionTemplate` folder
 
 ### Repository structure:
 - `project/` - Godot project boilerplate.
