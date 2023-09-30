@@ -42,7 +42,7 @@ A GDExtension for godot 4.x to play video, this is a wrapper of ffmpeg for decod
 	- `src/` - Wrapper source code.
 - `godot-cpp/` - Submodule needed for GDExtension compilation.
 
-### Platfrom CheckList
+### Supported platfrom
 | Platform | Video | Audio | XR Support |
 |-|-|-|-|
 | Windows | O | X | X |
