@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://brmlmtpgp5cya"]
+
+[ext_resource type="Shader" path="res://Shader/shader.gdshader" id="1_35wnn"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_llh3e"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_35wnn")
+shader_parameter/tex = SubResource("NoiseTexture2D_llh3e")

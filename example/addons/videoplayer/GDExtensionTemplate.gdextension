@@ -1,0 +1,12 @@
+[configuration]
+
+entry_symbol = "gdextension_init"
+compatibility_minimum = 4.1
+
+[dependencies]
+
+windows.x86_64 = {}
+
+[libraries]
+
+windows.x86_64 = "lib/Windows-AMD64/GDExtensionTemplate.dll"

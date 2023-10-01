@@ -1,0 +1,49 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="VideoPlayer"
+config/tags=PackedStringArray("audio", "video")
+run/main_scene="res://Scene/DemoScene.tscn"
+config/features=PackedStringArray("4.1", "C#", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[audio]
+
+driver/enable_input=true
+
+[display]
+
+window/size/borderless=true
+window/vsync/vsync_mode=0
+
+[dotnet]
+
+project/assembly_name="VideoPlayer"
+
+[editor_plugins]
+
+enabled=PackedStringArray()
+
+[navigation]
+
+avoidance/enable_file_logging=true
+
+[physics]
+
+3d/physics_engine="JoltPhysics3D"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=2
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+anti_aliasing/quality/msaa_3d=1

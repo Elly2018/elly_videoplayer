@@ -1,0 +1,57 @@
+[gd_scene load_steps=11 format=3 uid="uid://dn3rmx1bi81lv"]
+
+[ext_resource type="Environment" uid="uid://co4hk2iqv5oxv" path="res://Environment/DemoScene.tres" id="1_11yc7"]
+[ext_resource type="PackedScene" uid="uid://bj6iuse67y4gl" path="res://Prefab/sphere.tscn" id="3_ihpox"]
+[ext_resource type="Script" path="res://Script/CameraControllerMouse.cs" id="4_h5p8w"]
+
+[sub_resource type="Environment" id="Environment_24h51"]
+background_color = Color(1, 1, 1, 1)
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_3w5hy"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_31pxy"]
+viewport_path = NodePath("Sprite3D/SubViewport")
+
+[sub_resource type="Gradient" id="Gradient_kw0tj"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_fpqrf"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_x327m"]
+color_ramp = SubResource("Gradient_kw0tj")
+noise = SubResource("FastNoiseLite_fpqrf")
+
+[sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_yohlv"]
+buffer_length = 0.1
+
+[node name="Scene" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_24h51")
+camera_attributes = SubResource("CameraAttributesPractical_3w5hy")
+
+[node name="Node3D" type="Node3D" parent="." node_paths=PackedStringArray("self")]
+script = ExtResource("4_h5p8w")
+sensitivity = 1.0
+self = NodePath(".")
+
+[node name="Camera3D" type="Camera3D" parent="Node3D"]
+environment = ExtResource("1_11yc7")
+current = true
+fov = 90.0
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5.9907)
+texture = SubResource("ViewportTexture_31pxy")
+
+[node name="SubViewport" type="SubViewport" parent="Sprite3D"]
+size = Vector2i(192, 144)
+render_target_update_mode = 4
+
+[node name="TextureRect" type="TextureRect" parent="Sprite3D/SubViewport"]
+offset_right = 512.0
+offset_bottom = 512.0
+texture = SubResource("NoiseTexture2D_x327m")
+stretch_mode = 2
+
+[node name="Sphere" parent="." instance=ExtResource("3_ihpox")]
+audio_stream_Gen = SubResource("AudioStreamGenerator_yohlv")

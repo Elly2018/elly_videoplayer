@@ -241,11 +241,11 @@ void nativeGetAudioFormat(int id, int& channel, int& frequency, float& totalTime
 	totalTime = (float)(audioInfo.totalTime);
 }
 
-float nativeGetAudioData(int id, unsigned char** audioData, int& frameSize) {
+float nativeGetAudioData(int id, unsigned char** audioData, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
     std::shared_ptr<VideoContext> videoCtx;
 	if (!getVideoContext(id, videoCtx)) { return -1.0f; }
 
-	return (float) (videoCtx->avhandler->getAudioFrame(audioData, frameSize));
+	return (float) (videoCtx->avhandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample));
 }
 
 void nativeFreeAudioData(int id) {

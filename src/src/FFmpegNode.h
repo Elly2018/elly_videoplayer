@@ -4,7 +4,11 @@
 #include <string>
 
 #include <godot_cpp/classes/audio_stream_playback.hpp>
+#include <godot_cpp/classes/audio_stream_wav.hpp>
 #include <godot_cpp/classes/audio_stream_player.hpp>
+#include <godot_cpp/classes/audio_stream_wav.hpp>
+#include <godot_cpp/classes/audio_stream_generator.hpp>
+#include <godot_cpp/classes/audio_stream_generator_playback.hpp>
 #include <godot_cpp/classes/global_constants.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/node.hpp>
@@ -38,8 +42,9 @@ private:
 	};
 
 	// TODO: Implement audio.
- 	AudioStreamPlayer *player;
- 	Ref<AudioStreamPlayback> playback;
+	AudioStreamPlayer* player;
+	AudioStreamGenerator* generator;
+	AudioStreamGeneratorPlayback* playback;
 
 	Ref<ImageTexture> texture;
 	Ref<Image> image;
@@ -55,6 +60,7 @@ private:
 	int width = 0;
 	int height = 0;
 	float video_length = 0.0f;
+	float phase = 0;
 	double video_current_time = 0.0f;
 	int data_size = 0;
 
@@ -97,6 +103,13 @@ public:
 
 	void _process(float delta);
  	void _physics_process(float delta);
+
+	void set_player(AudioStreamPlayer* _player);
+	AudioStreamPlayer* get_player() const;
+	void set_gen_streamer(AudioStreamGenerator* _gen);
+	AudioStreamGenerator* get_gen_streamer() const;
+	void set_gen_streamer_playback(AudioStreamGeneratorPlayback* _gen);
+	AudioStreamGeneratorPlayback* get_gen_streamer_playback() const;
 
 	FFmpegNode();
 	~FFmpegNode();

@@ -2,8 +2,8 @@
 #include "Logger.h"
 
 #include <cstring>
+#include <math.h>
 
-#include <godot_cpp/classes/audio_stream_generator.hpp>
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -23,6 +23,9 @@ void FFmpegNode::_init_media() {
 	audio_playback = nativeIsAudioEnabled(id);
 	if (audio_playback) {
 		nativeGetAudioFormat(id, channels, frequency, audio_length);
+		generator->set_mix_rate(frequency);
+		LOG("Audio info: %d %d %d \n", channels, frequency, audio_length);
+		player->play();
 	}
 
 	state = INITIALIZED;
@@ -82,6 +85,7 @@ void FFmpegNode::play() {
 		paused = false;
 	} else {
 		nativeStartDecoding(id);
+		player->play();
 	}
 
 	global_start_time = Time::get_singleton()->get_unix_time_from_system();
@@ -100,6 +104,7 @@ void FFmpegNode::stop() {
 	video_current_time = 0.0f;
 	audio_current_time = 0.0f;
 	paused = false;
+	player->stop();
 
 	emit_signal("message", String("start change to INITIALIZED"));
 	state = INITIALIZED;
@@ -117,6 +122,7 @@ void FFmpegNode::set_paused(bool p_paused) {
 	} else {
 		global_start_time = Time::get_singleton()->get_unix_time_from_system() - hang_time;
 	}
+	player->set_stream_paused(p_paused);
 }
 
 bool FFmpegNode::is_paused() const {
@@ -165,14 +171,54 @@ void FFmpegNode::seek(float p_time) {
 void FFmpegNode::_process(float delta) {
 	if (state > INITIALIZED && state != SEEK && state != END_OF_FILE) {
 		// TODO: Implement audio.
-		unsigned char *audio_data = nullptr;
+		unsigned char* raw_audio_data = nullptr;
 		int audio_size = 0;
-		double audio_time = nativeGetAudioData(id, &audio_data, audio_size);
-		if (audio_time != -1.0f) {
+		int channel = 0;
+		size_t byte_per_sample = 0;
+		double audio_time = nativeGetAudioData(id, &raw_audio_data, audio_size, channel, byte_per_sample);
+		if (playback == nullptr) {
 			nativeFreeAudioData(id);
 		}
-	}
+		else if (playback != nullptr && audio_time != -1.0f) {
+			int c = playback->get_frames_available();
+			float increment = 220.0f / 44100.0f;
+			while (c > 0) {
+				float si = Math::sin(phase * (float)Math_TAU);
+				const Vector2 f = Vector2(1.0, 1.0) * si;
+				emit_signal("audio", f);
+				phase = Math::fmod(phase + increment, 1.0f);
+				c -= 1;
+			}
+			PackedByteArray audio_data = PackedByteArray();
+			audio_data.resize(audio_size * byte_per_sample);
+			memcpy(audio_data.ptrw(), raw_audio_data, audio_size * byte_per_sample);
+			nativeFreeAudioData(id);
+			//audio_data.resize(audio_size);
+			LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
+			union {
+				float result;
+				signed char a[4];
+			} u_data;
+			u_data.result = 0;
 
+			goto passout;
+			for (int i = 0; i < audio_size * byte_per_sample && c > 0; i+= byte_per_sample) {
+				float out = 0;
+				for (int k = 0; k < byte_per_sample; k++) {
+					u_data.a[k] = audio_data[i + k];
+				}
+				out = u_data.result;
+				float increment = 440.0f / 44100.0f;
+				float si = Math::sin(phase * (float)Math_TAU);
+				const Vector2 f = Vector2(1.0, 1.0) * si;
+				playback->push_frame(f);
+				phase = Math::fmod(phase + increment, 1.0f);
+				c -= 1;
+				LOG("Push frame: [%f, %f, %f, %f] \n", out, si, f.y, phase);
+			}
+		}
+	}
+passout:
 	switch (state) {
 		case LOADING: {
 			if (nativeGetDecoderState(id) == INITIALIZED) {
@@ -211,7 +257,7 @@ void FFmpegNode::_process(float delta) {
 				bool frame_ready = false;
 
 				nativeGrabVideoFrame(id, &frame_data, frame_ready);
-
+				
 				if (frame_ready) {
 					PackedByteArray image_data;
 					LOG("data size: %d \n", data_size);
@@ -256,6 +302,7 @@ void FFmpegNode::_process(float delta) {
 // TODO: Implement audio.
 
 void FFmpegNode::_physics_process(float delta) {
+	/*
   	if (!audio_playback || paused || state == UNINITIALIZED || state == EOF) {
   		return;
   	}
@@ -273,21 +320,48 @@ void FFmpegNode::_physics_process(float delta) {
   	if (state == DECODING && frame_data != nullptr && !player->is_playing()) {
   		audio_current_time = Time::get_singleton()->get_unix_time_from_system() - global_start_time;
   	}
+	*/
   }
 
+void FFmpegNode::set_player(AudioStreamPlayer* _player)
+{
+	player = _player;
+	player->set_autoplay(true);
+}
+
+AudioStreamPlayer* FFmpegNode::get_player() const
+{
+	return player;
+}
+
+void FFmpegNode::set_gen_streamer(AudioStreamGenerator* _gen)
+{
+	generator = _gen;
+	if (player != nullptr) {
+		player->set_stream(generator);
+	}
+}
+
+AudioStreamGenerator* FFmpegNode::get_gen_streamer() const
+{
+	return generator;
+}
+
+void FFmpegNode::set_gen_streamer_playback(AudioStreamGeneratorPlayback* _gen)
+{
+	playback = _gen;
+}
+
+AudioStreamGeneratorPlayback* FFmpegNode::get_gen_streamer_playback() const
+{
+	return playback;
+}
 FFmpegNode::FFmpegNode() {
 	image = Image::create(1,1,false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
 
 	auto temp = Logger::instance();
-	// TODO: Implement audio.
-
-	player = new AudioStreamPlayer();
-	player->set_autoplay(true);
-  	add_child(player);
-  	Ref<AudioStreamGenerator> generator = new AudioStreamGenerator();
-  	player->set_stream(generator);
-  	playback = player->get_stream_playback();
+	LOG("FFmpegNode instance created. \n");
 }
 
 FFmpegNode::~FFmpegNode() {
@@ -312,8 +386,15 @@ void FFmpegNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("has_loop"), &FFmpegNode::has_loop);
 	ClassDB::bind_method(D_METHOD("get_playback_position"), &FFmpegNode::get_playback_position);
 	ClassDB::bind_method(D_METHOD("seek", "time"), &FFmpegNode::seek);
+	ClassDB::bind_method(D_METHOD("set_player", "player"), &FFmpegNode::set_player);
+	ClassDB::bind_method(D_METHOD("get_player"), &FFmpegNode::get_player);
+	ClassDB::bind_method(D_METHOD("set_gen_streamer", "streamer"), &FFmpegNode::set_gen_streamer);
+	ClassDB::bind_method(D_METHOD("get_gen_streamer"), &FFmpegNode::get_gen_streamer);
+	ClassDB::bind_method(D_METHOD("set_gen_streamer_playback", "streamer"), &FFmpegNode::set_gen_streamer_playback);
+	ClassDB::bind_method(D_METHOD("get_gen_streamer_playback"), &FFmpegNode::get_gen_streamer_playback);
 
 	ADD_SIGNAL(MethodInfo("async_loaded", PropertyInfo(Variant::BOOL, "successful")));
+	ADD_SIGNAL(MethodInfo("audio", PropertyInfo(Variant::VECTOR2, "v2")));
 	ADD_SIGNAL(MethodInfo("message", PropertyInfo(Variant::STRING, "message")));
 	ADD_SIGNAL(MethodInfo("error", PropertyInfo(Variant::STRING, "message")));
 }

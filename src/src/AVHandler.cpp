@@ -53,14 +53,17 @@ double AVHandler::getVideoFrame(void** frameData) {
 	return mIDecoder->getVideoFrame(frameData);
 }
 
-double AVHandler::getAudioFrame(uint8_t** outputFrame, int& frameSize) {
-	if (mIDecoder == nullptr || !mIDecoder->getAudioInfo().isEnabled || mDecoderState == SEEK) {
-		LOG("Audio is not available. \n");
+double AVHandler::getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
+	bool decoder_null = mIDecoder == nullptr;
+	bool decoder_disable = !mIDecoder->getAudioInfo().isEnabled;
+	bool decoder_seek = mDecoderState == SEEK;
+	if (decoder_null || decoder_disable || decoder_seek) {
+		LOG("Audio is not available. %d %d %d \n", decoder_null, decoder_disable, decoder_seek);
 		*outputFrame = nullptr;
 		return -1;
 	}
 	
-	return mIDecoder->getAudioFrame(outputFrame, frameSize);
+	return mIDecoder->getAudioFrame(outputFrame, frameSize, nb_channel, byte_per_sample);
 }
 
 void AVHandler::freeVideoFrame() {
