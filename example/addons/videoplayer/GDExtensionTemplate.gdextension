@@ -9,4 +9,4 @@ windows.x86_64 = {}
 
 [libraries]
 
-windows.x86_64 = "lib/Windows-AMD64/GDExtensionTemplate.dll"
+windows.x86_64 = "lib/Windows-AMD64/gd_videoplayer-d.dll"

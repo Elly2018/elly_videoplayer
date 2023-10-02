@@ -13,6 +13,8 @@ target_link_directories( ${PROJECT_NAME} PUBLIC
   "ffmpeg/lib"
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gd_videoplayer")
+
 if( WIN32 )
 # Windows config
 target_link_libraries(${PROJECT_NAME} PRIVATE avcodec.lib)
