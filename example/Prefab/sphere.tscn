@@ -10,7 +10,7 @@ uv2_padding = 0.0
 rings = 64
 
 [sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_cr308"]
-buffer_length = 0.25
+buffer_length = 0.1
 
 [node name="Sphere" type="Node3D" node_paths=PackedStringArray("geo", "player", "audio_stream")]
 transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0.203564, -0.109128, 0.122446)
