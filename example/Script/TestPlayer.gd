@@ -30,6 +30,7 @@ func _ready():
 	fill_buffer()
 	
 func _process(_delta):
+	# fill_buffer();
 	if (!enable):
 		return
 	var tex = player.get_video_texture();
@@ -37,9 +38,10 @@ func _process(_delta):
 	
 
 func fill_buffer():
-	var increment = 0.0 / 44100;
+	var increment = 100.0 / 44100;
 	var c = audio_stream_Gen_playback.get_frames_available()
-	print(c)
+	if(c != 0):
+		print(c)
 	while c > 0:
 		var f = sin(phase * TAU);
 		audio_stream_Gen_playback.push_frame(Vector2(1.0,1.0) * f);

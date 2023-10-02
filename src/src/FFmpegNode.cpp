@@ -280,7 +280,6 @@ void FFmpegNode::_physics_process(float delta) {
 				} u_data;
 				u_data.result = 0;
 
-				List<Vector2> fs = List<Vector2>();
 				for (int i = 0; i < audio_size * byte_per_sample * channel; i += (byte_per_sample * channel)) {
 					float* out = new float[channel];
 					for (int j = 0; j < channel; j++) { // j have byte per sample padding for each sample
@@ -298,40 +297,30 @@ void FFmpegNode::_physics_process(float delta) {
 						right = out[1];
 					}
 					lastframe = Vector2(left, right);
-					fs.push_back(Vector2(left, right));
+					audioFrame.push_back(Vector2(left, right));
 					playback->push_frame(lastframe);
 					LOG("Push frame, out: %f, sin: [%f, %f], frame: [%f, %f] \n", out, left, right, lastframe.x, lastframe.y);
 					delete[] out;
 				}
-				audioFrame.push_back(fs);
 			}
 
-			bool haveFrame = audioFrame.size() > 0;
-			List<Vector2> fra = List<Vector2>();
-			if(haveFrame) fra = audioFrame.front()->get();
 			bool haveUpdate = false;
-			float increment = sampleRate / 44100.0f;
-			while (c > 0) {
+			float increment = 220.0f / 44100.0f;
+			while (c > 0 && audioFrame.size() > 0) {
 				haveUpdate = true;
 				bool pass = false;
-				if (haveFrame) {
-					if (fra.size() > 0) {
-						pass = true;
-						Vector2 element = fra.front()->get();
-						Vector2 pf = Vector2(element.x * sin(phase.x * Math_TAU), element.y * sin(phase.y * Math_TAU));
-						playback->push_frame(pf);
-						fra.pop_front();
-						lastframe = element;
-					}
-				}
-				if (!pass) {
-					Vector2 pf = Vector2(lastframe.x * sin(phase.x * Math_TAU), lastframe.y * sin(phase.y * Math_TAU));
+				if (audioFrame.size() > 0) {
+					pass = true;
+					Vector2 element = audioFrame.front()->get();
+					Vector2 pf = Vector2(element.x * sin(phase.x * Math_TAU), element.y * sin(phase.y * Math_TAU));
 					playback->push_frame(pf);
+					audioFrame.pop_front();
+					lastframe = element;
 				}
 				phase = Vector2(fmod(phase.x + increment, 1.0), fmod(phase.y + increment, 1.0));
 				c -= 1;
 			}
-			if (haveUpdate && haveFrame) {
+			if (haveUpdate) {
 				audioFrame.pop_front();
 			}
 		}
@@ -374,7 +363,7 @@ AudioStreamGeneratorPlayback* FFmpegNode::get_gen_streamer_playback() const
 FFmpegNode::FFmpegNode() {
 	image = Image::create(1,1,false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
-	audioFrame = List<List<Vector2>>();
+	audioFrame = List<Vector2>();
 
 	auto temp = Logger::instance();
 	LOG("FFmpegNode instance created. \n");

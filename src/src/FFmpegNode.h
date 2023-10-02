@@ -62,7 +62,7 @@ private:
 	float video_length = 0.0f;
 	Vector2 phase = Vector2();
 	Vector2 lastframe = Vector2();
-	List<List<Vector2>> audioFrame;
+	List<Vector2> audioFrame;
 	double video_current_time = 0.0f;
 	int data_size = 0;
 
