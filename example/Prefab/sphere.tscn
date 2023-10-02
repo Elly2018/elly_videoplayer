@@ -1,9 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://bj6iuse67y4gl"]
+[gd_scene load_steps=5 format=3 uid="uid://bj6iuse67y4gl"]
 
 [ext_resource type="Script" path="res://Script/TestPlayer.gd" id="1_y61al"]
 [ext_resource type="Material" uid="uid://brmlmtpgp5cya" path="res://Material/shader_material.tres" id="2_ycshh"]
-
-[sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_oywm7"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_2ikhj"]
 lightmap_size_hint = Vector2i(17, 9)
@@ -12,6 +10,7 @@ uv2_padding = 0.0
 rings = 64
 
 [sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_cr308"]
+buffer_length = 0.25
 
 [node name="Sphere" type="Node3D" node_paths=PackedStringArray("geo", "player", "audio_stream")]
 transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0.203564, -0.109128, 0.122446)
@@ -19,8 +18,7 @@ script = ExtResource("1_y61al")
 enable = true
 geo = NodePath("MeshInstance3D")
 player = NodePath("FFmpegNode")
-audio_stream = NodePath("Audio/Player")
-audio_stream_Gen = SubResource("AudioStreamGenerator_oywm7")
+audio_stream = NodePath("Player")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 0, 0)
@@ -31,11 +29,8 @@ mesh = SubResource("SphereMesh_2ikhj")
 
 [node name="FFmpegNode" type="FFmpegNode" parent="."]
 
-[node name="Audio" type="Node" parent="."]
-
-[node name="Player" type="AudioStreamPlayer" parent="Audio"]
+[node name="Player" type="AudioStreamPlayer" parent="."]
 stream = SubResource("AudioStreamGenerator_cr308")
-volume_db = -12.041
 autoplay = true
 
 [connection signal="async_loaded" from="FFmpegNode" to="." method="_load_finish"]

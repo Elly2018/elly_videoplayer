@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://dn3rmx1bi81lv"]
+[gd_scene load_steps=10 format=3 uid="uid://dn3rmx1bi81lv"]
 
 [ext_resource type="Environment" uid="uid://co4hk2iqv5oxv" path="res://Environment/DemoScene.tres" id="1_11yc7"]
 [ext_resource type="PackedScene" uid="uid://bj6iuse67y4gl" path="res://Prefab/sphere.tscn" id="3_ihpox"]
@@ -19,9 +19,6 @@ viewport_path = NodePath("Sprite3D/SubViewport")
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_x327m"]
 color_ramp = SubResource("Gradient_kw0tj")
 noise = SubResource("FastNoiseLite_fpqrf")
-
-[sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_yohlv"]
-buffer_length = 0.1
 
 [node name="Scene" type="Node3D"]
 
@@ -54,4 +51,3 @@ texture = SubResource("NoiseTexture2D_x327m")
 stretch_mode = 2
 
 [node name="Sphere" parent="." instance=ExtResource("3_ihpox")]
-audio_stream_Gen = SubResource("AudioStreamGenerator_yohlv")

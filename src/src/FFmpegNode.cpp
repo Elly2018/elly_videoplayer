@@ -175,46 +175,64 @@ void FFmpegNode::_process(float delta) {
 		int audio_size = 0;
 		int channel = 0;
 		size_t byte_per_sample = 0;
+		/*
+		* AV_SAMPLE_FMT_FLT will usually give us byte_per_sample = 4
+		*/
 		double audio_time = nativeGetAudioData(id, &raw_audio_data, audio_size, channel, byte_per_sample);
 		if (playback == nullptr) {
 			nativeFreeAudioData(id);
 		}
-		else if (playback != nullptr && audio_time != -1.0f) {
+		else {
 			int c = playback->get_frames_available();
-			float increment = 220.0f / 44100.0f;
-			while (c > 0) {
-				float si = Math::sin(phase * (float)Math_TAU);
-				const Vector2 f = Vector2(1.0, 1.0) * si;
-				emit_signal("audio", f);
-				phase = Math::fmod(phase + increment, 1.0f);
-				c -= 1;
-			}
-			PackedByteArray audio_data = PackedByteArray();
-			audio_data.resize(audio_size * byte_per_sample);
-			memcpy(audio_data.ptrw(), raw_audio_data, audio_size * byte_per_sample);
-			nativeFreeAudioData(id);
-			//audio_data.resize(audio_size);
-			LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
-			union {
-				float result;
-				signed char a[4];
-			} u_data;
-			u_data.result = 0;
+			LOG("get_frames_available: %d \n", c);
+			if (audio_time != -1.0f) {
+				PackedByteArray audio_data = PackedByteArray();
+				audio_data.resize(audio_size * byte_per_sample * channel);
+				memcpy(audio_data.ptrw(), raw_audio_data, audio_size * byte_per_sample);
+				nativeFreeAudioData(id);
+				//audio_data.resize(audio_size);
+				LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
+				union {
+					float result;
+					signed char a[4];
+				} u_data;
+				u_data.result = 0;
 
-			goto passout;
-			for (int i = 0; i < audio_size * byte_per_sample && c > 0; i+= byte_per_sample) {
-				float out = 0;
-				for (int k = 0; k < byte_per_sample; k++) {
-					u_data.a[k] = audio_data[i + k];
+				for (int i = 0; i < audio_size * byte_per_sample * channel; i += (byte_per_sample * channel)) {
+					float* out = new float[channel];
+					for (int j = 0; j < channel; j++) { // j have byte per sample padding for each sample
+						for (int k = 0; k < byte_per_sample; k++) { // read four byte
+							u_data.a[k] = audio_data[i + (j * byte_per_sample) + k];
+						}
+						out[j] = u_data.result;
+					}
+					float left = out[0];
+					float right;
+					if (channel <= 1) {
+						right = out[0];
+					}
+					else {
+						right = out[1];
+					}
+					//float increment_x = left / 44100.0f;
+					//float increment_y = right / 44100.0f;
+					//float si_x = Math::sin(phase.x * (float)Math_TAU);
+					//float si_y = Math::sin(phase.y * (float)Math_TAU);
+					lastframe = Vector2(left, right);
+					//const Vector2 f = Vector2(left, right);
+					audioFrame.push_back(Vector2(left, right));
+					playback->push_frame(lastframe);
+					//phase = Vector2(Math::fmod(phase.x + increment_x, 1.0f), Math::fmod(phase.y + increment_y, 1.0f));
+					LOG("Push frame, out: %f, sin: [%f, %f], frame: [%f, %f] \n", out, left, right, lastframe.x, lastframe.y);
+					delete[] out;
 				}
-				out = u_data.result;
-				float increment = 440.0f / 44100.0f;
-				float si = Math::sin(phase * (float)Math_TAU);
-				const Vector2 f = Vector2(1.0, 1.0) * si;
-				playback->push_frame(f);
-				phase = Math::fmod(phase + increment, 1.0f);
+			}
+
+			while (c > 0 && audioFrame.size() > 0) {
+				Vector2 element = audioFrame.front()->get();
+				playback->push_frame(element);
+				audioFrame.pop_front();
 				c -= 1;
-				LOG("Push frame: [%f, %f, %f, %f] \n", out, si, f.y, phase);
 			}
 		}
 	}
@@ -359,6 +377,7 @@ AudioStreamGeneratorPlayback* FFmpegNode::get_gen_streamer_playback() const
 FFmpegNode::FFmpegNode() {
 	image = Image::create(1,1,false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
+	audioFrame = List<Vector2>();
 
 	auto temp = Logger::instance();
 	LOG("FFmpegNode instance created. \n");

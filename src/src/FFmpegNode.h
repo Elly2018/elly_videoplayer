@@ -60,7 +60,9 @@ private:
 	int width = 0;
 	int height = 0;
 	float video_length = 0.0f;
-	float phase = 0;
+	Vector2 phase = Vector2();
+	Vector2 lastframe = Vector2();
+	List<Vector2> audioFrame;
 	double video_current_time = 0.0f;
 	int data_size = 0;
 
