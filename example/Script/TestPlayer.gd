@@ -34,11 +34,12 @@ func _process(_delta):
 		return
 	var tex = player.get_video_texture();
 	mat.set_deferred("shader_parameter/tex", tex);
-	# fill_buffer()
+	
 
 func fill_buffer():
 	var increment = 0.0 / 44100;
 	var c = audio_stream_Gen_playback.get_frames_available()
+	print(c)
 	while c > 0:
 		var f = sin(phase * TAU);
 		audio_stream_Gen_playback.push_frame(Vector2(1.0,1.0) * f);

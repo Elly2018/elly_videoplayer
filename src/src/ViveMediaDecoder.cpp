@@ -226,7 +226,7 @@ bool nativeIsAudioEnabled(int id) {
 	return ret;
 }
 
-void nativeGetAudioFormat(int id, int& channel, int& frequency, float& totalTime) {
+void nativeGetAudioFormat(int id, int& channel, int& sampleRate, float& totalTime) {
     std::shared_ptr<VideoContext> videoCtx;
 	if (!getVideoContext(id, videoCtx)) { return; }
 
@@ -237,7 +237,7 @@ void nativeGetAudioFormat(int id, int& channel, int& frequency, float& totalTime
 
 	IDecoder::AudioInfo audioInfo = videoCtx->avhandler->getAudioInfo();
 	channel = audioInfo.channels;
-	frequency = audioInfo.sampleRate;
+	sampleRate = audioInfo.sampleRate;
 	totalTime = (float)(audioInfo.totalTime);
 }
 

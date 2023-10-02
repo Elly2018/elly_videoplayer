@@ -42,7 +42,6 @@ texture = SubResource("ViewportTexture_31pxy")
 
 [node name="SubViewport" type="SubViewport" parent="Sprite3D"]
 size = Vector2i(192, 144)
-render_target_update_mode = 4
 
 [node name="TextureRect" type="TextureRect" parent="Sprite3D/SubViewport"]
 offset_right = 512.0

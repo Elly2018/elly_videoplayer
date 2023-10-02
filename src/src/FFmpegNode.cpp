@@ -22,9 +22,9 @@ void FFmpegNode::_init_media() {
 
 	audio_playback = nativeIsAudioEnabled(id);
 	if (audio_playback) {
-		nativeGetAudioFormat(id, channels, frequency, audio_length);
-		generator->set_mix_rate(frequency);
-		LOG("Audio info: %d %d %d \n", channels, frequency, audio_length);
+		nativeGetAudioFormat(id, channels, sampleRate, audio_length);
+		generator->set_mix_rate(sampleRate);
+		LOG("Audio info: %d %d %d \n", channels, sampleRate, audio_length);
 		player->play();
 	}
 
@@ -280,6 +280,7 @@ void FFmpegNode::_physics_process(float delta) {
 				} u_data;
 				u_data.result = 0;
 
+				List<Vector2> fs = List<Vector2>();
 				for (int i = 0; i < audio_size * byte_per_sample * channel; i += (byte_per_sample * channel)) {
 					float* out = new float[channel];
 					for (int j = 0; j < channel; j++) { // j have byte per sample padding for each sample
@@ -297,24 +298,41 @@ void FFmpegNode::_physics_process(float delta) {
 						right = out[1];
 					}
 					lastframe = Vector2(left, right);
-					audioFrame.push_back(Vector2(left, right));
+					fs.push_back(Vector2(left, right));
 					playback->push_frame(lastframe);
 					LOG("Push frame, out: %f, sin: [%f, %f], frame: [%f, %f] \n", out, left, right, lastframe.x, lastframe.y);
 					delete[] out;
 				}
+				audioFrame.push_back(fs);
 			}
 
+			bool haveFrame = audioFrame.size() > 0;
+			List<Vector2> fra = List<Vector2>();
+			if(haveFrame) fra = audioFrame.front()->get();
+			bool haveUpdate = false;
+			float increment = sampleRate / 44100.0f;
 			while (c > 0) {
-				if (audioFrame.size() > 0) {
-					Vector2 element = audioFrame.front()->get();
-					playback->push_frame(element);
-					audioFrame.pop_front();
-					lastframe = element;
+				haveUpdate = true;
+				bool pass = false;
+				if (haveFrame) {
+					if (fra.size() > 0) {
+						pass = true;
+						Vector2 element = fra.front()->get();
+						Vector2 pf = Vector2(element.x * sin(phase.x * Math_TAU), element.y * sin(phase.y * Math_TAU));
+						playback->push_frame(pf);
+						fra.pop_front();
+						lastframe = element;
+					}
 				}
-				else {
-					playback->push_frame(lastframe);
+				if (!pass) {
+					Vector2 pf = Vector2(lastframe.x * sin(phase.x * Math_TAU), lastframe.y * sin(phase.y * Math_TAU));
+					playback->push_frame(pf);
 				}
+				phase = Vector2(fmod(phase.x + increment, 1.0), fmod(phase.y + increment, 1.0));
 				c -= 1;
+			}
+			if (haveUpdate && haveFrame) {
+				audioFrame.pop_front();
 			}
 		}
 	}
@@ -356,7 +374,7 @@ AudioStreamGeneratorPlayback* FFmpegNode::get_gen_streamer_playback() const
 FFmpegNode::FFmpegNode() {
 	image = Image::create(1,1,false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
-	audioFrame = List<Vector2>();
+	audioFrame = List<List<Vector2>>();
 
 	auto temp = Logger::instance();
 	LOG("FFmpegNode instance created. \n");
