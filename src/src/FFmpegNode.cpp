@@ -365,6 +365,9 @@ FFmpegNode::FFmpegNode() {
 	image = Image::create(1,1,false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
 	audioFrame = List<Vector2>();
+	player = Ref<AudioStreamPlayer>(nullptr);
+	generator = Ref<AudioStreamGenerator>(nullptr);
+	playback = Ref<AudioStreamGeneratorPlayback>(nullptr);
 
 	auto temp = Logger::instance();
 	LOG("FFmpegNode instance created. \n");
