@@ -103,8 +103,8 @@ public:
 	void _process(float delta);
  	void _physics_process(float delta);
 
-	void set_player(const Ref<AudioStreamPlayer>& _player);
-	Ref<AudioStreamPlayer> get_player() const;
+	void set_player(const AudioStreamPlayer* _player);
+	AudioStreamPlayer* get_player() const;
 	void set_sample_rate(const int rate);
 	int get_sample_rate() const;
 	void set_buffer_length(const float second);

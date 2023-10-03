@@ -326,20 +326,20 @@ void FFmpegNode::_physics_process(float delta) {
 	}
 }
 
-void FFmpegNode::set_player(const Ref<AudioStreamPlayer>& _player)
+void FFmpegNode::set_player(const AudioStreamPlayer* _player)
 {
-	player = _player;
+	player = Ref<AudioStreamPlayer>(_player);
 	player->set_autoplay(true);
 	generator = player->get_stream();
 	if (generator.is_null()) {
-		generator = Ref<AudioStreamGenerator>(memnew(AudioStreamGenerator));
+		generator.instantiate();
 	}
 	player->set_stream(generator);
 }
 
-Ref<AudioStreamPlayer> FFmpegNode::get_player() const
+AudioStreamPlayer* FFmpegNode::get_player() const
 {
-	return player;
+	return player.ptr();
 }
 
 void FFmpegNode::set_sample_rate(const int rate)
