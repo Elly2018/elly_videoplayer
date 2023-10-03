@@ -8,7 +8,7 @@ var audio_stream_Gen: AudioStreamGenerator;
 var audio_stream_Gen_playback: AudioStreamPlayback;
 
 # const uri:String = "https://vrvod-funique.cdn.hinet.net/FuniqueDemo/edu/0001/HD/HD.m3u8";
-# const uri:String = "C:/Users/chuel/Videos/Desktop/amatista-studio_30-art.wmv";
+# const uri:String = "https://vrvod2-funique.cdn.hinet.net/ingBEBwpNd7vpEryrn9KeF3LUv3YL8bUApQCcSU1ZM9zjZA5feCUrRMnipfKWrgAWSmPFgV6fnPXk90LhwK5Sbbj4ABZWJHaqjqW/stream.m3u8?token=SSS18jTx7m2VWuugqMsz0A&expire=1704032541";
 const uri:String = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
 var mat: Material
