@@ -269,24 +269,18 @@ void FFmpegNode::_physics_process(float delta) {
 			int c = playback->get_frames_available();
 			LOG("get_frames_available: %d \n", c);
 			if (audio_time != -1.0f) {
-				PackedByteArray audio_data = PackedByteArray();
+				PackedFloat32Array audio_data = PackedFloat32Array();
 				audio_data.resize(audio_size * byte_per_sample * channel);
-				memcpy(audio_data.ptrw(), raw_audio_data, audio_size * byte_per_sample);
+				memcpy(audio_data.ptrw(), raw_audio_data, audio_size * channel * byte_per_sample);
 				nativeFreeAudioData(id);
 				LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
-				union {
-					float result;
-					signed char a[4];
-				} u_data;
-				u_data.result = 0;
+				float s = 0;
 
-				for (int i = 0; i < audio_size * byte_per_sample * channel; i += (byte_per_sample * channel)) {
+				for (int i = 0; i < audio_size * channel; i += channel) {
 					float* out = new float[channel];
 					for (int j = 0; j < channel; j++) { // j have byte per sample padding for each sample
-						for (int k = 0; k < byte_per_sample; k++) { // read four byte
-							u_data.a[k] = audio_data[i + (j * byte_per_sample) + k];
-						}
-						out[j] = u_data.result;
+						s = audio_data[i + j];
+						out[j] = s;
 					}
 					float left = out[0];
 					float right;
@@ -298,7 +292,7 @@ void FFmpegNode::_physics_process(float delta) {
 					}
 					lastframe = Vector2(left, right);
 					audioFrame.push_back(Vector2(left, right));
-					playback->push_frame(lastframe);
+					//playback->push_frame(lastframe);
 					LOG("Push frame, out: %f, sin: [%f, %f], frame: [%f, %f] \n", out, left, right, lastframe.x, lastframe.y);
 					delete[] out;
 				}
@@ -313,15 +307,12 @@ void FFmpegNode::_physics_process(float delta) {
 					pass = true;
 					Vector2 element = audioFrame.front()->get();
 					Vector2 pf = Vector2(element.x * sin(phase.x * Math_TAU), element.y * sin(phase.y * Math_TAU));
-					playback->push_frame(pf);
+					playback->push_frame(element);
 					audioFrame.pop_front();
 					lastframe = element;
 				}
 				phase = Vector2(fmod(phase.x + increment, 1.0), fmod(phase.y + increment, 1.0));
 				c -= 1;
-			}
-			if (haveUpdate) {
-				audioFrame.pop_front();
 			}
 		}
 	}
