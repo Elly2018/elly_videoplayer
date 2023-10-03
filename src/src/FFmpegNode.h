@@ -42,9 +42,9 @@ private:
 	};
 
 	// TODO: Implement audio.
-	AudioStreamPlayer* player;
-	AudioStreamGenerator* generator;
-	AudioStreamGeneratorPlayback* playback;
+	Ref<AudioStreamPlayer> player;
+	Ref<AudioStreamGenerator> generator;
+	Ref<AudioStreamGeneratorPlayback> playback;
 
 	Ref<ImageTexture> texture;
 	Ref<Image> image;
@@ -60,12 +60,11 @@ private:
 	int width = 0;
 	int height = 0;
 	float video_length = 0.0f;
-	Vector2 phase = Vector2();
-	Vector2 lastframe = Vector2();
 	List<Vector2> audioFrame;
 	double video_current_time = 0.0f;
 	int data_size = 0;
 
+	bool first_frame_ready = false;
 	bool audio_playback = false;
 	int channels = 0;
 	int sampleRate = 0;
@@ -96,8 +95,6 @@ public:
 	void set_loop(bool p_enable);
 	bool has_loop() const;
 
-	Ref<ImageTexture> get_video_texture();
-
 	float get_length() const;
 
 	float get_playback_position() const;
@@ -106,12 +103,12 @@ public:
 	void _process(float delta);
  	void _physics_process(float delta);
 
-	void set_player(AudioStreamPlayer* _player);
-	AudioStreamPlayer* get_player() const;
-	void set_gen_streamer(AudioStreamGenerator* _gen);
-	AudioStreamGenerator* get_gen_streamer() const;
-	void set_gen_streamer_playback(AudioStreamGeneratorPlayback* _gen);
-	AudioStreamGeneratorPlayback* get_gen_streamer_playback() const;
+	void set_player(const Ref<AudioStreamPlayer>& _player);
+	Ref<AudioStreamPlayer> get_player() const;
+	void set_sample_rate(const int rate);
+	int get_sample_rate() const;
+	void set_buffer_length(const float second);
+	float get_buffer_length() const;
 
 	FFmpegNode();
 	~FFmpegNode();

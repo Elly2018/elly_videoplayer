@@ -34,6 +34,11 @@ void FFmpegNode::_init_media() {
 
 bool FFmpegNode::load_path(String path) {
 	emit_signal("message", String("start load path: ") + path);
+	if (player.is_null()) {
+		emit_signal("error", String("You must register the player instance first"));
+		return false;
+	}
+
 	int d_state = nativeGetDecoderState(id);
 	if (d_state > 1) {
 		emit_signal("error", String("Decoder state: ") + String(std::to_string(d_state).c_str()));
@@ -42,6 +47,7 @@ bool FFmpegNode::load_path(String path) {
 
 	CharString utf8 = path.utf8();
 	const char *cstr = utf8.get_data();
+	first_frame_ready = false;
 
 	nativeCreateDecoder(cstr, id);
 
@@ -129,10 +135,6 @@ bool FFmpegNode::is_paused() const {
 	return paused;
 }
 
-Ref<ImageTexture> FFmpegNode::get_video_texture() {
-	return texture;
-}
-
 float FFmpegNode::get_length() const {
 	return video_playback && video_length > audio_length ? video_length : audio_length;
 }
@@ -216,6 +218,8 @@ void FFmpegNode::_process(float delta) {
 					LOG("actual data size: %d \n", image_data.size());
 					image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, image_data);
 					texture->set_deferred("image", image);
+					emit_signal("video_update", texture);
+					
 					first_frame = false;
 
 					nativeReleaseVideoFrame(id);
@@ -266,12 +270,16 @@ void FFmpegNode::_physics_process(float delta) {
 			nativeFreeAudioData(id);
 		}
 		else {
-			int c = playback->get_frames_available();
+			int c = 0;
+			if (playback.is_valid()) {
+				c = playback->get_frames_available();
+			}
 			LOG("get_frames_available: %d \n", c);
 			if (audio_time != -1.0f) {
 				PackedFloat32Array audio_data = PackedFloat32Array();
 				audio_data.resize(audio_size * byte_per_sample * channel);
 				memcpy(audio_data.ptrw(), raw_audio_data, audio_size * channel * byte_per_sample);
+				emit_signal("audio_update", audio_data, audio_size, channel);
 				nativeFreeAudioData(id);
 				LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
 				float s = 0;
@@ -290,12 +298,15 @@ void FFmpegNode::_physics_process(float delta) {
 					else {
 						right = out[1];
 					}
-					lastframe = Vector2(left, right);
 					audioFrame.push_back(Vector2(left, right));
-					//playback->push_frame(lastframe);
-					LOG("Push frame, out: %f, sin: [%f, %f], frame: [%f, %f] \n", out, left, right, lastframe.x, lastframe.y);
+					LOG("Push frame, out: %f, sin: [%f, %f] \n", out, left, right);
 					delete[] out;
 				}
+			}
+
+			if (!first_frame_ready && c == 0 && audioFrame.size() > 0) {
+				player->play();
+				playback = player->get_stream();
 			}
 
 			bool haveUpdate = false;
@@ -306,50 +317,49 @@ void FFmpegNode::_physics_process(float delta) {
 				if (audioFrame.size() > 0) {
 					pass = true;
 					Vector2 element = audioFrame.front()->get();
-					Vector2 pf = Vector2(element.x * sin(phase.x * Math_TAU), element.y * sin(phase.y * Math_TAU));
 					playback->push_frame(element);
 					audioFrame.pop_front();
-					lastframe = element;
 				}
-				phase = Vector2(fmod(phase.x + increment, 1.0), fmod(phase.y + increment, 1.0));
 				c -= 1;
 			}
 		}
 	}
 }
 
-void FFmpegNode::set_player(AudioStreamPlayer* _player)
+void FFmpegNode::set_player(const Ref<AudioStreamPlayer>& _player)
 {
 	player = _player;
 	player->set_autoplay(true);
+	generator = player->get_stream();
+	if (generator.is_null()) {
+		generator = Ref<AudioStreamGenerator>(memnew(AudioStreamGenerator));
+	}
+	player->set_stream(generator);
 }
 
-AudioStreamPlayer* FFmpegNode::get_player() const
+Ref<AudioStreamPlayer> FFmpegNode::get_player() const
 {
 	return player;
 }
 
-void FFmpegNode::set_gen_streamer(AudioStreamGenerator* _gen)
+void FFmpegNode::set_sample_rate(const int rate)
 {
-	generator = _gen;
-	if (player != nullptr) {
-		player->set_stream(generator);
-	}
+	generator->set_mix_rate(rate);
 }
 
-AudioStreamGenerator* FFmpegNode::get_gen_streamer() const
+int FFmpegNode::get_sample_rate() const
 {
-	return generator;
+	return generator->get_mix_rate();
 }
 
-void FFmpegNode::set_gen_streamer_playback(AudioStreamGeneratorPlayback* _gen)
+void FFmpegNode::set_buffer_length(const float second)
 {
-	playback = _gen;
+	generator->set_buffer_length(second);
 }
 
-AudioStreamGeneratorPlayback* FFmpegNode::get_gen_streamer_playback() const
+float FFmpegNode::get_buffer_length() const
 {
-	return playback;
+	return generator->get_buffer_length();
 }
 FFmpegNode::FFmpegNode() {
 	image = Image::create(1,1,false, Image::FORMAT_RGB8);
@@ -376,7 +386,6 @@ void FFmpegNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_playing"), &FFmpegNode::is_playing);
 	ClassDB::bind_method(D_METHOD("set_paused", "paused"), &FFmpegNode::set_paused);
 	ClassDB::bind_method(D_METHOD("is_paused"), &FFmpegNode::is_paused);
-	ClassDB::bind_method(D_METHOD("get_video_texture"), &FFmpegNode::get_video_texture);
 	ClassDB::bind_method(D_METHOD("get_length"), &FFmpegNode::get_length);
 	ClassDB::bind_method(D_METHOD("set_loop", "enable"), &FFmpegNode::set_loop);
 	ClassDB::bind_method(D_METHOD("has_loop"), &FFmpegNode::has_loop);
@@ -384,13 +393,18 @@ void FFmpegNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("seek", "time"), &FFmpegNode::seek);
 	ClassDB::bind_method(D_METHOD("set_player", "player"), &FFmpegNode::set_player);
 	ClassDB::bind_method(D_METHOD("get_player"), &FFmpegNode::get_player);
-	ClassDB::bind_method(D_METHOD("set_gen_streamer", "streamer"), &FFmpegNode::set_gen_streamer);
-	ClassDB::bind_method(D_METHOD("get_gen_streamer"), &FFmpegNode::get_gen_streamer);
-	ClassDB::bind_method(D_METHOD("set_gen_streamer_playback", "streamer"), &FFmpegNode::set_gen_streamer_playback);
-	ClassDB::bind_method(D_METHOD("get_gen_streamer_playback"), &FFmpegNode::get_gen_streamer_playback);
+	ClassDB::bind_method(D_METHOD("set_sample_rate", "rate"), &FFmpegNode::set_sample_rate);
+	ClassDB::bind_method(D_METHOD("get_sample_rate"), &FFmpegNode::get_sample_rate);
+	ClassDB::bind_method(D_METHOD("set_buffer_length", "second"), &FFmpegNode::set_buffer_length);
+	ClassDB::bind_method(D_METHOD("get_buffer_length"), &FFmpegNode::get_buffer_length);
+
+	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "Player", PROPERTY_HINT_NODE_PATH_VALID_TYPES), "set_player", "get_player");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "sample_rate"), "set_sample_rate", "get_sample_rate");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buffer_length"), "set_buffer_length", "get_buffer_length");
 
 	ADD_SIGNAL(MethodInfo("async_loaded", PropertyInfo(Variant::BOOL, "successful")));
-	ADD_SIGNAL(MethodInfo("audio", PropertyInfo(Variant::VECTOR2, "v2")));
+	ADD_SIGNAL(MethodInfo("video_update", PropertyInfo(Variant::RID, "image", PROPERTY_HINT_RESOURCE_TYPE, "ImageTexture")));
+	ADD_SIGNAL(MethodInfo("audio_update", PropertyInfo(Variant::PACKED_FLOAT32_ARRAY, "sample"), PropertyInfo(Variant::INT, "size"), PropertyInfo(Variant::INT, "channel")));
 	ADD_SIGNAL(MethodInfo("message", PropertyInfo(Variant::STRING, "message")));
 	ADD_SIGNAL(MethodInfo("error", PropertyInfo(Variant::STRING, "message")));
 }
