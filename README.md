@@ -45,15 +45,9 @@ A GDExtension for godot 4.x to play video, this is a wrapper of ffmpeg for decod
 ### Supported platfrom
 | Platform | Video | Audio | XR Support |
 |-|-|-|-|
-| Windows | O | X | X |
-| Windows | X | X | X |
-| MacOS | X | X | X |
+| Windows | O | O | X |
 | MacOS | X | X | X |
 | Linux | X | X | X |
-| Linux | X | X | X |
-| Android | X | X | X |
 | Android | X | X | X |
 | IOS | X | X | X |
-| IOS | X | X | X |
-| Web | X | X | X |
-| Web | X | X | X |
+| Web File | X | X | X |
