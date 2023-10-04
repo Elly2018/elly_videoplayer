@@ -32,9 +32,20 @@ void FFmpegNode::_init_media() {
 	emit_signal("message", String("start change to INITIALIZED"));
 }
 
+void FFmpegNode::audio_init() 
+{
+	player->set_autoplay(true);
+	player->play();
+	playback = player->get_stream_playback();
+	int c = playback->get_frames_available();
+	while (c > 0) {
+		playback->push_frame(Vector2(0, 0));
+	}
+}
+
 bool FFmpegNode::load_path(String path) {
 	emit_signal("message", String("start load path: ") + path);
-	if (player.is_null()) {
+	if (player == nullptr) {
 		emit_signal("error", String("You must register the player instance first"));
 		return false;
 	}
@@ -326,20 +337,21 @@ void FFmpegNode::_physics_process(float delta) {
 	}
 }
 
-void FFmpegNode::set_player(const AudioStreamPlayer* _player)
+void FFmpegNode::set_player(AudioStreamPlayer* _player)
 {
-	player = Ref<AudioStreamPlayer>(_player);
+	player = _player;
 	player->set_autoplay(true);
 	generator = player->get_stream();
 	if (generator.is_null()) {
 		generator.instantiate();
 	}
 	player->set_stream(generator);
+	
 }
 
 AudioStreamPlayer* FFmpegNode::get_player() const
 {
-	return player.ptr();
+	return player;
 }
 
 void FFmpegNode::set_sample_rate(const int rate)
@@ -365,9 +377,6 @@ FFmpegNode::FFmpegNode() {
 	image = Image::create(1,1,false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
 	audioFrame = List<Vector2>();
-	player = Ref<AudioStreamPlayer>(nullptr);
-	generator = Ref<AudioStreamGenerator>(nullptr);
-	playback = Ref<AudioStreamGeneratorPlayback>(nullptr);
 
 	auto temp = Logger::instance();
 	LOG("FFmpegNode instance created. \n");
@@ -401,9 +410,9 @@ void FFmpegNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_buffer_length", "second"), &FFmpegNode::set_buffer_length);
 	ClassDB::bind_method(D_METHOD("get_buffer_length"), &FFmpegNode::get_buffer_length);
 
-	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "Player", PROPERTY_HINT_NODE_PATH_VALID_TYPES), "set_player", "get_player");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "sample_rate"), "set_sample_rate", "get_sample_rate");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buffer_length"), "set_buffer_length", "get_buffer_length");
+	//ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "Player", PROPERTY_HINT_NODE_PATH_VALID_TYPES), "set_player", "get_player");
+	//ADD_PROPERTY(PropertyInfo(Variant::INT, "sample_rate"), "set_sample_rate", "get_sample_rate");
+	//ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buffer_length"), "set_buffer_length", "get_buffer_length");
 
 	ADD_SIGNAL(MethodInfo("async_loaded", PropertyInfo(Variant::BOOL, "successful")));
 	ADD_SIGNAL(MethodInfo("video_update", PropertyInfo(Variant::RID, "image", PROPERTY_HINT_RESOURCE_TYPE, "ImageTexture")));

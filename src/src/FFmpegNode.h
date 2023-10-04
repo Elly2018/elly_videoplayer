@@ -42,7 +42,7 @@ private:
 	};
 
 	// TODO: Implement audio.
-	Ref<AudioStreamPlayer> player;
+	AudioStreamPlayer* player;
 	Ref<AudioStreamGenerator> generator;
 	Ref<AudioStreamGeneratorPlayback> playback;
 
@@ -81,6 +81,7 @@ protected:
 	static void _bind_methods();
 
 public:
+	void audio_init();
 	bool load_path(String path);
 	void load_path_async(String path);
 
@@ -103,7 +104,7 @@ public:
 	void _process(float delta);
  	void _physics_process(float delta);
 
-	void set_player(const AudioStreamPlayer* _player);
+	void set_player(AudioStreamPlayer* _player);
 	AudioStreamPlayer* get_player() const;
 	void set_sample_rate(const int rate);
 	int get_sample_rate() const;

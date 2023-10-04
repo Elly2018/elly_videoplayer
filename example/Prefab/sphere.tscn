@@ -27,13 +27,14 @@ cast_shadow = 0
 gi_mode = 0
 mesh = SubResource("SphereMesh_2ikhj")
 
-[node name="FFmpegNode" type="FFmpegNode" parent="."]
-
 [node name="Player" type="AudioStreamPlayer" parent="."]
 stream = SubResource("AudioStreamGenerator_cr308")
 autoplay = true
 
-[connection signal="async_loaded" from="FFmpegNode" to="." method="_load_finish"]
-[connection signal="audio" from="FFmpegNode" to="." method="push_audio"]
+[node name="FFmpegNode" type="FFmpegNode" parent="."]
+
+[connection signal="async_loaded" from="FFmpegNode" to="." method="async_load_finish"]
+[connection signal="audio_update" from="FFmpegNode" to="." method="audio_update"]
 [connection signal="error" from="FFmpegNode" to="." method="error_feedback"]
 [connection signal="message" from="FFmpegNode" to="." method="message_feedback"]
+[connection signal="video_update" from="FFmpegNode" to="." method="texture_update"]

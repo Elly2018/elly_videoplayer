@@ -5,11 +5,9 @@ A GDExtension for godot 4.x to play video, this is a wrapper of ffmpeg for decod
  
 ### Getting started:
 
-##### Requirement
+In order to setup the project\
+Check this page for build process
 
-- [git](https://git-scm.com) tools
-- cURL tool
-	- Which for windows you can use powershell (admin) to download: `choco install curl`.
 
 #### 1. Open build/windows_pull_submodule.bat
 - This will clone the godot-cpp 4.1 in the root folder.
@@ -20,7 +18,7 @@ A GDExtension for godot 4.x to play video, this is a wrapper of ffmpeg for decod
 	- build
 	- src
 		- src
-		- ffmpeg (Add)
+		- ffmpeg (Add if desktop)
 	- godot-cpp (Add)
 	
 #### 2. Open build/windows_codegen.bat.
