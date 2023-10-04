@@ -63,8 +63,7 @@ private:
 	List<Vector2> audioFrame;
 	double video_current_time = 0.0f;
 	int data_size = 0;
-
-	bool first_frame_ready = false;
+	
 	bool audio_playback = false;
 	int channels = 0;
 	int sampleRate = 0;

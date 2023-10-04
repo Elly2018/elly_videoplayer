@@ -58,7 +58,6 @@ bool FFmpegNode::load_path(String path) {
 
 	CharString utf8 = path.utf8();
 	const char *cstr = utf8.get_data();
-	first_frame_ready = false;
 
 	nativeCreateDecoder(cstr, id);
 
@@ -315,13 +314,8 @@ void FFmpegNode::_physics_process(float delta) {
 				}
 			}
 
-			if (!first_frame_ready && c == 0 && audioFrame.size() > 0) {
-				player->play();
-				playback = player->get_stream();
-			}
-
 			bool haveUpdate = false;
-			float increment = 220.0f / 44100.0f;
+			float increment = 0.0f / 44100.0f;
 			while (c > 0 && audioFrame.size() > 0) {
 				haveUpdate = true;
 				bool pass = false;
@@ -391,6 +385,7 @@ void FFmpegNode::_notification(int p_what)
 }
 
 void FFmpegNode::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("audio_init"), &FFmpegNode::audio_init);
 	ClassDB::bind_method(D_METHOD("load_path", "path"), &FFmpegNode::load_path);
 	ClassDB::bind_method(D_METHOD("load_path_async", "path"), &FFmpegNode::load_path_async);
 	ClassDB::bind_method(D_METHOD("play"), &FFmpegNode::play);

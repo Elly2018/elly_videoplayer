@@ -17,6 +17,7 @@ func _ready():
 	player.set_player(audio_stream);
 	player.load_path(uri)
 	player.play()
+	player.audio_init()
 	
 func texture_update(tex):
 	mat.set_deferred("shader_parameter/tex", tex);
