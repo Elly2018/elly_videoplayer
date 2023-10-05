@@ -40,6 +40,7 @@ void FFmpegNode::audio_init()
 	int c = playback->get_frames_available();
 	while (c > 0) {
 		playback->push_frame(Vector2(0, 0));
+		c -= 1;
 	}
 }
 
