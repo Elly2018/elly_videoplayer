@@ -15,7 +15,6 @@ buffer_length = 0.2
 [node name="Sphere" type="Node3D" node_paths=PackedStringArray("geo", "player", "audio_stream")]
 transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0.203564, -0.109128, 0.122446)
 script = ExtResource("1_y61al")
-enable = true
 geo = NodePath("MeshInstance3D")
 player = NodePath("FFmpegMediaPlayer")
 audio_stream = NodePath("Player")

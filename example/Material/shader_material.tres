@@ -7,4 +7,6 @@
 [resource]
 render_priority = 0
 shader = ExtResource("1_35wnn")
+shader_parameter/flip = null
+shader_parameter/mode = null
 shader_parameter/tex = SubResource("NoiseTexture2D_llh3e")

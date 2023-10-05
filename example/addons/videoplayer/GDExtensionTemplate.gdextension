@@ -5,7 +5,9 @@ compatibility_minimum = 4.1
 
 [dependencies]
 
-windows.x86_64 = {}
+windows.x86_64 = {
+"":"lib/Windows-AMD64"
+}
 
 [libraries]
 
