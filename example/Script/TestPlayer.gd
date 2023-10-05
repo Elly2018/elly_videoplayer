@@ -2,7 +2,9 @@ extends Node
 
 @export var enable: bool;
 @export var geo: GeometryInstance3D;
-@export var player: FFmpegNode;
+@export var v: SubViewport;
+@export var plane: TextureRect;
+@export var player: FFmpegMediaPlayer;
 @export var audio_stream: AudioStreamPlayer;
 
 const uri:String = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
@@ -19,8 +21,10 @@ func _ready():
 	player.play()
 	player.audio_init()
 	
-func texture_update(tex):
+func texture_update(tex, size):
+	v.size = size;
 	mat.set_deferred("shader_parameter/tex", tex);
+	plane.set_deferred("texture", tex);
 		
 func audio_update(data:PackedFloat32Array, size:int, channel:int):
 	pass

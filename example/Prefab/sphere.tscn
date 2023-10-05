@@ -17,7 +17,7 @@ transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0.203564, -0.109128, 0.122
 script = ExtResource("1_y61al")
 enable = true
 geo = NodePath("MeshInstance3D")
-player = NodePath("FFmpegNode")
+player = NodePath("FFmpegMediaPlayer")
 audio_stream = NodePath("Player")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
@@ -29,12 +29,13 @@ mesh = SubResource("SphereMesh_2ikhj")
 
 [node name="Player" type="AudioStreamPlayer" parent="."]
 stream = SubResource("AudioStreamGenerator_cr308")
+volume_db = 10.0
 autoplay = true
 
-[node name="FFmpegNode" type="FFmpegNode" parent="."]
+[node name="FFmpegMediaPlayer" type="FFmpegMediaPlayer" parent="."]
 
-[connection signal="async_loaded" from="FFmpegNode" to="." method="async_load_finish"]
-[connection signal="audio_update" from="FFmpegNode" to="." method="audio_update"]
-[connection signal="error" from="FFmpegNode" to="." method="error_feedback"]
-[connection signal="message" from="FFmpegNode" to="." method="message_feedback"]
-[connection signal="video_update" from="FFmpegNode" to="." method="texture_update"]
+[connection signal="async_loaded" from="FFmpegMediaPlayer" to="." method="async_load_finish"]
+[connection signal="audio_update" from="FFmpegMediaPlayer" to="." method="audio_update"]
+[connection signal="error" from="FFmpegMediaPlayer" to="." method="error_feedback"]
+[connection signal="message" from="FFmpegMediaPlayer" to="." method="message_feedback"]
+[connection signal="video_update" from="FFmpegMediaPlayer" to="." method="texture_update"]

@@ -19,8 +19,8 @@ using namespace godot;
 /**
  * The control node for godot video player
 */
-class FFmpegNode : public Node {
-	GDCLASS(FFmpegNode, Node);
+class FFmpegMediaPlayer : public Node {
+	GDCLASS(FFmpegMediaPlayer, Node);
 
 private:
 /**
@@ -110,6 +110,6 @@ public:
 	void set_buffer_length(const float second);
 	float get_buffer_length() const;
 
-	FFmpegNode();
-	~FFmpegNode();
+	FFmpegMediaPlayer();
+	~FFmpegMediaPlayer();
 };
