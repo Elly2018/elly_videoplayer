@@ -2,12 +2,15 @@
 
 A GDExtension for godot 4.x to play video, this is a wrapper of ffmpeg for decode
 
+|-|-|-|
+|-|-|-|
+|![v1](img/v1.PNG)|![v1](img/v2.PNG)|![v1](img/v3.PNG)|
+|-|-|-|
  
 ### Getting started:
 
 In order to setup the project\
 Check this page for build process
-
 
 #### 1. Open build/windows_pull_submodule.bat
 - This will clone the godot-cpp 4.1 in the root folder.
