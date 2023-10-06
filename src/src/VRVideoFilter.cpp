@@ -54,7 +54,6 @@ bool VRVideoFilter::get_flip() const
 
 void VRVideoFilter::set_texture(Ref<ImageTexture> tex, Vector2i size)
 {
-	texture = tex;
 	for (Ref<Material> mat : mats) {
 		mat->set_deferred("shader_parameter/tex", tex);
 		mat->set_deferred("shader_parameter/flip", flip);
@@ -64,8 +63,6 @@ void VRVideoFilter::set_texture(Ref<ImageTexture> tex, Vector2i size)
 
 VRVideoFilter::VRVideoFilter()
 {
-	image = Image::create(1, 1, false, Image::FORMAT_RGB8);
-	texture = ImageTexture::create_from_image(image);
 	mats = List<Ref<Material>>();
 }
 
