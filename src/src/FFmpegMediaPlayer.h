@@ -80,30 +80,92 @@ protected:
 	static void _bind_methods();
 
 public:
+	/*
+	* User should call this method in _ready func in the gdscript
+	* To fill the buffer of audio stream (audio stream generator)
+	*/
 	void audio_init();
+	/*
+	* Loading path from string
+	*/
 	bool load_path(String path);
+	/*
+	* Async loading path from string
+	* "async_loaded" signal will trigger when finish
+	*/
 	void load_path_async(String path);
 
-	void stop();
-	void play();
 
+	/*
+	* Stop the player, this will destroy decoder object in the low level
+	* And reset every variable
+	*/
+	void stop();
+	/*
+	* This method should called after media is loaded
+	* Otherwise this will do nothing
+	*/
+	void play();
+	/*
+	* Check current state is playing media
+	*/
 	bool is_playing() const;
 
+
+	/*
+	* Pause decoder
+	*/
 	void set_paused(bool p_paused);
+	/*
+	* Check pause state
+	*/
 	bool is_paused() const;
 
+
+	/*
+	* Set the loop trigger
+	* Looping will decide if end of file will causing seek to start
+	*/
 	void set_loop(bool p_enable);
+	/*
+	* Check loop state
+	*/
 	bool has_loop() const;
-
+	/*
+	* Get the media length (second)
+	*/
 	float get_length() const;
-
+	/*
+	* Get current play position (second)
+	*/
 	float get_playback_position() const;
+	/*
+	* Seeking to particular position within the loaded media
+	*/
 	void seek(float p_time);
 
+
+	/*
+	* Godot update method
+	* This will trying to update the video part
+	* And handle some stage of player events
+	*/
 	void _process(float delta);
+	/*
+	* Godot fixed update method
+	* This will trying to update the audio part
+	*/
  	void _physics_process(float delta);
 
+
+	/*
+	* Set the audio player instance to it
+	* This instance will become the primary source of audio player for it
+	*/
 	void set_player(AudioStreamPlayer* _player);
+	/*
+	* Get current use audio player
+	*/
 	AudioStreamPlayer* get_player() const;
 	void set_sample_rate(const int rate);
 	int get_sample_rate() const;
