@@ -343,6 +343,7 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 
 void FFmpegMediaPlayer::set_player(AudioStreamPlayer* _player)
 {
+	NodePath np;
 	player = _player;
 	player->set_autoplay(true);
 	generator = player->get_stream();
@@ -350,7 +351,6 @@ void FFmpegMediaPlayer::set_player(AudioStreamPlayer* _player)
 		generator.instantiate();
 	}
 	player->set_stream(generator);
-	
 }
 
 AudioStreamPlayer* FFmpegMediaPlayer::get_player() const
@@ -415,9 +415,8 @@ void FFmpegMediaPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_buffer_length", "second"), &FFmpegMediaPlayer::set_buffer_length);
 	ClassDB::bind_method(D_METHOD("get_buffer_length"), &FFmpegMediaPlayer::get_buffer_length);
 
-	//ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "Player", PROPERTY_HINT_NODE_PATH_VALID_TYPES), "set_player", "get_player");
-	//ADD_PROPERTY(PropertyInfo(Variant::INT, "sample_rate"), "set_sample_rate", "get_sample_rate");
-	//ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buffer_length"), "set_buffer_length", "get_buffer_length");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "sample_rate"), "set_sample_rate", "get_sample_rate");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buffer_length"), "set_buffer_length", "get_buffer_length");
 
 	ADD_SIGNAL(MethodInfo("async_loaded", PropertyInfo(Variant::BOOL, "successful")));
 	ADD_SIGNAL(MethodInfo("video_update", PropertyInfo(Variant::RID, "image", PROPERTY_HINT_RESOURCE_TYPE, "ImageTexture"), PropertyInfo(Variant::VECTOR2I, "size")));

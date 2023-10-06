@@ -17,8 +17,10 @@ class VRVideoFilter : public Node {
 	GDCLASS(VRVideoFilter, Node);
 
 private:
+	bool flip = false;
 	Ref<Image> image;
 	Ref<ImageTexture> texture;
+	List<Ref<Material>> mats;
 	int layout = 0;
 
 protected:
@@ -38,6 +40,9 @@ public:
 
 	void set_layout(int _layout);
 	int get_layout() const;
+
+	void set_flip(bool flip);
+	bool get_flip();
 
 	void set_texture(Ref<ImageTexture> tex, Vector2i size);
 
