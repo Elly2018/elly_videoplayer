@@ -40,6 +40,11 @@ Check this page for build process
 	- `src/` - Wrapper source code.
 - `godot-cpp/` - Submodule needed for GDExtension compilation.
 
+### known issues
+
+- When play HLS stream, audio will not be load
+- Sometime in editor mode, the audio stream player will failed to initialize (Engine issue ?)
+
 ### Supported platfrom
 | Platform | Video | Audio | XR Support |
 |-|-|-|-|
