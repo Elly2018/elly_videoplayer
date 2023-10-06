@@ -5,7 +5,9 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/godot.hpp>
 
-#include "FFmpegNode.h"
+#include "FFmpegMediaPlayer.h"
+#include "FFmpegMediaEncoder.h"
+#include "VRVideoFilter.h"
 
 using namespace godot;
 
@@ -15,7 +17,9 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
-		ClassDB::register_class<FFmpegNode>();
+		ClassDB::register_class<FFmpegMediaPlayer>();
+		ClassDB::register_class<FFmpegMediaEncoder>();
+		ClassDB::register_class<VRVideoFilter>();
 		//ClassDB::register_class<MySingleton>();
 		//_my_singleton = memnew(MySingleton);
 		//Engine::get_singleton()->register_singleton("MySingleton", MySingleton::get_singleton());

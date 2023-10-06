@@ -1,0 +1,42 @@
+[gd_scene load_steps=5 format=3 uid="uid://bj6iuse67y4gl"]
+
+[ext_resource type="Script" path="res://Script/TestPlayer.gd" id="1_y61al"]
+[ext_resource type="Material" uid="uid://brmlmtpgp5cya" path="res://Material/shader_material.tres" id="2_ycshh"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_2ikhj"]
+lightmap_size_hint = Vector2i(17, 9)
+flip_faces = true
+uv2_padding = 0.0
+rings = 64
+
+[sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_cr308"]
+buffer_length = 0.2
+
+[node name="Sphere" type="Node3D" node_paths=PackedStringArray("geo", "player", "audio_stream")]
+transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0.203564, -0.109128, 0.122446)
+script = ExtResource("1_y61al")
+play_on_start = true
+loop = true
+geo = NodePath("MeshInstance3D")
+player = NodePath("FFmpegMediaPlayer")
+audio_stream = NodePath("Player")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 0, 0)
+material_override = ExtResource("2_ycshh")
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("SphereMesh_2ikhj")
+
+[node name="Player" type="AudioStreamPlayer" parent="."]
+stream = SubResource("AudioStreamGenerator_cr308")
+volume_db = 10.0
+autoplay = true
+
+[node name="FFmpegMediaPlayer" type="FFmpegMediaPlayer" parent="."]
+
+[connection signal="async_loaded" from="FFmpegMediaPlayer" to="." method="async_load_finish"]
+[connection signal="audio_update" from="FFmpegMediaPlayer" to="." method="audio_update"]
+[connection signal="error" from="FFmpegMediaPlayer" to="." method="error_feedback"]
+[connection signal="message" from="FFmpegMediaPlayer" to="." method="message_feedback"]
+[connection signal="video_update" from="FFmpegMediaPlayer" to="." method="texture_update"]

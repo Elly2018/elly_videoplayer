@@ -29,9 +29,10 @@ public:
 	void setAudioEnable(bool isEnable);
 	void setAudioAllChDataEnable(bool isEnable);
 	double getVideoFrame(void** frameData);
-	double getAudioFrame(unsigned char** outputFrame, int& frameSize);
+	double getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample);
 	void freeVideoFrame();
 	void freeAudioFrame();
+	void print_stream_maps();
 
 	int getMetaData(char**& key, char**& value);
 

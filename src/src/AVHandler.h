@@ -27,7 +27,7 @@ public:
 	void setSeekTime(float sec);
 	
 	double getVideoFrame(void** frameData);
-	double getAudioFrame(uint8_t** outputFrame, int& frameSize);
+	double getAudioFrame(uint8_t** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample);
 	void freeVideoFrame();
 	void freeAudioFrame();
 	void setVideoEnable(bool isEnable);

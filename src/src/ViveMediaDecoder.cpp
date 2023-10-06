@@ -226,7 +226,7 @@ bool nativeIsAudioEnabled(int id) {
 	return ret;
 }
 
-void nativeGetAudioFormat(int id, int& channel, int& frequency, float& totalTime) {
+void nativeGetAudioFormat(int id, int& channel, int& sampleRate, float& totalTime) {
     std::shared_ptr<VideoContext> videoCtx;
 	if (!getVideoContext(id, videoCtx)) { return; }
 
@@ -237,15 +237,15 @@ void nativeGetAudioFormat(int id, int& channel, int& frequency, float& totalTime
 
 	IDecoder::AudioInfo audioInfo = videoCtx->avhandler->getAudioInfo();
 	channel = audioInfo.channels;
-	frequency = audioInfo.sampleRate;
+	sampleRate = audioInfo.sampleRate;
 	totalTime = (float)(audioInfo.totalTime);
 }
 
-float nativeGetAudioData(int id, unsigned char** audioData, int& frameSize) {
+float nativeGetAudioData(int id, unsigned char** audioData, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
     std::shared_ptr<VideoContext> videoCtx;
 	if (!getVideoContext(id, videoCtx)) { return -1.0f; }
 
-	return (float) (videoCtx->avhandler->getAudioFrame(audioData, frameSize));
+	return (float) (videoCtx->avhandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample));
 }
 
 void nativeFreeAudioData(int id) {
@@ -362,7 +362,7 @@ void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady) {
         if (videoDecCurTime <= videoCtx->progressTime) {
 
             double curFrameTime = localAVHandler->getVideoFrame(frameData);
-			LOG("current frame time: %d %d %d %d \n", curFrameTime, frameData != nullptr, curFrameTime != -1, videoCtx->lastUpdateTime != curFrameTime);
+			LOG("current frame time: %f %d %d %d \n", curFrameTime, frameData != nullptr, curFrameTime != -1, videoCtx->lastUpdateTime != curFrameTime);
             if (frameData != nullptr && curFrameTime != -1 && videoCtx->lastUpdateTime != curFrameTime) {
                 frameReady = true;
                 videoCtx->lastUpdateTime = (float)curFrameTime;

@@ -13,6 +13,7 @@ GDExtensionTemplate-build/
 .DS_Store
 
 x64/
+bin/
 VideoPlayer.dir/
 FFmpeg/
 godot-cpp/

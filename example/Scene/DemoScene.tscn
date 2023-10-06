@@ -1,0 +1,59 @@
+[gd_scene load_steps=10 format=3 uid="uid://dn3rmx1bi81lv"]
+
+[ext_resource type="Environment" uid="uid://co4hk2iqv5oxv" path="res://Environment/DemoScene.tres" id="1_11yc7"]
+[ext_resource type="PackedScene" uid="uid://bj6iuse67y4gl" path="res://Prefab/sphere.tscn" id="3_ihpox"]
+[ext_resource type="Script" path="res://Script/CameraControllerMouse.cs" id="4_h5p8w"]
+
+[sub_resource type="Environment" id="Environment_24h51"]
+background_color = Color(1, 1, 1, 1)
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_3w5hy"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_31pxy"]
+viewport_path = NodePath("Sprite3D/SubViewport")
+
+[sub_resource type="Gradient" id="Gradient_xmxy3"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_xf3bu"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_spevx"]
+color_ramp = SubResource("Gradient_xmxy3")
+noise = SubResource("FastNoiseLite_xf3bu")
+
+[node name="Scene" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_24h51")
+camera_attributes = SubResource("CameraAttributesPractical_3w5hy")
+
+[node name="Node3D" type="Node3D" parent="." node_paths=PackedStringArray("self")]
+script = ExtResource("4_h5p8w")
+sensitivity = 1.0
+self = NodePath(".")
+
+[node name="Camera3D" type="Camera3D" parent="Node3D"]
+environment = ExtResource("1_11yc7")
+current = true
+fov = 90.0
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, -8)
+texture = SubResource("ViewportTexture_31pxy")
+
+[node name="SubViewport" type="SubViewport" parent="Sprite3D"]
+size_2d_override_stretch = true
+
+[node name="TextureRect" type="TextureRect" parent="Sprite3D/SubViewport"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 320.0
+offset_bottom = 368.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("NoiseTexture2D_spevx")
+stretch_mode = 2
+
+[node name="Sphere" parent="." node_paths=PackedStringArray("vieport", "plane") instance=ExtResource("3_ihpox")]
+vieport = NodePath("../Sprite3D/SubViewport")
+plane = NodePath("../Sprite3D/SubViewport/TextureRect")

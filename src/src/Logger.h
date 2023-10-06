@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define ENABLE_LOG
+//#define ENABLE_LOG
 #ifdef ENABLE_LOG
 #define LOG(...) Logger::instance()->log(__VA_ARGS__)
 #else
