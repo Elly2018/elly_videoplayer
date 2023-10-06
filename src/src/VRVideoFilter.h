@@ -11,7 +11,7 @@ using namespace godot;
 
 
 /**
- * The control node for godot video player
+ * The filter node for godot video display
 */
 class VRVideoFilter : public Node {
 	GDCLASS(VRVideoFilter, Node);

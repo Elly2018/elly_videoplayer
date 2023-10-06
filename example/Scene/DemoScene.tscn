@@ -54,8 +54,6 @@ grow_vertical = 2
 texture = SubResource("NoiseTexture2D_spevx")
 stretch_mode = 2
 
-[node name="Sphere" parent="." node_paths=PackedStringArray("v", "plane") instance=ExtResource("3_ihpox")]
-play_on_start = true
-v = NodePath("../Sprite3D/SubViewport")
+[node name="Sphere" parent="." node_paths=PackedStringArray("vieport", "plane") instance=ExtResource("3_ihpox")]
+vieport = NodePath("../Sprite3D/SubViewport")
 plane = NodePath("../Sprite3D/SubViewport/TextureRect")
-uri = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"

@@ -6,9 +6,17 @@ compatibility_minimum = 4.1
 [dependencies]
 
 windows.x86_64 = {
-"":"lib/Windows-AMD64"
+"lib/Windows-AMD64/avcodec-60.dll":".",
+"lib/Windows-AMD64/avdevice-60.dll":".",
+"lib/Windows-AMD64/avfilter-9.dll":".",
+"lib/Windows-AMD64/avformat-60.dll":".",
+"lib/Windows-AMD64/avutil-58.dll":".",
+"lib/Windows-AMD64/postproc-57.dll":".",
+"lib/Windows-AMD64/swresample-4.dll":".",
+"lib/Windows-AMD64/swscale-7.dll":"."
 }
 
 [libraries]
 
 windows.x86_64 = "lib/Windows-AMD64/gd_videoplayer-d.dll"
+

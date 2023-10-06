@@ -2,14 +2,17 @@ extends Node
 
 @export var play_on_start: bool;
 @export var loop: bool;
+@export var uri: String = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 @export var geo: GeometryInstance3D;
-@export var v: SubViewport;
+
+@export_group("Output")
+@export var vieport: SubViewport;
 @export var plane: TextureRect;
+
+@export_group("Media Source")
 @export var player: FFmpegMediaPlayer;
 @export var audio_stream: AudioStreamPlayer;
 
-
-@export var uri: String;
 # const uri:String = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
 var mat: Material
@@ -25,7 +28,7 @@ func _ready():
 	player.audio_init();
 	
 func texture_update(tex, size):
-	v.size = size;
+	vieport.size = size;
 	mat.set_deferred("shader_parameter/tex", tex);
 	plane.set_deferred("texture", tex);
 		
