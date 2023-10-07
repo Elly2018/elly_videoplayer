@@ -13,6 +13,7 @@ background_color = Color(1, 1, 1, 1)
 viewport_path = NodePath("Sprite3D/SubViewport")
 
 [sub_resource type="Gradient" id="Gradient_xmxy3"]
+colors = PackedColorArray(0, 0, 0, 1, 0, 0, 0, 1)
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_xf3bu"]
 
