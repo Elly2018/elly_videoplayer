@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://ciy3ke0sxpite"]
+
+[ext_resource type="PackedScene" uid="uid://bpf8brbbdrtls" path="res://Prefab/PlayUI.tscn" id="1_lnj50"]
+
+[node name="XRPlayUI" type="Node3D"]
+
+[node name="Node3D" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5)
+
+[node name="SubViewport" type="SubViewport" parent="Node3D"]
+size = Vector2i(600, 200)
+
+[node name="PlayUI" parent="Node3D/SubViewport" instance=ExtResource("1_lnj50")]

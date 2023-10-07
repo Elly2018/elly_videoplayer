@@ -20,25 +20,12 @@ extends Node
 var mat: Material
 var phase = 0.0
 
-var waittime = 0.0
-var p = false
-
 func _ready():
 	if(geo != null):
 		mat = geo.material_override
 	player.set_player(audio_stream);
 	player.set_loop(loop);
 	if (play_on_start):
-		player.load_path(uri);
-		player.play();
-		player.audio_init();
-	
-func _process(delta):
-	if(play_on_start):
-		return;
-	waittime += delta;
-	if(waittime > 2.0 && !p):
-		p = true
 		player.load_path(uri);
 		player.play();
 		player.audio_init();
@@ -52,6 +39,27 @@ func texture_update(tex:ImageTexture, size:Vector2i):
 		
 func audio_update(data:PackedFloat32Array, size:int, channel:int):
 	pass
+		
+func audio_volumn(p:float):
+	audio_stream.volume_db = p;
+	
+func pause_trigger():
+	print("Pause trigger")
+	player.set_paused(!player.is_paused())
+	
+func play_trigger():
+	print("Play trigger")
+	player.play()
+	
+func stop_trigger():
+	print("Stop trigger")
+	player.stop()
+	
+func load_trigger(p:String):
+	print("Loading: ", p)
+	player.load_path(p);
+	player.play();
+	player.audio_init();
 		
 func async_load_finish(result):
 	print("Loading result: ", result)

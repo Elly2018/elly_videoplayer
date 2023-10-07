@@ -1,25 +1,24 @@
 extends Node
 
+signal ToPlay
+signal ToPause
+signal ToStop
+signal ToLoad(p:String)
+signal ToAudio(p:float)
+
 @export var input_uri: TextEdit
-@export var audio_slider: Slider
-
-# Called when the node enters the scene tree for the first time.
-func _ready():
-	pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
-	pass
 
 func OnPlay():
-	pass
+	emit_signal("ToPlay");
 	
 func OnPause():
-	pass
+	emit_signal("ToPause");
 	
 func OnStop():
-	pass
+	emit_signal("ToStop");
 	
 func OnLoad():
-	pass
+	emit_signal("ToLoad", input_uri.text);
+
+func OnAudio(v:float):
+	emit_signal("ToAudio", v);

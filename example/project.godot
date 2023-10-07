@@ -14,6 +14,7 @@ config/name="VideoPlayer"
 config/tags=PackedStringArray("audio", "video")
 run/main_scene="res://Scene/DemoScene.tscn"
 config/features=PackedStringArray("4.1", "C#", "GL Compatibility")
+run/max_fps=60
 config/icon="res://icon.svg"
 
 [audio]
@@ -22,7 +23,6 @@ driver/enable_input=true
 
 [display]
 
-window/size/borderless=true
 window/vsync/vsync_mode=0
 
 [dotnet]
@@ -43,7 +43,10 @@ avoidance/enable_file_logging=true
 
 [rendering]
 
-textures/canvas_textures/default_texture_filter=2
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 anti_aliasing/quality/msaa_3d=1
+
+[xr]
+
+shaders/enabled=true
