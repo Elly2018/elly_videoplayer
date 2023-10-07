@@ -6,10 +6,10 @@
 #include <mutex>
 #include <memory>
  
-class AVHandler {
+class AVDecoderHandler {
 public:
-	AVHandler();
-	~AVHandler();
+	AVDecoderHandler();
+	~AVDecoderHandler();
 	
 	enum DecoderState {
 		INIT_FAIL = -1, UNINITIALIZED, INITIALIZED, DECODING, SEEK, BUFFERING, DECODE_EOF, STOP

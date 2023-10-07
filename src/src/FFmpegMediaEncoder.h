@@ -43,7 +43,7 @@ private:
 
 	bool is_pause;
 	State state = UNINITIALIZED;
-	Ref<CameraTexture> target;
+	Ref<Image> target;
 	IOType in_type;
 	IOType out_type;
 	EncoderSetting setting;
@@ -54,7 +54,8 @@ protected:
 	static void _bind_methods();
 
 public:
-	void register_camera(Ref<CameraTexture> tex);
+	void push_image(Ref<Image> image);
+	void push_audio(PackedFloat32Array data, int sample_count, int channel);
 
 	void start();
 	void stop();

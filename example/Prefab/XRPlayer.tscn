@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://nepgy2yvue6r"]
+
+[ext_resource type="Script" path="res://Script/MouseController.gd" id="1_t31re"]
+[ext_resource type="Environment" uid="uid://co4hk2iqv5oxv" path="res://Environment/DemoScene.tres" id="2_0ppnw"]
+
+[node name="Player" type="Node3D"]
+script = ExtResource("1_t31re")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+environment = ExtResource("2_0ppnw")
+current = true
+fov = 90.0

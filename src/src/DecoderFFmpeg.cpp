@@ -1,6 +1,7 @@
 //========= Copyright 2015-2019, HTC Corporation. All rights reserved. ===========
 
 #include "DecoderFFmpeg.h"
+#include "DecodeConfig.h"
 #include "Logger.h"
 #include <fstream>
 #include <string>
@@ -21,8 +22,8 @@ DecoderFFmpeg::DecoderFFmpeg() {
 
 	mSwrContext = nullptr;
 
-	mVideoBuffMax = 64;
-	mAudioBuffMax = 128;
+	mVideoBuffMax = DEFAULT_VIDEO_BUFFER;
+	mAudioBuffMax = DEFAULT_AUDIO_BUFFER;
 
 	memset(&mVideoInfo, 0, sizeof(VideoInfo));
 	memset(&mAudioInfo, 0, sizeof(AudioInfo));
@@ -60,8 +61,8 @@ bool DecoderFFmpeg::init(const char* filePath) {
 	if (errorCode < 0) {
 		LOG("config loading error. \n");
 		LOG("Use default settings. \n");
-		mVideoBuffMax = 64;
-		mAudioBuffMax = 128;
+		mVideoBuffMax = DEFAULT_VIDEO_BUFFER;
+		mAudioBuffMax = DEFAULT_AUDIO_BUFFER;
 		mUseTCP = false;
 		mIsSeekToAny = false;
 	}
@@ -391,8 +392,8 @@ void DecoderFFmpeg::destroy() {
 	
 	mIsInitialized = false;
 	mIsAudioAllChEnabled = false;
-	mVideoBuffMax = 64;
-	mAudioBuffMax = 128;
+	mVideoBuffMax = DEFAULT_VIDEO_BUFFER;
+	mAudioBuffMax = DEFAULT_AUDIO_BUFFER;
 	mUseTCP = false;
 	mIsSeekToAny = false;
 }

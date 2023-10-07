@@ -388,6 +388,7 @@ FFmpegMediaPlayer::FFmpegMediaPlayer() {
 
 FFmpegMediaPlayer::~FFmpegMediaPlayer() {
 	nativeScheduleDestroyDecoder(id);
+	LOG("FFmpegMediaPlayer instance destroy. \n");
 }
 
 void FFmpegMediaPlayer::_notification(int p_what)
