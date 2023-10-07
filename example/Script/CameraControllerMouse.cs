@@ -4,11 +4,15 @@ public partial class CameraControllerMouse : Node3D
 {
     [Export] bool UseLog;
     [Export] float sensitivity;
-    [Export] CameraControllerMouse self = null;
     Vector2 pos = Vector2.Zero;
 	Vector2 delta = Vector2.Zero;
     bool view = false;
     bool reset = false;
+
+    public override void _Ready()
+    {
+        base._Ready();
+    }
 
     public override void _Input(InputEvent @event)
     {
@@ -28,14 +32,11 @@ public partial class CameraControllerMouse : Node3D
                 if (UseLog) GD.Print(delta);
                 pos = newpos;
 
-                if (self != null)
-                {
-                    Vector3 rot = self.Rotation;
-                    rot.Y += delta.X * sensitivity * 0.001f;
-                    rot.X += delta.Y * sensitivity * 0.001f;
-                    rot.Z = 0;
-                    self.Rotation = rot;
-                }
+                Vector3 rot = Rotation;
+                rot.Y += delta.X * sensitivity * 0.001f;
+                rot.X += delta.Y * sensitivity * 0.001f;
+                rot.Z = 0;
+                Rotation = rot;
             }
         }
         if (@event is InputEventMouseButton button)

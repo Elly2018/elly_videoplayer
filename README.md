@@ -4,7 +4,7 @@ A GDExtension for godot 4.x to play video, this is a wrapper of ffmpeg for decod
 
 Some showcase in below
 
-|![v1](img/v1.PNG)|![v1](img/v2.PNG)|![v1](img/v3.PNG)|
+|![v1](img/v1.PNG)|![v1](img/v2.PNG)|![v1](img/v4.GIF)|
 |-|-|-|
  
 ### Getting started:
