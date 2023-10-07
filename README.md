@@ -8,6 +8,9 @@ Some showcase in below
 
 |![v1](img/v1.PNG)|![v1](img/v2.PNG)|![v1](img/v3.PNG)|
 |-|-|-|
+
+The above demo use URL [BitBuckBunmny.mp4](http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4) link as input\
+And apply to VR sphere mesh and a viewport texture in front of player
  
 ### Getting started:
 
