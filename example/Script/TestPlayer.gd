@@ -13,8 +13,6 @@ extends Node
 @export var player: FFmpegMediaPlayer;
 @export var audio_stream: AudioStreamPlayer;
 
-# const uri:String = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-
 var mat: Material
 var phase = 0.0
 

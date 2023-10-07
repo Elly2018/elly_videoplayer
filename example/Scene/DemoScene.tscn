@@ -1,8 +1,8 @@
 [gd_scene load_steps=10 format=3 uid="uid://dn3rmx1bi81lv"]
 
 [ext_resource type="Environment" uid="uid://co4hk2iqv5oxv" path="res://Environment/DemoScene.tres" id="1_11yc7"]
+[ext_resource type="Script" path="res://Script/MouseController.gd" id="1_bdcv1"]
 [ext_resource type="PackedScene" uid="uid://bj6iuse67y4gl" path="res://Prefab/sphere.tscn" id="3_ihpox"]
-[ext_resource type="Script" path="res://Script/CameraControllerMouse.cs" id="4_h5p8w"]
 
 [sub_resource type="Environment" id="Environment_24h51"]
 background_color = Color(1, 1, 1, 1)
@@ -26,10 +26,8 @@ noise = SubResource("FastNoiseLite_xf3bu")
 environment = SubResource("Environment_24h51")
 camera_attributes = SubResource("CameraAttributesPractical_3w5hy")
 
-[node name="Node3D" type="Node3D" parent="." node_paths=PackedStringArray("self")]
-script = ExtResource("4_h5p8w")
-sensitivity = 1.0
-self = NodePath(".")
+[node name="Node3D" type="Node3D" parent="."]
+script = ExtResource("1_bdcv1")
 
 [node name="Camera3D" type="Camera3D" parent="Node3D"]
 environment = ExtResource("1_11yc7")
