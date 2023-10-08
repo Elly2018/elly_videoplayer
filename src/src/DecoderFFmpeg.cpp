@@ -121,6 +121,7 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		//	Duration / time_base = video time (seconds)
 		mVideoInfo.width = mVideoCodecContext->width;
 		mVideoInfo.height = mVideoCodecContext->height;
+		mVideoInfo.framerate = av_q2d(mVideoCodecContext->framerate);
 		mVideoInfo.totalTime = mVideoStream->duration <= 0 ? ctxDuration : mVideoStream->duration * av_q2d(mVideoStream->time_base);
 
 		//mVideoFrames.swap(decltype(mVideoFrames)());

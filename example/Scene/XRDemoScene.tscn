@@ -19,5 +19,6 @@ camera_attributes = SubResource("CameraAttributesPractical_3w5hy")
 [node name="Player" parent="." instance=ExtResource("2_jmy22")]
 
 [node name="Sphere" parent="." instance=ExtResource("3_alk7n")]
+play_on_start = false
 
 [node name="XRPlayUI" parent="." instance=ExtResource("4_bs2wu")]

@@ -4,7 +4,7 @@ extends Node
 @export var loop: bool;
 @export var uri: String = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 @export var geo: GeometryInstance3D;
-@export var te: TextureRect;
+@export var texture_rect: TextureRect;
 
 @export_group("Media Source")
 @export var player: FFmpegMediaPlayer;
@@ -16,13 +16,23 @@ extends Node
 # https://test-streams.mux.dev/x36xhzz/url_6/193039199_mp4_h264_aac_hq_7.m3u8
 # Big Buck ABR
 # https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8
-
+# Elephants Dream
+# http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4
+# Tear of steel (audio channel test)
+# https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4
+# Bitbop ball for sync test
+# http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8
 var mat: Material
+var aspect: float
+var rootInterface:Control
 var phase = 0.0
+
 
 func _ready():
 	if(geo != null):
 		mat = geo.material_override
+	if(texture_rect != null):
+		rootInterface = texture_rect.get_parent_control()
 	player.set_player(audio_stream);
 	player.set_loop(loop);
 	if (play_on_start):
@@ -31,11 +41,21 @@ func _ready():
 		player.audio_init();
 	
 func texture_update(tex:ImageTexture, size:Vector2i):
-	# vieport.size = size;
+	aspect = float(size.x) / float(size.y);
 	if (mat != null):
 		mat.set_deferred("shader_parameter/tex", tex);
-	if (te != null):
-		te.set_deferred("texture", tex);
+	if (texture_rect != null):
+		texture_rect.set_deferred("texture", tex);
+		var root_size = rootInterface.get_rect().size
+		var root_aspect = root_size.x / root_size.y
+		if root_aspect > aspect:
+			# Fit height
+			texture_rect.size = Vector2(root_size.y * aspect, root_size.y)
+			texture_rect.position = Vector2((root_size.x - (root_size.y * aspect)) / 2.0, 0.0)
+		else:
+			# Fit width
+			texture_rect.size = Vector2(root_size.x, root_size.x / aspect)
+			texture_rect.position = Vector2(0.0, (root_size.y - (root_size.x / aspect)) / 2.0)
 		
 func audio_update(data:PackedFloat32Array, size:int, channel:int):
 	pass

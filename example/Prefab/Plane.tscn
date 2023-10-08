@@ -5,22 +5,13 @@
 [sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_cr308"]
 buffer_length = 0.2
 
-[node name="Plane" type="Node3D" node_paths=PackedStringArray("te", "player", "audio_stream")]
+[node name="Plane" type="Node3D" node_paths=PackedStringArray("texture_rect", "player", "audio_stream")]
 transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0.203564, -0.109128, 0.122446)
 script = ExtResource("1_8ajqr")
-play_on_start = true
 loop = true
-te = NodePath("TextureRect")
+texture_rect = NodePath("Container/TextureRect")
 player = NodePath("FFmpegMediaPlayer")
 audio_stream = NodePath("Player")
-
-[node name="TextureRect" type="TextureRect" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-expand_mode = 1
 
 [node name="Player" type="AudioStreamPlayer" parent="."]
 stream = SubResource("AudioStreamGenerator_cr308")
@@ -29,6 +20,23 @@ autoplay = true
 [node name="FFmpegMediaPlayer" type="FFmpegMediaPlayer" parent="."]
 
 [node name="FFmpegMediaEncoder" type="FFmpegMediaEncoder" parent="."]
+
+[node name="Container" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TextureRect" type="TextureRect" parent="Container"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
 
 [connection signal="async_loaded" from="FFmpegMediaPlayer" to="." method="async_load_finish"]
 [connection signal="audio_update" from="FFmpegMediaPlayer" to="." method="audio_update"]

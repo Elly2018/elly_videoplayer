@@ -17,7 +17,6 @@ environment = SubResource("Environment_24h51")
 camera_attributes = SubResource("CameraAttributesPractical_3w5hy")
 
 [node name="Plane" parent="." instance=ExtResource("4_7ran5")]
-play_on_start = false
 
 [node name="2DPlayer" parent="." instance=ExtResource("2_74c40")]
 

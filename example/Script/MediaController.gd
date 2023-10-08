@@ -7,6 +7,7 @@ signal ToLoad(p:String)
 signal ToAudio(p:float)
 
 @export var input_uri: TextEdit
+@export var Con: Control
 
 func OnPlay():
 	emit_signal("ToPlay");
@@ -22,3 +23,6 @@ func OnLoad():
 
 func OnAudio(v:float):
 	emit_signal("ToAudio", v);
+
+func MenuTrigger():
+	Con.visible = !Con.visible;

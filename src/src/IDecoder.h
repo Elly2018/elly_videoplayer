@@ -13,6 +13,7 @@ public:
 		bool isEnabled;
 		int width;
 		int height;
+		float framerate;
 		double lastTime;
 		double totalTime;
 		BufferState bufferState;

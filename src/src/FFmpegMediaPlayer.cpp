@@ -15,8 +15,12 @@ void FFmpegMediaPlayer::_init_media() {
 	video_playback = nativeIsVideoEnabled(id);
 	if (video_playback) {
 		first_frame = true;
-
-		nativeGetVideoFormat(id, width, height, video_length);
+		nativeGetVideoFormat(id, width, height, framerate, video_length);
+		emit_signal("message", String("Video info:"));
+		emit_signal("message", String("\tWidth: ") + String::num(width));
+		emit_signal("message", String("\tHeight: ") + String::num(height));
+		emit_signal("message", String("\tFramerate: ") + String::num(framerate));
+		//delay_frame = Math::ceil(framerate / 4.0f);
 		data_size = width * height * 3;
 	}
 
@@ -24,7 +28,12 @@ void FFmpegMediaPlayer::_init_media() {
 	if (audio_playback) {
 		nativeGetAudioFormat(id, channels, sampleRate, audio_length);
 		generator->set_mix_rate(sampleRate);
+		emit_signal("message", String("Audio info:"));
+		emit_signal("message", String("\tChannel: ") + String::num(channels));
+		emit_signal("message", String("\tSamplerate: ") + String::num(sampleRate));
+		emit_signal("message", String("\tFLength: ") + String::num(audio_length));
 		LOG("Audio info: %d %d %d \n", channels, sampleRate, audio_length);
+		delay_audio = sampleRate * 0.4;
 		player->play();
 	}
 
@@ -112,7 +121,8 @@ void FFmpegMediaPlayer::play() {
 }
 
 void FFmpegMediaPlayer::stop() {
-	if (nativeGetDecoderState(id) != DECODING) {
+	if (state < State::DECODING) {
+		emit_signal("message", String("Stop failed, decoder state currently is: ") + String::num(state));
 		return;
 	}
 
@@ -122,6 +132,15 @@ void FFmpegMediaPlayer::stop() {
 	audio_current_time = 0.0f;
 	paused = false;
 	player->stop();
+	audioFrame.clear();
+	pipe_frame.clear();
+
+	PackedByteArray empty = PackedByteArray();
+	empty.append(0); empty.append(0); empty.append(0);
+	image->call_deferred("set_data", 1, 1, false, Image::FORMAT_RGB8, empty);
+	texture->set_deferred("image", image);
+	emit_signal("video_update", texture, Vector2i(1, 1));
+
 
 	emit_signal("message", String("start change to INITIALIZED"));
 	state = INITIALIZED;
@@ -227,9 +246,14 @@ void FFmpegMediaPlayer::_process(float delta) {
 					image_data.resize(data_size);
 					memcpy(image_data.ptrw(), frame_data, data_size);
 					LOG("actual data size: %d \n", image_data.size());
-					image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, image_data);
-					texture->set_deferred("image", image);
-					emit_signal("video_update", texture, Vector2i(width, height));
+					pipe_frame.push_back(image_data);
+					if (pipe_frame.size() > delay_frame) {
+						PackedByteArray buffer = pipe_frame.front()->get();
+						pipe_frame.pop_front();
+						image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, buffer);
+						texture->set_deferred("image", image);
+						emit_signal("video_update", texture, Vector2i(width, height));
+					}
 					
 					first_frame = false;
 
@@ -322,12 +346,20 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 				bool pass = false;
 				if (audioFrame.size() > 0) {
 					pass = true;
-					Vector2 element = audioFrame.front()->get();
-					if (playback.is_valid()) 
+					if (delay_audio > 0)
 					{
-						playback->push_frame(element);
+						playback->push_frame(Vector2(0, 0));
+						delay_audio -= 1;
 					}
-					audioFrame.pop_front();
+					else 
+					{
+						Vector2 element = audioFrame.front()->get();
+						if (playback.is_valid())
+						{
+							playback->push_frame(element);
+						}
+						audioFrame.pop_front();
+					}
 				}
 				c -= 1;
 			}
@@ -378,9 +410,10 @@ float FFmpegMediaPlayer::get_buffer_length() const
 	return generator->get_buffer_length();
 }
 FFmpegMediaPlayer::FFmpegMediaPlayer() {
-	image = Image::create(1,1,false, Image::FORMAT_RGB8);
+	image = Image::create(1, 1, false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
 	audioFrame = List<Vector2>();
+	pipe_frame = List<PackedByteArray>();
 
 	auto temp = Logger::instance();
 	LOG("FFmpegMediaPlayer instance created. \n");

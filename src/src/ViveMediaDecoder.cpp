@@ -190,7 +190,7 @@ bool nativeIsVideoEnabled(int id) {
 	return ret;
 }
 
-void nativeGetVideoFormat(int id, int& width, int& height, float& totalTime) {
+void nativeGetVideoFormat(int id, int& width, int& height, float& framerate, float& totalTime) {
     std::shared_ptr<VideoContext> videoCtx;
 	if (!getVideoContext(id, videoCtx)) { return; }
 
@@ -202,6 +202,7 @@ void nativeGetVideoFormat(int id, int& width, int& height, float& totalTime) {
 	IDecoder::VideoInfo videoInfo = videoCtx->avhandler->getVideoInfo();
 	width = videoInfo.width;
 	height = videoInfo.height;
+	framerate = videoInfo.framerate;
 	totalTime = (float)(videoInfo.totalTime);
 }
 

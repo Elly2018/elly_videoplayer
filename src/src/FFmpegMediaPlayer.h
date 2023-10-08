@@ -59,8 +59,12 @@ private:
 	bool video_playback = false;
 	int width = 0;
 	int height = 0;
+	float framerate = 0.0f;
+	int delay_frame = 0;
+	int delay_audio = 0;
 	float video_length = 0.0f;
 	List<Vector2> audioFrame;
+	List<PackedByteArray> pipe_frame;
 	double video_current_time = 0.0f;
 	int data_size = 0;
 	
