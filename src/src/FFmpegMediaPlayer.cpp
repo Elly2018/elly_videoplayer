@@ -62,8 +62,9 @@ bool FFmpegMediaPlayer::load_path(String path) {
 
 	int d_state = nativeGetDecoderState(id);
 	if (d_state > 1) {
-		emit_signal("error", String("Decoder state: ") + String(std::to_string(d_state).c_str()));
-		return false;
+		stop();
+		//emit_signal("error", String("Decoder state: ") + String(std::to_string(d_state).c_str()));
+		//return false;
 	}
 
 	CharString utf8 = path.utf8();
@@ -197,11 +198,21 @@ void FFmpegMediaPlayer::seek(float p_time) {
 
 	hang_time = p_time;
 
+	audioFrame.clear();
+	pipe_frame.clear();
+
 	state = SEEK;
 }
 
 void FFmpegMediaPlayer::_process(float delta) {
 	switch (state) {
+		case FAILED: {
+			state = UNINITIALIZED;
+			emit_signal("error", String("Main loop, async loading failed, nativeGetDecoderState == -1"));
+			emit_signal("error", String("Init failed"));
+			emit_signal("async_loaded", false);
+		} break;
+
 		case LOADING: {
 			if (nativeGetDecoderState(id) == INITIALIZED) {
 				_init_media();

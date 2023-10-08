@@ -32,6 +32,7 @@ private:
 		 * This means the media does not initialize yet.
 		 * It will trying to get the information it needs in order to start the decoding process.
 		*/
+		FAILED = -1,
 		LOADING,
 		UNINITIALIZED,
 		INITIALIZED,

@@ -62,14 +62,18 @@ func audio_update(data:PackedFloat32Array, size:int, channel:int):
 		
 func audio_volumn(p:float):
 	audio_stream.volume_db = p;
+
+func play_pause_trigger():
+	print("Play / Pause trigger")
+	player.set_paused(!player.is_paused())
 	
 func pause_trigger():
 	print("Pause trigger")
-	player.set_paused(!player.is_paused())
+	player.set_paused(true)
 	
 func play_trigger():
 	print("Play trigger")
-	player.play()
+	player.set_paused(false)
 	
 func stop_trigger():
 	print("Stop trigger")
@@ -91,3 +95,10 @@ func message_feedback(m:String):
 func error_feedback(m:String):
 	printerr(m)
 	
+func quick_seek_forward(m:float):
+	var t = player.get_playback_position() + m;
+	player.seek(t);
+	
+func quick_seek_backward(m:float):
+	var t = player.get_playback_position() - m;
+	player.seek(t);

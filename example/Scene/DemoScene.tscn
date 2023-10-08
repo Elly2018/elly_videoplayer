@@ -21,9 +21,13 @@ camera_attributes = SubResource("CameraAttributesPractical_3w5hy")
 [node name="2DPlayer" parent="." instance=ExtResource("2_74c40")]
 
 [node name="PlayUI" parent="." instance=ExtResource("3_5iufy")]
+seek_time = 5.0
 
+[connection signal="SeekBackward" from="PlayUI" to="Plane" method="quick_seek_backward"]
+[connection signal="SeekForward" from="PlayUI" to="Plane" method="quick_seek_forward"]
 [connection signal="ToAudio" from="PlayUI" to="Plane" method="audio_volumn"]
 [connection signal="ToLoad" from="PlayUI" to="Plane" method="load_trigger"]
 [connection signal="ToPause" from="PlayUI" to="Plane" method="pause_trigger"]
 [connection signal="ToPlay" from="PlayUI" to="Plane" method="play_trigger"]
+[connection signal="ToPlayPause" from="PlayUI" to="Plane" method="play_pause_trigger"]
 [connection signal="ToStop" from="PlayUI" to="Plane" method="stop_trigger"]

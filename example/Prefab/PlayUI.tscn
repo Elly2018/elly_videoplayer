@@ -57,7 +57,7 @@ offset_top = 15.0
 offset_right = -50.0
 offset_bottom = 31.0
 grow_horizontal = 2
-min_value = -20.0
+min_value = -40.0
 max_value = 10.0
 
 [node name="ButtonGroup" type="Control" parent="Container"]
