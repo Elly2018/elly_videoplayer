@@ -2,7 +2,7 @@ extends Node
 
 @export var play_on_start: bool;
 @export var loop: bool;
-@export var uri: String = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+@export var uri: String = "https://test-streams.mux.dev/x36xhzz/url_6/193039199_mp4_h264_aac_hq_7.m3u8";
 @export var geo: GeometryInstance3D;
 @export var texture_rect: TextureRect;
 
@@ -39,7 +39,7 @@ func _ready():
 		player.load_path(uri);
 		player.play();
 		player.audio_init();
-	
+
 func texture_update(tex:ImageTexture, size:Vector2i):
 	aspect = float(size.x) / float(size.y);
 	if (mat != null):
@@ -96,9 +96,11 @@ func error_feedback(m:String):
 	printerr(m)
 	
 func quick_seek_forward(m:float):
-	var t = player.get_playback_position() + m;
+	var currentTime = player.get_playback_position();
+	var t = currentTime + m;
 	player.seek(t);
 	
 func quick_seek_backward(m:float):
-	var t = player.get_playback_position() - m;
+	var currentTime = player.get_playback_position();
+	var t = currentTime - m;
 	player.seek(t);

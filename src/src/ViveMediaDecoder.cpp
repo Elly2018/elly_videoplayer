@@ -175,6 +175,13 @@ void nativeDestroyDecoder(int id) {
 	videoCtx->id = -1;
 }
 
+bool nativeGetOtherStreamIndex(int id, int type, int* li, int& count, int& current) {
+	std::shared_ptr<VideoContext> videoCtx;
+	if (!getVideoContext(id, videoCtx) || videoCtx->avhandler == nullptr) { return false; }
+
+	return videoCtx->avhandler->getOtherIndex((AVDecoderHandler::MediaType)type, li, count, current);
+}
+
 //	Video
 bool nativeIsVideoEnabled(int id) {
     std::shared_ptr<VideoContext> videoCtx;

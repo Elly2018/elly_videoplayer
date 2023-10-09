@@ -11,12 +11,18 @@
 using namespace godot;
 
 void FFmpegMediaPlayer::_init_media() {
+	int* li = nullptr;
+	int count = 0;
+	int current = 0;
 	emit_signal("message", String("start init media"));
 	video_playback = nativeIsVideoEnabled(id);
 	if (video_playback) {
 		first_frame = true;
 		nativeGetVideoFormat(id, width, height, framerate, video_length);
+		nativeGetOtherStreamIndex(id, 0, li, count, current);
 		emit_signal("message", String("Video info:"));
+		emit_signal("message", String("\tStream Count: ") + String::num(count));
+		emit_signal("message", String("\tCurrent Index: ") + String::num(current));
 		emit_signal("message", String("\tWidth: ") + String::num(width));
 		emit_signal("message", String("\tHeight: ") + String::num(height));
 		emit_signal("message", String("\tFramerate: ") + String::num(framerate));
@@ -27,8 +33,11 @@ void FFmpegMediaPlayer::_init_media() {
 	audio_playback = nativeIsAudioEnabled(id);
 	if (audio_playback) {
 		nativeGetAudioFormat(id, channels, sampleRate, audio_length);
+		nativeGetOtherStreamIndex(id, 1, li, count, current);
 		generator->set_mix_rate(sampleRate);
 		emit_signal("message", String("Audio info:"));
+		emit_signal("message", String("\tStream Count: ") + String::num(count));
+		emit_signal("message", String("\tCurrent Index: ") + String::num(current));
 		emit_signal("message", String("\tChannel: ") + String::num(channels));
 		emit_signal("message", String("\tSamplerate: ") + String::num(sampleRate));
 		emit_signal("message", String("\tFLength: ") + String::num(audio_length));

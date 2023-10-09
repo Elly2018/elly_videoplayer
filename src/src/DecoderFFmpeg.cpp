@@ -38,6 +38,10 @@ DecoderFFmpeg::~DecoderFFmpeg() {
 }
 
 bool DecoderFFmpeg::init(const char* filePath) {
+	return init(nullptr, filePath);
+}
+
+bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 	if (mIsInitialized) {
 		LOG("Decoder has been init. \n");
 		return true;
@@ -72,7 +76,13 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		av_dict_set(&opts, "rtsp_transport", "tcp", 0);
 	}
 	
-	errorCode = avformat_open_input(&mAVFormatContext, filePath, nullptr, &opts);
+	if (sizeof(format) == 0) {
+		errorCode = avformat_open_input(&mAVFormatContext, filePath, nullptr, &opts);
+	}
+	else {
+		const AVInputFormat* mInputFormat = av_find_input_format(format);
+		errorCode = avformat_open_input(&mAVFormatContext, filePath, mInputFormat, &opts);
+	}
 	av_dict_free(&opts);
 	if (errorCode < 0) {
 		LOG("avformat_open_input error(%x). \n", errorCode);
@@ -121,6 +131,7 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		//	Duration / time_base = video time (seconds)
 		mVideoInfo.width = mVideoCodecContext->width;
 		mVideoInfo.height = mVideoCodecContext->height;
+		mVideoInfo.currentIndex = videoStreamIndex;
 		mVideoInfo.framerate = av_q2d(mVideoCodecContext->framerate);
 		mVideoInfo.totalTime = mVideoStream->duration <= 0 ? ctxDuration : mVideoStream->duration * av_q2d(mVideoStream->time_base);
 
@@ -162,6 +173,17 @@ bool DecoderFFmpeg::init(const char* filePath) {
 		//mAudioFrames.swap(decltype(mAudioFrames)());
 	}
 
+	std::vector<int> videoIndex = std::vector<int>();
+	std::vector<int> audioIndex = std::vector<int>();
+	std::vector<int> subtitleIndex = std::vector<int>();
+	getListType(mAVFormatContext, videoIndex, audioIndex, subtitleIndex);
+	mVideoInfo.otherIndex = videoIndex.data();
+	mVideoInfo.otherIndexCount = videoIndex.size();
+	mAudioInfo.otherIndex = audioIndex.data();
+	mAudioInfo.otherIndexCount = audioIndex.size();
+	mSubtitleInfo.otherIndex = subtitleIndex.data();
+	mSubtitleInfo.otherIndexCount = subtitleIndex.size();
+
 	LOG("Finished initialization \n");
 	mIsInitialized = true;
 	print_stream_maps();
@@ -185,6 +207,8 @@ bool DecoderFFmpeg::decode() {
 			updateVideoFrame();
 		} else if (mAudioInfo.isEnabled && mPacket->stream_index == mAudioStream->index) {
 			updateAudioFrame();
+		} else if (mSubtitleInfo.isEnabled && mPacket->stream_index == mSubtitleStream->index) {
+			//updateAudioFrame();
 		}
 
 		av_packet_unref(mPacket);
@@ -201,6 +225,11 @@ IDecoder::VideoInfo DecoderFFmpeg::getVideoInfo() {
 
 IDecoder::AudioInfo DecoderFFmpeg::getAudioInfo() {
 	return mAudioInfo;
+}
+
+IDecoder::SubtitleInfo DecoderFFmpeg::getSubtitleInfo()
+{
+	return mSubtitleInfo;
 }
 
 void DecoderFFmpeg::setVideoEnable(bool isEnable) {
@@ -355,6 +384,20 @@ int DecoderFFmpeg::getMetaData(char**& key, char**& value) {
 	return metaCount;
 }
 
+int DecoderFFmpeg::getStreamCount()
+{
+	return mAVFormatContext != nullptr ? mAVFormatContext->nb_streams : 0;
+}
+
+int DecoderFFmpeg::getStreamType(int index)
+{
+	AVCodecContext* b = getStreamCodecContext(index);
+	if (b == nullptr) return -1;
+	int r = b->codec_type;
+	freeStreamCodecContext(b);
+	return r;
+}
+
 void DecoderFFmpeg::destroy() {
 	if (mVideoCodecContext != nullptr) {
 		avcodec_close(mVideoCodecContext);
@@ -388,8 +431,12 @@ void DecoderFFmpeg::destroy() {
 	mAudioStream = nullptr;
 	av_packet_unref(mPacket);
 	
+	delete mVideoInfo.otherIndex;
+	delete mAudioInfo.otherIndex;
+	delete mSubtitleInfo.otherIndex;
 	memset(&mVideoInfo, 0, sizeof(VideoInfo));
 	memset(&mAudioInfo, 0, sizeof(AudioInfo));
+	memset(&mSubtitleInfo, 0, sizeof(SubtitleInfo));
 	
 	mIsInitialized = false;
 	mIsAudioAllChEnabled = false;
@@ -428,7 +475,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 
 	int width = srcFrame->width;
 	int height = srcFrame->height;
-
+	
 	const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
 	LOG("Video format w:%d h:%d f:%d \n", width, height, dstFormat);
 	AVFrame* dstFrame = av_frame_alloc();
@@ -503,6 +550,28 @@ void DecoderFFmpeg::updateAudioFrame() {
 	av_frame_free(&frameDecoded);
 }
 
+void DecoderFFmpeg::updateSubtitleFrame()
+{
+	AVFrame* frameDecoded = av_frame_alloc();
+	int ret = avcodec_send_packet(mSubtitleCodecContext, mPacket);
+	if (ret != 0) {
+		LOG("Subtitle frame update failed: avcodec_send_packet, %d \n", ret);
+		return;
+	}
+	ret = avcodec_receive_frame(mSubtitleCodecContext, frameDecoded);
+	if (ret != 0) {
+		LOG("Subtitle frame update failed: avcodec_receive_frame, %d \n", ret);
+		return;
+	}
+
+	AVFrame* frame = av_frame_alloc();
+
+	std::lock_guard<std::mutex> lock(mSubtitleMutex);
+	mSubtitleFrames.push(frame);
+	updateBufferState();
+	av_frame_free(&frameDecoded);
+}
+
 void DecoderFFmpeg::freeVideoFrame() {
 	freeFrontFrame(&mVideoFrames, &mVideoMutex);
 }
@@ -563,6 +632,36 @@ void DecoderFFmpeg::flushBuffer(std::queue<AVFrame*>* frameBuff, std::mutex* mut
 	while (!frameBuff->empty()) {
 		av_frame_free(&(frameBuff->front()));
 		frameBuff->pop();
+	}
+}
+
+AVCodecContext* DecoderFFmpeg::getStreamCodecContext(int index)
+{
+	if (index < 0 || index > mAVFormatContext->nb_streams) {
+		LOG("Index out of range: getStreamsCodecContext \n");
+		return nullptr;
+	}
+	AVCodecContext* buffer = avcodec_alloc_context3(NULL);
+	avcodec_parameters_to_context(buffer, mAVFormatContext->streams[index]->codecpar);
+	return buffer;
+}
+
+void DecoderFFmpeg::freeStreamCodecContext(AVCodecContext* codec) {
+	if (codec != nullptr)
+	{
+		avcodec_close(codec);
+	}
+}
+
+void DecoderFFmpeg::getListType(AVFormatContext* format, std::vector<int>& v, std::vector<int>& a, std::vector<int>& s) {
+	v.clear();
+	a.clear();
+	s.clear();
+	for (int i = 0; i < format->nb_streams; i++) {
+		int type = getStreamType(i);
+		if (type == AVMEDIA_TYPE_VIDEO) v.push_back(i);
+		else if (type == AVMEDIA_TYPE_AUDIO) a.push_back(i);
+		else if (type == AVMEDIA_TYPE_SUBTITLE) s.push_back(i);
 	}
 }
 

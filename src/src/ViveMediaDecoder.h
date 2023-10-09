@@ -13,6 +13,7 @@ extern "C" {
 	bool nativeStartDecoding(int id);
     void nativeScheduleDestroyDecoder(int id);
 	void nativeDestroyDecoder(int id);
+	bool nativeGetOtherStreamIndex(int id, int type, int* li, int& count, int& current);
 	bool nativeIsEOF(int id);
     void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady);
     void nativeReleaseVideoFrame(int id);

@@ -14,6 +14,9 @@ public:
 	enum DecoderState {
 		INIT_FAIL = -1, UNINITIALIZED, INITIALIZED, DECODING, SEEK, BUFFERING, DECODE_EOF, STOP
 	};
+	enum MediaType {
+		VIDEO, AUDIO, SUBTITLE
+	};
 	DecoderState getDecoderState();
 
 	void init(const char* filePath);
@@ -28,6 +31,7 @@ public:
 	
 	double getVideoFrame(void** frameData);
 	double getAudioFrame(uint8_t** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample);
+	bool getOtherIndex(MediaType type, int* li, int& count, int& current);
 	void freeVideoFrame();
 	void freeAudioFrame();
 	void setVideoEnable(bool isEnable);
@@ -36,6 +40,7 @@ public:
 
 	IDecoder::VideoInfo getVideoInfo();
 	IDecoder::AudioInfo getAudioInfo();
+	IDecoder::SubtitleInfo getSubtitleInfo();
 	bool isVideoBufferEmpty();
 	bool isVideoBufferFull();
 

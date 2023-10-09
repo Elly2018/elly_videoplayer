@@ -66,6 +66,39 @@ double AVDecoderHandler::getAudioFrame(unsigned char** outputFrame, int& frameSi
 	return mIDecoder->getAudioFrame(outputFrame, frameSize, nb_channel, byte_per_sample);
 }
 
+bool AVDecoderHandler::getOtherIndex(MediaType type, int* li, int& count, int& current)
+{
+	switch (type)
+	{
+	case AVDecoderHandler::VIDEO:
+		{
+			IDecoder::VideoInfo info = getVideoInfo();
+			count = info.otherIndexCount;
+			current = info.currentIndex;
+			//memcpy(li, info.otherIndex, count * sizeof(int));
+			li = info.otherIndex;
+		} return true;
+	case AVDecoderHandler::AUDIO:
+		{
+			IDecoder::AudioInfo info = getAudioInfo();
+			count = info.otherIndexCount;
+			current = info.currentIndex;
+			//memcpy(li, info.otherIndex, count * sizeof(int));
+			li = info.otherIndex;
+		} return true;
+	case AVDecoderHandler::SUBTITLE:
+		{
+			IDecoder::SubtitleInfo info = getSubtitleInfo();
+			count = info.otherIndexCount;
+			current = info.currentIndex;
+			//memcpy(li, info.otherIndex, count * sizeof(int));
+			li = info.otherIndex;
+		} return true;
+	}
+
+	return false;
+}
+
 void AVDecoderHandler::freeVideoFrame() {
 	if (mIDecoder == nullptr || !mIDecoder->getVideoInfo().isEnabled || mDecoderState == SEEK) {
 		LOG("Video is not available. \n");
@@ -138,6 +171,10 @@ IDecoder::VideoInfo AVDecoderHandler::getVideoInfo() {
 
 IDecoder::AudioInfo AVDecoderHandler::getAudioInfo() {
 	return mIDecoder->getAudioInfo();
+}
+
+IDecoder::SubtitleInfo AVDecoderHandler::getSubtitleInfo() {
+	return mIDecoder->getSubtitleInfo();
 }
 
 bool AVDecoderHandler::isVideoBufferEmpty() {
