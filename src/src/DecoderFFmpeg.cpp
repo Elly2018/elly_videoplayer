@@ -219,6 +219,16 @@ bool DecoderFFmpeg::decode() {
 	return true;
 }
 
+bool DecoderFFmpeg::buffering()
+{
+	if (!mIsInitialized) {
+		LOG("Not initialized. \n");
+		return false;
+	}
+
+	return false;
+}
+
 IDecoder::VideoInfo DecoderFFmpeg::getVideoInfo() {
 	return mVideoInfo;
 }
@@ -230,6 +240,11 @@ IDecoder::AudioInfo DecoderFFmpeg::getAudioInfo() {
 IDecoder::SubtitleInfo DecoderFFmpeg::getSubtitleInfo()
 {
 	return mSubtitleInfo;
+}
+
+bool DecoderFFmpeg::isBufferingFinish()
+{
+	return false;
 }
 
 void DecoderFFmpeg::setVideoEnable(bool isEnable) {

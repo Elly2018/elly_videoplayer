@@ -6,6 +6,7 @@
 
 AVDecoderHandler::AVDecoderHandler() {
 	mDecoderState = UNINITIALIZED;
+	mBufferState = NONE;
 	mSeekTime = 0.0;
 	mIDecoder = std::make_unique<DecoderFFmpeg>();
 }
@@ -148,6 +149,19 @@ void AVDecoderHandler::startDecoding() {
 			}
 		}
         mDecodeThreadRunning = false;
+	});
+
+	mBufferThread = std::thread([&]() {
+		mBufferThreadRunning = true;
+		if (mDecoderState < DECODING) {
+			LOG("It is not during the decoding state. \n");
+			LOG("Buffer thread would not start. \n");
+			return;
+		}
+		while (mBufferThreadRunning) {
+			mBufferThreadRunning = mIDecoder->isBufferingFinish();
+		}
+		mBufferThreadRunning = false;
 	});
 }
 

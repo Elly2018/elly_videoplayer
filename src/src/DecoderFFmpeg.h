@@ -21,12 +21,14 @@ public:
 	bool init(const char* filePath);
 	bool init(const char* format, const char* filePath);
 	bool decode();
+	bool buffering();
 	void seek(double time);
 	void destroy();
 
 	VideoInfo getVideoInfo();
 	AudioInfo getAudioInfo();
 	SubtitleInfo getSubtitleInfo();
+	bool isBufferingFinish();
 	void setVideoEnable(bool isEnable);
 	void setAudioEnable(bool isEnable);
 	void setAudioAllChDataEnable(bool isEnable);

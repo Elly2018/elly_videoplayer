@@ -365,13 +365,17 @@ void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady) {
 
 	AVDecoderHandler* localAVDecoderHandler = videoCtx->avhandler.get();
 
-    if (localAVDecoderHandler != nullptr && localAVDecoderHandler->getDecoderState() >= AVDecoderHandler::DecoderState::INITIALIZED && localAVDecoderHandler->getVideoInfo().isEnabled) {
+    if (localAVDecoderHandler != nullptr && 
+		localAVDecoderHandler->getDecoderState() >= AVDecoderHandler::DecoderState::INITIALIZED && 
+		localAVDecoderHandler->getVideoInfo().isEnabled) {
         double videoDecCurTime = localAVDecoderHandler->getVideoInfo().lastTime;
         if (videoDecCurTime <= videoCtx->progressTime) {
 
             double curFrameTime = localAVDecoderHandler->getVideoFrame(frameData);
 			LOG("current frame time: %f %d %d %d \n", curFrameTime, frameData != nullptr, curFrameTime != -1, videoCtx->lastUpdateTime != curFrameTime);
-            if (frameData != nullptr && curFrameTime != -1 && videoCtx->lastUpdateTime != curFrameTime) {
+            if (frameData != nullptr && 
+				curFrameTime != -1 && 
+				videoCtx->lastUpdateTime != curFrameTime) {
                 frameReady = true;
                 videoCtx->lastUpdateTime = (float)curFrameTime;
                 videoCtx->isContentReady = true;

@@ -14,6 +14,9 @@ public:
 	enum DecoderState {
 		INIT_FAIL = -1, UNINITIALIZED, INITIALIZED, DECODING, SEEK, BUFFERING, DECODE_EOF, STOP
 	};
+	enum BufferState {
+		NONE, BUFFERING, FINISHED
+	};
 	enum MediaType {
 		VIDEO, AUDIO, SUBTITLE
 	};
@@ -48,9 +51,12 @@ public:
 
 private:
 	DecoderState mDecoderState;
+	BufferState mBufferState;
 	std::unique_ptr<IDecoder> mIDecoder;
 	double mSeekTime;
 	
 	std::thread mDecodeThread;
+	std::thread mBufferThread;
     bool mDecodeThreadRunning = false;
+	bool mBufferThreadRunning = false;
 };
