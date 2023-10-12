@@ -38,6 +38,4 @@ autoplay = true
 
 [connection signal="async_loaded" from="FFmpegMediaPlayer" to="." method="async_load_finish"]
 [connection signal="audio_update" from="FFmpegMediaPlayer" to="." method="audio_update"]
-[connection signal="error" from="FFmpegMediaPlayer" to="." method="error_feedback"]
-[connection signal="message" from="FFmpegMediaPlayer" to="." method="message_feedback"]
 [connection signal="video_update" from="FFmpegMediaPlayer" to="." method="texture_update"]

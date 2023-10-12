@@ -5,12 +5,12 @@ using namespace godot;
 
 FFmpegMediaEncoder::FFmpegMediaEncoder()
 {
-	LOG("FFmpegMediaEncoder instance created. \n");
+	LOG("FFmpegMediaEncoder instance created.");
 }
 
 FFmpegMediaEncoder::~FFmpegMediaEncoder()
 {
-	LOG("FFmpegMediaEncoder instance destroy. \n");
+	LOG("FFmpegMediaEncoder instance destroy.");
 }
 
 void FFmpegMediaEncoder::push_image(Ref<Image> image)

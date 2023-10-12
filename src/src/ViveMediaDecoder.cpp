@@ -39,7 +39,7 @@ bool getVideoContext(int id, std::shared_ptr<VideoContext>& videoCtx) {
 		}
 	}
 
-	LOG("Decoder does not exist. \n");
+	LOG("[ViveMediaDecoder] Decoder does not exist.");
 	return false;
 }
 
@@ -77,7 +77,7 @@ void nativeCleanDestroyedDecoders() {
 }
 
 int nativeCreateDecoderAsync(const char* filePath, int& id) {
-	LOG("Query available decoder id. \n");
+	LOG("[ViveMediaDecoder] Query available decoder id.");
 
 	int newID = 0;
     std::shared_ptr<VideoContext> videoCtx;
@@ -103,7 +103,7 @@ int nativeCreateDecoderAsync(const char* filePath, int& id) {
 
 //	Synchronized init. Used for thumbnail currently.
 int nativeCreateDecoder(const char* filePath, int& id) {
-	LOG("Query available decoder id. \n");
+	LOG("[ViveMediaDecoder] Query available decoder id.");
 
 	int newID = 0;
     std::shared_ptr<VideoContext> videoCtx;
@@ -188,12 +188,12 @@ bool nativeIsVideoEnabled(int id) {
 	if (!getVideoContext(id, videoCtx)) { return false; }
 
 	if (videoCtx->avhandler->getDecoderState() < AVDecoderHandler::DecoderState::INITIALIZED) {
-		LOG("Decoder is unavailable currently. \n");
+		LOG("[ViveMediaDecoder] Decoder is unavailable currently.");
 		return false;
 	}
 
 	bool ret = videoCtx->avhandler->getVideoInfo().isEnabled;
-	LOG("nativeIsVideoEnabled: %s \n", ret ? "true" : "false");
+	LOG("[ViveMediaDecoder] nativeIsVideoEnabled: ", ret ? "true" : "false");
 	return ret;
 }
 
@@ -202,7 +202,7 @@ void nativeGetVideoFormat(int id, int& width, int& height, float& framerate, flo
 	if (!getVideoContext(id, videoCtx)) { return; }
 
 	if (videoCtx->avhandler->getDecoderState() < AVDecoderHandler::DecoderState::INITIALIZED) {
-		LOG("Decoder is unavailable currently. \n");
+		LOG("[ViveMediaDecoder] Decoder is unavailable currently.");
 		return;
 	}
 
@@ -225,12 +225,12 @@ bool nativeIsAudioEnabled(int id) {
 	if (!getVideoContext(id, videoCtx)) { return false; }
 
 	if (videoCtx->avhandler->getDecoderState() < AVDecoderHandler::DecoderState::INITIALIZED) {
-		LOG("Decoder is unavailable currently. \n");
+		LOG("[ViveMediaDecoder] Decoder is unavailable currently.");
 		return false;
 	}
 
 	bool ret = videoCtx->avhandler->getAudioInfo().isEnabled;
-	LOG("nativeIsAudioEnabled: %s \n", ret ? "true" : "false");
+	LOG("[ViveMediaDecoder] nativeIsAudioEnabled: ", ret ? "true" : "false");
 	return ret;
 }
 
@@ -239,7 +239,7 @@ void nativeGetAudioFormat(int id, int& channel, int& sampleRate, float& totalTim
 	if (!getVideoContext(id, videoCtx)) { return; }
 
 	if (videoCtx->avhandler->getDecoderState() < AVDecoderHandler::DecoderState::INITIALIZED) {
-		LOG("Decoder is unavailable currently. \n");
+		LOG("[ViveMediaDecoder] Decoder is unavailable currently. ");
 		return;
 	}
 
@@ -268,11 +268,11 @@ void nativeSetSeekTime(int id, float sec) {
 	if (!getVideoContext(id, videoCtx)) { return; }
 
 	if (videoCtx->avhandler->getDecoderState() < AVDecoderHandler::DecoderState::INITIALIZED) {
-		LOG("Decoder is unavailable currently. \n");
+		LOG("[ViveMediaDecoder] Decoder is unavailable currently. ");
 		return;
 	}
 
-	LOG("nativeSetSeekTime %f. \n", sec);
+	LOG("[ViveMediaDecoder] nativeSetSeekTime: ", sec);
 	videoCtx->avhandler->setSeekTime(sec);
 	if (!videoCtx->avhandler->getVideoInfo().isEnabled) {
 		videoCtx->isContentReady = true;
@@ -359,7 +359,7 @@ void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady) {
     std::shared_ptr<VideoContext> videoCtx;
     if (!getVideoContext(id, videoCtx) || videoCtx->avhandler == nullptr) { return; }
     if (videoCtx->videoFrameLocked) {
-        LOG("Release last video frame first");
+        LOG("[ViveMediaDecoder] Release last video frame first");
         return;
     }
 
@@ -372,7 +372,6 @@ void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady) {
         if (videoDecCurTime <= videoCtx->progressTime) {
 
             double curFrameTime = localAVDecoderHandler->getVideoFrame(frameData);
-			LOG("current frame time: %f %d %d %d \n", curFrameTime, frameData != nullptr, curFrameTime != -1, videoCtx->lastUpdateTime != curFrameTime);
             if (frameData != nullptr && 
 				curFrameTime != -1 && 
 				videoCtx->lastUpdateTime != curFrameTime) {
