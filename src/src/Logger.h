@@ -8,7 +8,7 @@
 
 using namespace godot;
 
-#define ENABLE_LOG
+//#define ENABLE_LOG
 #ifdef ENABLE_LOG
 #define LOG(...) godot::UtilityFunctions::print( __VA_ARGS__ )
 #define LOG_ERROR(...) godot::UtilityFunctions::printerr( __VA_ARGS__ )

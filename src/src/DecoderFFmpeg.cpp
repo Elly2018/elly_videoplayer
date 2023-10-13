@@ -73,6 +73,8 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 	}
 
 	AVDictionary* opts = nullptr;
+	av_dict_set(&opts, "buffer_size", "655360", 0);
+	av_dict_set(&opts, "hwaccel", "auto", 0);
 	if (mUseTCP) {
 		av_dict_set(&opts, "rtsp_transport", "tcp", 0);
 	}
@@ -197,6 +199,7 @@ bool DecoderFFmpeg::decode() {
 		return false;
 	}
 
+	// Five iteration ahead
 	if (!isBuffBlocked()) {
 		if (av_read_frame(mAVFormatContext, mPacket) < 0) {
 			updateVideoFrame();
@@ -206,9 +209,11 @@ bool DecoderFFmpeg::decode() {
 
 		if (mVideoInfo.isEnabled && mPacket->stream_index == mVideoStream->index) {
 			updateVideoFrame();
-		} else if (mAudioInfo.isEnabled && mPacket->stream_index == mAudioStream->index) {
+		}
+		else if (mAudioInfo.isEnabled && mPacket->stream_index == mAudioStream->index) {
 			updateAudioFrame();
-		} else if (mSubtitleInfo.isEnabled && mPacket->stream_index == mSubtitleStream->index) {
+		}
+		else if (mSubtitleInfo.isEnabled && mPacket->stream_index == mSubtitleStream->index) {
 			//updateSubtitleFrame();
 		}
 
@@ -347,6 +352,8 @@ double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize,
 	double timeInSec = av_q2d(mAudioStream->time_base) * timeStamp;
 	mAudioInfo.lastTime = timeInSec;
 
+	LOG("mAudioInfo.lastTime: ", timeInSec);
+
 	return timeInSec;
 }
 
@@ -473,94 +480,98 @@ bool DecoderFFmpeg::isBuffBlocked() {
 }
 
 void DecoderFFmpeg::updateVideoFrame() {
-	AVFrame* srcFrame = av_frame_alloc();
-	clock_t start = clock();
 	int ret = avcodec_send_packet(mVideoCodecContext, mPacket);
 	if (ret != 0) {
 		LOG("Video frame update failed: avcodec_send_packet ", ret);
 		return;
 	}
-	ret = avcodec_receive_frame(mVideoCodecContext, srcFrame);
-	if (ret != 0) {
-		LOG("Video frame update failed: avcodec_receive_frame ", ret);
-		return;
-	}
+	do {
+		AVFrame* srcFrame = av_frame_alloc();
+		clock_t start = clock();
+		ret = avcodec_receive_frame(mVideoCodecContext, srcFrame);
+		if (ret != 0) {
+			//LOG("Video frame update failed: avcodec_receive_frame ", ret);
+			return;
+		}
 
-	int width = srcFrame->width;
-	int height = srcFrame->height;
-	
-	const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
-	LOG("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
-	AVFrame* dstFrame = av_frame_alloc();
-	av_frame_copy_props(dstFrame, srcFrame);
+		int width = srcFrame->width;
+		int height = srcFrame->height;
 
-	dstFrame->format = dstFormat;
+		const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
+		LOG("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
+		AVFrame* dstFrame = av_frame_alloc();
+		av_frame_copy_props(dstFrame, srcFrame);
 
-	//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
-	int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
-	LOG("Number of bytes: ", numBytes);
-	AVBufferRef* buffer = av_buffer_alloc(numBytes * sizeof(uint8_t));
-	//avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
-	av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
-	dstFrame->buf[0] = buffer;
+		dstFrame->format = dstFormat;
 
-	SwsContext* conversion = sws_getContext(width,
-		height,
-		(AVPixelFormat)srcFrame->format,
-		width,
-		height,
-		dstFormat,
-		SWS_FAST_BILINEAR,
-		nullptr,
-		nullptr,
-		nullptr);
-	sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
-	sws_freeContext(conversion);
+		//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
+		int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
+		LOG("Number of bytes: ", numBytes);
+		AVBufferRef* buffer = av_buffer_alloc(numBytes * sizeof(uint8_t));
+		//avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
+		av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
+		dstFrame->buf[0] = buffer;
 
-	dstFrame->format = dstFormat;
-	dstFrame->width = srcFrame->width;
-	dstFrame->height = srcFrame->height;
+		SwsContext* conversion = sws_getContext(width,
+			height,
+			(AVPixelFormat)srcFrame->format,
+			width,
+			height,
+			dstFormat,
+			SWS_FAST_BILINEAR,
+			nullptr,
+			nullptr,
+			nullptr);
+		sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
+		sws_freeContext(conversion);
 
-	av_frame_free(&srcFrame);
+		dstFrame->format = dstFormat;
+		dstFrame->width = srcFrame->width;
+		dstFrame->height = srcFrame->height;
 
-	LOG("updateVideoFrame = ", (float)(clock() - start) / CLOCKS_PER_SEC);
+		av_frame_free(&srcFrame);
 
-	std::lock_guard<std::mutex> lock(mVideoMutex);
-	mVideoFrames.push(dstFrame);
-	updateBufferState();
+		LOG("updateVideoFrame = ", (float)(clock() - start) / CLOCKS_PER_SEC);
+
+		std::lock_guard<std::mutex> lock(mVideoMutex);
+		mVideoFrames.push(dstFrame);
+		updateBufferState();
+	} while (ret != AVERROR(EAGAIN));
 }
 
 void DecoderFFmpeg::updateAudioFrame() {
-	AVFrame* frameDecoded = av_frame_alloc();
-
 	int ret = avcodec_send_packet(mAudioCodecContext, mPacket);
 	if (ret != 0) {
 		LOG("Audio frame update failed: avcodec_send_packet ", ret);
 		return;
 	}
-	ret = avcodec_receive_frame(mAudioCodecContext, frameDecoded);
-	if (ret != 0) {
-		LOG("Audio frame update failed: avcodec_receive_frame ", ret);
-		return;
-	}
+	do {
+		AVFrame* frameDecoded = av_frame_alloc();
+		ret = avcodec_receive_frame(mAudioCodecContext, frameDecoded);
+		if (ret != 0) {
+			//LOG("Audio frame update failed: avcodec_receive_frame ", ret);
+			return;
+		}
 
-	AVFrame* frame = av_frame_alloc();
-	frame->sample_rate = frameDecoded->sample_rate;
-	frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
-	frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
-	frame->best_effort_timestamp = frameDecoded->best_effort_timestamp;
-	
-	ret = swr_convert_frame(mSwrContext, frame, frameDecoded);
-	if (ret != 0) {
-		LOG("Audio update failed ", ret);
-	}
+		AVFrame* frame = av_frame_alloc();
+		frame->sample_rate = frameDecoded->sample_rate;
+		frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
+		frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
+		frame->best_effort_timestamp = frameDecoded->best_effort_timestamp;
 
-	LOG("updateAudioFrame. linesize: ", frame->linesize[0]);
+		ret = swr_convert_frame(mSwrContext, frame, frameDecoded);
+		if (ret != 0) {
+			LOG("Audio update failed ", ret);
+		}
 
-	std::lock_guard<std::mutex> lock(mAudioMutex);
-	mAudioFrames.push(frame);
-	updateBufferState();
-	av_frame_free(&frameDecoded);
+		av_frame_free(&frameDecoded);
+
+		LOG("updateAudioFrame. linesize: ", frame->linesize[0]);
+
+		std::lock_guard<std::mutex> lock(mAudioMutex);
+		mAudioFrames.push(frame);
+		updateBufferState();
+	} while (ret != AVERROR(EAGAIN));
 }
 
 void DecoderFFmpeg::updateSubtitleFrame()

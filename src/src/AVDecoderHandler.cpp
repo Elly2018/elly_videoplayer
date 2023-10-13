@@ -3,6 +3,7 @@
 #include "AVDecoderHandler.h"
 #include "DecoderFFmpeg.h"
 #include "Logger.h"
+#include <Windows.h>
 
 AVDecoderHandler::AVDecoderHandler() {
 	mDecoderState = UNINITIALIZED;
@@ -46,7 +47,10 @@ double AVDecoderHandler::getVideoFrame(void** frameData) {
 	bool decoder_disable = !mIDecoder->getVideoInfo().isEnabled;
 	bool decoder_seek = mDecoderState == SEEK;
 	if (decoder_null || decoder_disable || decoder_seek) {
-		LOG("[AVDecoderHandler] Video is not available: ");
+		LOG_ERROR("[AVDecoderHandler] Video is not available: ");
+		LOG_ERROR("[AVDecoderHandler] decoder_null: ", decoder_null);
+		LOG_ERROR("[AVDecoderHandler] decoder_disable: ", decoder_disable);
+		LOG_ERROR("[AVDecoderHandler] decoder_seek: ", decoder_seek);
 		*frameData = nullptr;
 		return -1;
 	}
@@ -59,7 +63,10 @@ double AVDecoderHandler::getAudioFrame(unsigned char** outputFrame, int& frameSi
 	bool decoder_disable = !mIDecoder->getAudioInfo().isEnabled;
 	bool decoder_seek = mDecoderState == SEEK;
 	if (decoder_null || decoder_disable || decoder_seek) {
-		LOG("[AVDecoderHandler] Audio is not available. ");
+		LOG_ERROR("[AVDecoderHandler] Audio is not available. ");
+		LOG_ERROR("[AVDecoderHandler] decoder_null: ", decoder_null);
+		LOG_ERROR("[AVDecoderHandler] decoder_disable: ", decoder_disable);
+		LOG_ERROR("[AVDecoderHandler] decoder_seek: ", decoder_seek);
 		*outputFrame = nullptr;
 		return -1;
 	}
@@ -125,7 +132,7 @@ void AVDecoderHandler::startDecoding() {
 	}
 
 	mDecodeThread = std::thread([&]() {
-        mDecodeThreadRunning = true;
+    mDecodeThreadRunning = true;
 		if (!(mIDecoder->getVideoInfo().isEnabled || mIDecoder->getAudioInfo().isEnabled)) {
 			LOG("[AVDecoderHandler] No stream enabled.");
 			LOG("[AVDecoderHandler] Decode thread would not start.");
@@ -149,19 +156,6 @@ void AVDecoderHandler::startDecoding() {
 			}
 		}
         mDecodeThreadRunning = false;
-	});
-	return;
-	mBufferThread = std::thread([&]() {
-		mBufferThreadRunning = true;
-		if (mDecoderState < DECODING) {
-			LOG("[AVDecoderHandler] It is not during the decoding state.");
-			LOG("[AVDecoderHandler] Buffer thread would not start.");
-			return;
-		}
-		while (mBufferThreadRunning) {
-			mBufferThreadRunning = mIDecoder->isBufferingFinish();
-		}
-		mBufferThreadRunning = false;
 	});
 }
 
