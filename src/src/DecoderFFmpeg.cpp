@@ -10,6 +10,7 @@ extern "C" {
 }
 
 DecoderFFmpeg::DecoderFFmpeg() {
+	LOG("[DecoderFFmpeg] Create");
 	mAVFormatContext = nullptr;
 	mVideoStream = nullptr;
 	mAudioStream = nullptr;
@@ -33,6 +34,7 @@ DecoderFFmpeg::DecoderFFmpeg() {
 }
 
 DecoderFFmpeg::~DecoderFFmpeg() {
+	LOG("[DecoderFFmpeg] Destroy");
 	destroy();
 }
 
@@ -102,7 +104,7 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 	LOG("Video initialization  ");
 	int videoStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
 	if (videoStreamIndex < 0) {
-		LOG("video stream not found. \n");
+		LOG("video stream not found.");
 		mVideoInfo.isEnabled = false;
 	} else {
 		mVideoInfo.isEnabled = true;
@@ -207,7 +209,7 @@ bool DecoderFFmpeg::decode() {
 		} else if (mAudioInfo.isEnabled && mPacket->stream_index == mAudioStream->index) {
 			updateAudioFrame();
 		} else if (mSubtitleInfo.isEnabled && mPacket->stream_index == mSubtitleStream->index) {
-			//updateAudioFrame();
+			//updateSubtitleFrame();
 		}
 
 		av_packet_unref(mPacket);
@@ -323,7 +325,7 @@ double DecoderFFmpeg::getVideoFrame(void** frameData) {
 	double timeInSec = av_q2d(mVideoStream->time_base) * timeStamp;
 	mVideoInfo.lastTime = timeInSec;
 
-    LOG("mVideoInfo.lastTime: ", timeInSec);
+ LOG("mVideoInfo.lastTime: ", timeInSec);
 
 	return timeInSec;
 }
@@ -331,7 +333,7 @@ double DecoderFFmpeg::getVideoFrame(void** frameData) {
 double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
 	std::lock_guard<std::mutex> lock(mAudioMutex);
 	if (!mIsInitialized || mAudioFrames.size() == 0) {
-		LOG("Audio frame not available. \n");
+		LOG("Audio frame not available. ");
 		*outputFrame = nullptr;
 		return -1;
 	}
@@ -350,14 +352,14 @@ double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize,
 
 void DecoderFFmpeg::seek(double time) {
 	if (!mIsInitialized) {
-		LOG("Not initialized. \n");
+		LOG("Not initialized.");
 		return;
 	}
 
 	uint64_t timeStamp = (uint64_t) time * AV_TIME_BASE;
 
 	if (0 > av_seek_frame(mAVFormatContext, -1, timeStamp, mIsSeekToAny ? AVSEEK_FLAG_ANY : AVSEEK_FLAG_BACKWARD)) {
-		LOG("Seek time fail.\n");
+		LOG("Seek time fail.");
 		return;
 	}
 
@@ -445,9 +447,6 @@ void DecoderFFmpeg::destroy() {
 	mAudioStream = nullptr;
 	av_packet_unref(mPacket);
 	
-	delete mVideoInfo.otherIndex;
-	delete mAudioInfo.otherIndex;
-	delete mSubtitleInfo.otherIndex;
 	memset(&mVideoInfo, 0, sizeof(VideoInfo));
 	memset(&mAudioInfo, 0, sizeof(AudioInfo));
 	memset(&mSubtitleInfo, 0, sizeof(SubtitleInfo));
@@ -705,7 +704,7 @@ void DecoderFFmpeg::updateBufferState() {
 int DecoderFFmpeg::loadConfig() {
 	std::ifstream configFile("config", std::ifstream::in);
 	if (!configFile) {
-		LOG("config does not exist.\n");
+		LOG("config does not exist.");
 		return -1;
 	}
 
@@ -731,11 +730,11 @@ int DecoderFFmpeg::loadConfig() {
 	mVideoBuffMax = buffVideoMax;
 	mAudioBuffMax = buffAudioMax;
 	mIsSeekToAny = seekAny != 0;
-	LOG("config loading success.\n");
-	LOG("USE_TCP=%s\n", mUseTCP ? "true" : "false");
-	LOG("BUFF_VIDEO_MAX=%d\n", mVideoBuffMax);
-	LOG("BUFF_AUDIO_MAX=%d\n", mAudioBuffMax);
-	LOG("SEEK_ANY=%s\n", mIsSeekToAny ? "true" : "false");
+	LOG("config loading success.");
+	LOG("USE_TCP=", mUseTCP ? "true" : "false");
+	LOG("BUFF_VIDEO_MAX=", mVideoBuffMax);
+	LOG("BUFF_AUDIO_MAX=", mAudioBuffMax);
+	LOG("SEEK_ANY=", mIsSeekToAny ? "true" : "false");
 
 	return 0;
 }
@@ -743,5 +742,5 @@ int DecoderFFmpeg::loadConfig() {
 void DecoderFFmpeg::printErrorMsg(int errorCode) {
 	char msg[500];
 	av_strerror(errorCode, msg, sizeof(msg));
-	LOG("Error massage: %s \n", msg);
+	LOG("Error massage: ", msg);
 }

@@ -150,7 +150,7 @@ void AVDecoderHandler::startDecoding() {
 		}
         mDecodeThreadRunning = false;
 	});
-
+	return;
 	mBufferThread = std::thread([&]() {
 		mBufferThreadRunning = true;
 		if (mDecoderState < DECODING) {

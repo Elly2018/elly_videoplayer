@@ -67,7 +67,7 @@ func play_pause_trigger():
 	print("Play / Pause trigger")
 	player.set_paused(!player.is_paused())
 	
-func pause_trigger():
+func pause_trigger():	
 	print("Pause trigger")
 	player.set_paused(true)
 	

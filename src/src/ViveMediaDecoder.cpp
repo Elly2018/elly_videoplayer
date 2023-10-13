@@ -157,14 +157,17 @@ void nativeScheduleDestroyDecoder(int id) {
 }
 
 void nativeDestroyDecoder(int id) {
-    std::shared_ptr<VideoContext> videoCtx;
+  std::shared_ptr<VideoContext> videoCtx;
 	if (!getVideoContext(id, videoCtx)) { return; }
 
+	LOG("[ViveMediaDecoder] Destroy decoder.");
 	if (videoCtx->initThread.joinable()) {
 		videoCtx->initThread.join();
 	}
+	LOG("[ViveMediaDecoder] Destroy decoder (After join).");
 
 	videoCtx->avhandler.reset();
+	LOG("[ViveMediaDecoder] Destroy decoder (After reset).");
 
 	videoCtx->path.clear();
 	videoCtx->progressTime = 0.0f;
@@ -172,6 +175,7 @@ void nativeDestroyDecoder(int id) {
 
 	videoCtx->isContentReady = false;
 	removeVideoContext(videoCtx->id);
+	LOG("[ViveMediaDecoder] Destroy decoder (After remove video decoder).");
 	videoCtx->id = -1;
 }
 
