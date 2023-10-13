@@ -13,13 +13,14 @@ extern "C" {
 	bool nativeStartDecoding(int id);
     void nativeScheduleDestroyDecoder(int id);
 	void nativeDestroyDecoder(int id);
+	bool nativeGetOtherStreamIndex(int id, int type, int* li, int& count, int& current);
 	bool nativeIsEOF(int id);
     void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady);
     void nativeReleaseVideoFrame(int id);
 	//	Video
 	bool nativeIsVideoEnabled(int id);
 	void nativeSetVideoEnable(int id, bool isEnable);
-	void nativeGetVideoFormat(int id, int& width, int& height, float& totalTime);
+	void nativeGetVideoFormat(int id, int& width, int& height, float& framerate, float& totalTime);
 	void nativeSetVideoTime(int id, float currentTime);
 	bool nativeIsContentReady(int id);
 	bool nativeIsVideoBufferFull(int id);

@@ -11,25 +11,43 @@
 using namespace godot;
 
 void FFmpegMediaPlayer::_init_media() {
-	emit_signal("message", String("start init media"));
+	int* li = nullptr;
+	int count = 0;
+	int current = 0;
+	LOG("start init media");
 	video_playback = nativeIsVideoEnabled(id);
 	if (video_playback) {
 		first_frame = true;
-
-		nativeGetVideoFormat(id, width, height, video_length);
+		nativeGetVideoFormat(id, width, height, framerate, video_length);
+		nativeGetOtherStreamIndex(id, 0, li, count, current);
+		LOG("Video info:");
+		LOG("\tStream Count: ", count);
+		LOG("\tCurrent Index: ",current);
+		LOG("\tWidth: ", width);
+		LOG("\tHeight: ", height);
+		LOG("\tFramerate: ", framerate);
+		//delay_frame = Math::ceil(framerate / 4.0f);
 		data_size = width * height * 3;
 	}
 
 	audio_playback = nativeIsAudioEnabled(id);
 	if (audio_playback) {
 		nativeGetAudioFormat(id, channels, sampleRate, audio_length);
+		nativeGetOtherStreamIndex(id, 1, li, count, current);
 		generator->set_mix_rate(sampleRate);
-		LOG("Audio info: %d %d %d \n", channels, sampleRate, audio_length);
+		LOG("Audio info:");
+		LOG("\tStream Count: ", count);
+		LOG("\tCurrent Index: ", current);
+		LOG("\tChannel: ", channels);
+		LOG("\tSamplerate: ", sampleRate);
+		LOG("\tFLength: ", audio_length);
+		LOG("Audio info. channel: ", channels, ", samplerate: ", sampleRate, ", audio_length: ", audio_length);
+		delay_audio = sampleRate * 0.4;
 		player->play();
 	}
 
 	state = INITIALIZED;
-	emit_signal("message", String("start change to INITIALIZED"));
+	LOG("start change to INITIALIZED");
 }
 
 void FFmpegMediaPlayer::audio_init() 
@@ -44,17 +62,28 @@ void FFmpegMediaPlayer::audio_init()
 	}
 }
 
+void FFmpegMediaPlayer::load()
+{
+	load_path(path);
+}
+
+void FFmpegMediaPlayer::load_async()
+{
+	load_path_async(path);
+}
+
 bool FFmpegMediaPlayer::load_path(String path) {
-	emit_signal("message", String("start load path: ") + path);
+	LOG("start load path: ", path);
 	if (player == nullptr) {
-		emit_signal("error", String("You must register the player instance first"));
+		LOG_ERROR("You must register the player instance first");
 		return false;
 	}
 
 	int d_state = nativeGetDecoderState(id);
 	if (d_state > 1) {
-		emit_signal("error", String("Decoder state: ") + String(std::to_string(d_state).c_str()));
-		return false;
+		stop();
+		//LOG_ERROR("Decoder state: ") + String(std::to_string(d_state).c_str()));
+		//return false;
 	}
 
 	CharString utf8 = path.utf8();
@@ -66,8 +95,8 @@ bool FFmpegMediaPlayer::load_path(String path) {
 	if (is_loaded) {
 		_init_media();
 	} else {
-		emit_signal("message", String("nativeGetDecoderState is false"));
-		emit_signal("message", String("State change to UNINITIALIZED"));
+		LOG("nativeGetDecoderState is false");
+		LOG("State change to UNINITIALIZED");
 		state = UNINITIALIZED;
 	}
 
@@ -75,10 +104,10 @@ bool FFmpegMediaPlayer::load_path(String path) {
 }
 
 void FFmpegMediaPlayer::load_path_async(String path) {
-	emit_signal("message", String("start load path: ") + path);
+	LOG("start load path: ", path);
 	int d_state = nativeGetDecoderState(id);
 	if (d_state > 1) {
-		emit_signal("error", String("Decoder state: ") + String(std::to_string(d_state).c_str()));
+		LOG_ERROR("Decoder state: ", d_state);
 		emit_signal("async_loaded", false);
 		return;
 	}
@@ -88,13 +117,13 @@ void FFmpegMediaPlayer::load_path_async(String path) {
 
 	nativeCreateDecoderAsync(cstr, id);
 
-	emit_signal("message", String("State change to LOADING"));
+	LOG("State change to LOADING");
 	state = LOADING;
 }
 
 void FFmpegMediaPlayer::play() {
 	if (state != INITIALIZED) {
-		emit_signal("message", String("play func failed, because state is not INITIALIZED"));
+		LOG("play func failed, because state is not INITIALIZED");
 		return;
 	}
 
@@ -107,12 +136,14 @@ void FFmpegMediaPlayer::play() {
 
 	global_start_time = Time::get_singleton()->get_unix_time_from_system();
 
-	emit_signal("message", String("start change to Decoding"));
+	LOG("start change to Decoding");
 	state = DECODING;
+	audio_init();
 }
 
 void FFmpegMediaPlayer::stop() {
-	if (nativeGetDecoderState(id) != DECODING) {
+	if (state < State::DECODING) {
+		LOG("Stop failed, decoder state currently is: ", state);
 		return;
 	}
 
@@ -122,8 +153,17 @@ void FFmpegMediaPlayer::stop() {
 	audio_current_time = 0.0f;
 	paused = false;
 	player->stop();
+	audioFrame.clear();
+	pipe_frame.clear();
 
-	emit_signal("message", String("start change to INITIALIZED"));
+	PackedByteArray empty = PackedByteArray();
+	empty.append(0); empty.append(0); empty.append(0);
+	image->call_deferred("set_data", 1, 1, false, Image::FORMAT_RGB8, empty);
+	texture->set_deferred("image", image);
+	emit_signal("video_update", texture, Vector2i(1, 1));
+
+
+	LOG("start change to INITIALIZED");
 	state = INITIALIZED;
 }
 
@@ -178,20 +218,30 @@ void FFmpegMediaPlayer::seek(float p_time) {
 
 	hang_time = p_time;
 
+	audioFrame.clear();
+	pipe_frame.clear();
+
 	state = SEEK;
 }
 
 void FFmpegMediaPlayer::_process(float delta) {
 	switch (state) {
+		case FAILED: {
+			state = UNINITIALIZED;
+			LOG_ERROR("Main loop, async loading failed, nativeGetDecoderState == -1");
+			LOG_ERROR("Init failed");
+			emit_signal("async_loaded", false);
+		} break;
+
 		case LOADING: {
 			if (nativeGetDecoderState(id) == INITIALIZED) {
 				_init_media();
 				emit_signal("async_loaded", true);
-				emit_signal("message", String("Loading successful"));
+				LOG("Loading successful");
 			} else if (nativeGetDecoderState(id) == -1) {
 				state = UNINITIALIZED;
-				emit_signal("error", String("Main loop, async loading failed, nativeGetDecoderState == -1"));
-				emit_signal("error", String("Init failed"));
+				LOG_ERROR("Main loop, async loading failed, nativeGetDecoderState == -1");
+				LOG_ERROR("Init failed");
 				emit_signal("async_loaded", false);
 			}
 		} break;
@@ -223,13 +273,18 @@ void FFmpegMediaPlayer::_process(float delta) {
 				
 				if (frame_ready) {
 					PackedByteArray image_data;
-					LOG("data size: %d \n", data_size);
+					LOG_VERBOSE("data size: %d \n", data_size);
 					image_data.resize(data_size);
 					memcpy(image_data.ptrw(), frame_data, data_size);
-					LOG("actual data size: %d \n", image_data.size());
-					image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, image_data);
-					texture->set_deferred("image", image);
-					emit_signal("video_update", texture, Vector2i(width, height));
+					LOG_VERBOSE("actual data size: %d \n", image_data.size());
+					pipe_frame.push_back(image_data);
+					if (pipe_frame.size() > delay_frame) {
+						PackedByteArray buffer = pipe_frame.front()->get();
+						pipe_frame.pop_front();
+						image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, buffer);
+						texture->set_deferred("image", image);
+						emit_signal("video_update", texture, Vector2i(width, height));
+					}
 					
 					first_frame = false;
 
@@ -285,14 +340,13 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 			nativeFreeAudioData(id);
 		}
 		else {			
-			LOG("get_frames_available: %d \n", c);
+			//LOG("get_frames_available: %d \n", c);
 			if (audio_time != -1.0f) {
 				PackedFloat32Array audio_data = PackedFloat32Array();
 				audio_data.resize(audio_size * byte_per_sample * channel);
 				memcpy(audio_data.ptrw(), raw_audio_data, audio_size * channel * byte_per_sample);
 				emit_signal("audio_update", audio_data, audio_size, channel);
-				nativeFreeAudioData(id);
-				LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
+				//LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
 				float s = 0;
 
 				for (int i = 0; i < audio_size * channel; i += channel) {
@@ -310,11 +364,11 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 						right = out[1];
 					}
 					audioFrame.push_back(Vector2(left, right));
-					LOG("Push frame, out: %f, sin: [%f, %f] \n", out, left, right);
+					//LOG("Push frame, out: %f, sin: [%f, %f] \n", out, left, right);
 					delete[] out;
 				}
 			}
-
+			nativeFreeAudioData(id);
 			bool haveUpdate = false;
 			float increment = 0.0f / 44100.0f;
 			while (c > 0 && audioFrame.size() > 0) {
@@ -322,12 +376,20 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 				bool pass = false;
 				if (audioFrame.size() > 0) {
 					pass = true;
-					Vector2 element = audioFrame.front()->get();
-					if (playback.is_valid()) 
+					if (delay_audio > 0)
 					{
-						playback->push_frame(element);
+						playback->push_frame(Vector2(0, 0));
+						delay_audio -= 1;
 					}
-					audioFrame.pop_front();
+					else 
+					{
+						Vector2 element = audioFrame.front()->get();
+						if (playback.is_valid())
+						{
+							playback->push_frame(element);
+						}
+						audioFrame.pop_front();
+					}
 				}
 				c -= 1;
 			}
@@ -377,17 +439,34 @@ float FFmpegMediaPlayer::get_buffer_length() const
 {
 	return generator->get_buffer_length();
 }
+void FFmpegMediaPlayer::set_path(const String _path)
+{
+	path = _path;
+}
+String FFmpegMediaPlayer::get_path() const
+{
+	return path;
+}
+void FFmpegMediaPlayer::set_format(const String _format)
+{
+	format = _format;
+}
+String FFmpegMediaPlayer::get_format() const
+{
+	return format;
+}
 FFmpegMediaPlayer::FFmpegMediaPlayer() {
-	image = Image::create(1,1,false, Image::FORMAT_RGB8);
+	image = Image::create(1, 1, false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
 	audioFrame = List<Vector2>();
+	pipe_frame = List<PackedByteArray>();
 
-	auto temp = Logger::instance();
-	LOG("FFmpegMediaPlayer instance created. \n");
+	LOG("FFmpegMediaPlayer instance created.");
 }
 
 FFmpegMediaPlayer::~FFmpegMediaPlayer() {
 	nativeScheduleDestroyDecoder(id);
+	LOG("FFmpegMediaPlayer instance destroy.");
 }
 
 void FFmpegMediaPlayer::_notification(int p_what)
@@ -395,7 +474,8 @@ void FFmpegMediaPlayer::_notification(int p_what)
 }
 
 void FFmpegMediaPlayer::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("audio_init"), &FFmpegMediaPlayer::audio_init);
+	ClassDB::bind_method(D_METHOD("load"), &FFmpegMediaPlayer::load);
+	ClassDB::bind_method(D_METHOD("load_async"), &FFmpegMediaPlayer::load_async);
 	ClassDB::bind_method(D_METHOD("load_path", "path"), &FFmpegMediaPlayer::load_path);
 	ClassDB::bind_method(D_METHOD("load_path_async", "path"), &FFmpegMediaPlayer::load_path_async);
 	ClassDB::bind_method(D_METHOD("play"), &FFmpegMediaPlayer::play);
@@ -414,6 +494,10 @@ void FFmpegMediaPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_sample_rate"), &FFmpegMediaPlayer::get_sample_rate);
 	ClassDB::bind_method(D_METHOD("set_buffer_length", "second"), &FFmpegMediaPlayer::set_buffer_length);
 	ClassDB::bind_method(D_METHOD("get_buffer_length"), &FFmpegMediaPlayer::get_buffer_length);
+	ClassDB::bind_method(D_METHOD("set_path", "second"), &FFmpegMediaPlayer::set_path);
+	ClassDB::bind_method(D_METHOD("get_path"), &FFmpegMediaPlayer::get_path);
+	ClassDB::bind_method(D_METHOD("set_format", "second"), &FFmpegMediaPlayer::set_format);
+	ClassDB::bind_method(D_METHOD("get_format"), &FFmpegMediaPlayer::get_format);
 
 	//ADD_PROPERTY(PropertyInfo(Variant::INT, "sample_rate"), "set_sample_rate", "get_sample_rate");
 	//ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buffer_length"), "set_buffer_length", "get_buffer_length");
@@ -421,6 +505,4 @@ void FFmpegMediaPlayer::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("async_loaded", PropertyInfo(Variant::BOOL, "successful")));
 	ADD_SIGNAL(MethodInfo("video_update", PropertyInfo(Variant::RID, "image", PROPERTY_HINT_RESOURCE_TYPE, "ImageTexture"), PropertyInfo(Variant::VECTOR2I, "size")));
 	ADD_SIGNAL(MethodInfo("audio_update", PropertyInfo(Variant::PACKED_FLOAT32_ARRAY, "sample"), PropertyInfo(Variant::INT, "size"), PropertyInfo(Variant::INT, "channel")));
-	ADD_SIGNAL(MethodInfo("message", PropertyInfo(Variant::STRING, "message")));
-	ADD_SIGNAL(MethodInfo("error", PropertyInfo(Variant::STRING, "message")));
 }

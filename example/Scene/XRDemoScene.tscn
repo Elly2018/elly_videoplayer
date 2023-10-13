@@ -1,0 +1,24 @@
+[gd_scene load_steps=7 format=3 uid="uid://cv5o8tur4rxxh"]
+
+[ext_resource type="Script" path="res://Script/PlayerManager.gd" id="1_o4cmg"]
+[ext_resource type="PackedScene" uid="uid://nepgy2yvue6r" path="res://Prefab/XRPlayer.tscn" id="2_jmy22"]
+[ext_resource type="PackedScene" uid="uid://bn064jv76jmaw" path="res://Prefab/Sphere.tscn" id="3_alk7n"]
+[ext_resource type="PackedScene" uid="uid://ciy3ke0sxpite" path="res://Prefab/XRPlayUI.tscn" id="4_bs2wu"]
+
+[sub_resource type="Environment" id="Environment_24h51"]
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_3w5hy"]
+
+[node name="Scene" type="Node3D"]
+script = ExtResource("1_o4cmg")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_24h51")
+camera_attributes = SubResource("CameraAttributesPractical_3w5hy")
+
+[node name="Player" parent="." instance=ExtResource("2_jmy22")]
+
+[node name="Sphere" parent="." instance=ExtResource("3_alk7n")]
+play_on_start = false
+
+[node name="XRPlayUI" parent="." instance=ExtResource("4_bs2wu")]

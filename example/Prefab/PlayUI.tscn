@@ -1,0 +1,136 @@
+[gd_scene load_steps=3 format=3 uid="uid://bpf8brbbdrtls"]
+
+[ext_resource type="Script" path="res://Script/MediaController.gd" id="1_5vg8y"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_7rdpl"]
+
+[node name="PlayUI" type="Control" node_paths=PackedStringArray("input_uri", "Con")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_5vg8y")
+input_uri = NodePath("Container/TextEdit")
+Con = NodePath("Container")
+
+[node name="Container" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Container"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 10.0
+offset_bottom = 40.0
+grow_horizontal = 2
+text = "Deno Player"
+label_settings = SubResource("LabelSettings_7rdpl")
+
+[node name="TextEdit" type="TextEdit" parent="Container"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 20.0
+offset_top = 85.0
+offset_right = -20.0
+offset_bottom = 130.0
+grow_horizontal = 2
+text = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+placeholder_text = "Media URL"
+
+[node name="HSlider" type="HSlider" parent="Container"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 150.0
+offset_top = 15.0
+offset_right = -50.0
+offset_bottom = 31.0
+grow_horizontal = 2
+min_value = -40.0
+max_value = 10.0
+
+[node name="ButtonGroup" type="Control" parent="Container"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 40.0
+offset_bottom = 70.0
+grow_horizontal = 2
+
+[node name="Play" type="Button" parent="Container/ButtonGroup"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 20.0
+offset_top = -15.0
+offset_right = 120.0
+offset_bottom = 15.0
+grow_vertical = 2
+text = "Play"
+
+[node name="Pause" type="Button" parent="Container/ButtonGroup"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 130.0
+offset_top = -15.0
+offset_right = 230.0
+offset_bottom = 15.0
+grow_vertical = 2
+text = "Pause"
+
+[node name="Stop" type="Button" parent="Container/ButtonGroup"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 240.0
+offset_top = -15.0
+offset_right = 340.0
+offset_bottom = 15.0
+grow_vertical = 2
+text = "Stop"
+
+[node name="Load" type="Button" parent="Container/ButtonGroup"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 350.0
+offset_top = -15.0
+offset_right = 450.0
+offset_bottom = 16.0
+grow_vertical = 2
+text = "Load"
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 41.0
+grow_horizontal = 0
+text = "O"
+
+[connection signal="value_changed" from="Container/HSlider" to="." method="OnAudio"]
+[connection signal="pressed" from="Container/ButtonGroup/Play" to="." method="OnPlay"]
+[connection signal="pressed" from="Container/ButtonGroup/Pause" to="." method="OnPause"]
+[connection signal="pressed" from="Container/ButtonGroup/Stop" to="." method="OnStop"]
+[connection signal="pressed" from="Container/ButtonGroup/Load" to="." method="OnLoad"]
+[connection signal="pressed" from="Button" to="." method="MenuTrigger"]

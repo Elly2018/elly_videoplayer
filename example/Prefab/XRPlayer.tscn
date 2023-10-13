@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://nepgy2yvue6r"]
+
+[ext_resource type="Script" path="res://Script/MouseController.gd" id="1_t31re"]
+
+[node name="Player" type="Node3D"]
+script = ExtResource("1_t31re")
+
+[node name="XROrigin3D" type="XROrigin3D" parent="."]
+current = true
+
+[node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D"]

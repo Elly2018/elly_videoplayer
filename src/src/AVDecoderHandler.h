@@ -6,13 +6,19 @@
 #include <mutex>
 #include <memory>
  
-class AVHandler {
+class AVDecoderHandler {
 public:
-	AVHandler();
-	~AVHandler();
+	AVDecoderHandler();
+	~AVDecoderHandler();
 	
 	enum DecoderState {
 		INIT_FAIL = -1, UNINITIALIZED, INITIALIZED, DECODING, SEEK, BUFFERING, DECODE_EOF, STOP
+	};
+	enum BufferState {
+		NONE, LOADING, FULL
+	};
+	enum MediaType {
+		VIDEO, AUDIO, SUBTITLE
 	};
 	DecoderState getDecoderState();
 
@@ -28,6 +34,7 @@ public:
 	
 	double getVideoFrame(void** frameData);
 	double getAudioFrame(uint8_t** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample);
+	bool getOtherIndex(MediaType type, int* li, int& count, int& current);
 	void freeVideoFrame();
 	void freeAudioFrame();
 	void setVideoEnable(bool isEnable);
@@ -36,6 +43,7 @@ public:
 
 	IDecoder::VideoInfo getVideoInfo();
 	IDecoder::AudioInfo getAudioInfo();
+	IDecoder::SubtitleInfo getSubtitleInfo();
 	bool isVideoBufferEmpty();
 	bool isVideoBufferFull();
 
@@ -43,9 +51,12 @@ public:
 
 private:
 	DecoderState mDecoderState;
+	BufferState mBufferState;
 	std::unique_ptr<IDecoder> mIDecoder;
 	double mSeekTime;
 	
 	std::thread mDecodeThread;
-    bool mDecodeThreadRunning = false;
+	std::thread mBufferThread;
+  bool mDecodeThreadRunning = false;
+	bool mBufferThreadRunning = false;
 };

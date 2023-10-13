@@ -1,12 +1,19 @@
-[gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://brmlmtpgp5cya"]
+[gd_resource type="ShaderMaterial" load_steps=5 format=3 uid="uid://brmlmtpgp5cya"]
 
 [ext_resource type="Shader" path="res://Shader/shader.gdshader" id="1_35wnn"]
 
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_llh3e"]
+[sub_resource type="Gradient" id="Gradient_6eiqs"]
+colors = PackedColorArray(0, 0, 0, 1, 0, 0, 0, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_ot31o"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_hv1hq"]
+color_ramp = SubResource("Gradient_6eiqs")
+noise = SubResource("FastNoiseLite_ot31o")
 
 [resource]
 render_priority = 0
 shader = ExtResource("1_35wnn")
 shader_parameter/flip = null
 shader_parameter/mode = null
-shader_parameter/tex = SubResource("NoiseTexture2D_llh3e")
+shader_parameter/tex = SubResource("NoiseTexture2D_hv1hq")

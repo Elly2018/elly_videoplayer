@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ViveMediaDecoder.h"
+#include "MediaDecoderUtility.h"
 #include <string>
 
 #include <godot_cpp/classes/audio_stream_playback.hpp>
@@ -32,6 +32,7 @@ private:
 		 * This means the media does not initialize yet.
 		 * It will trying to get the information it needs in order to start the decoding process.
 		*/
+		FAILED = -1,
 		LOADING,
 		UNINITIALIZED,
 		INITIALIZED,
@@ -48,6 +49,8 @@ private:
 
 	Ref<ImageTexture> texture;
 	Ref<Image> image;
+	String path;
+	String format;
 
 	int id = 0;
 	int state = UNINITIALIZED;
@@ -59,8 +62,12 @@ private:
 	bool video_playback = false;
 	int width = 0;
 	int height = 0;
+	float framerate = 0.0f;
+	int delay_frame = 0;
+	int delay_audio = 0;
 	float video_length = 0.0f;
 	List<Vector2> audioFrame;
+	List<PackedByteArray> pipe_frame;
 	double video_current_time = 0.0f;
 	int data_size = 0;
 	
@@ -74,6 +81,11 @@ private:
 	double hang_time = 0.0f;
 
 	void _init_media();
+	/*
+	* User should call this method in _ready func in the gdscript
+	* To fill the buffer of audio stream (audio stream generator)
+	*/
+	void audio_init();
 
 protected:
 	void _notification(int p_what);
@@ -81,10 +93,14 @@ protected:
 
 public:
 	/*
-	* User should call this method in _ready func in the gdscript
-	* To fill the buffer of audio stream (audio stream generator)
+	* Loading path from local variable
 	*/
-	void audio_init();
+	void load();
+	/*
+	* Async loading path from local variable
+	* "async_loaded" signal will trigger when finish
+	*/
+	void load_async();
 	/*
 	* Loading path from string
 	*/
@@ -167,10 +183,15 @@ public:
 	* Get current use audio player
 	*/
 	AudioStreamPlayer* get_player() const;
+
 	void set_sample_rate(const int rate);
 	int get_sample_rate() const;
 	void set_buffer_length(const float second);
 	float get_buffer_length() const;
+	void set_path(const String _path);
+	String get_path() const;
+	void set_format(const String _format);
+	String get_format() const;
 
 	FFmpegMediaPlayer();
 	~FFmpegMediaPlayer();

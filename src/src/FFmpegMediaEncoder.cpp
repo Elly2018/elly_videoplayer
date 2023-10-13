@@ -1,15 +1,26 @@
 #include "FFmpegMediaEncoder.h"
+#include "Logger.h"
 
 using namespace godot;
 
-void FFmpegMediaEncoder::_bind_methods()
+FFmpegMediaEncoder::FFmpegMediaEncoder()
 {
-
+	LOG("FFmpegMediaEncoder instance created.");
 }
 
-void FFmpegMediaEncoder::register_camera(Ref<CameraTexture> tex)
+FFmpegMediaEncoder::~FFmpegMediaEncoder()
 {
-	target = tex;
+	LOG("FFmpegMediaEncoder instance destroy.");
+}
+
+void FFmpegMediaEncoder::push_image(Ref<Image> image)
+{
+	target = image;
+}
+
+void FFmpegMediaEncoder::push_audio(PackedFloat32Array data, int sample_count, int channel) 
+{
+
 }
 
 void FFmpegMediaEncoder::start()
@@ -32,12 +43,7 @@ void FFmpegMediaEncoder::stop()
 
 }
 
-FFmpegMediaEncoder::FFmpegMediaEncoder() 
+void FFmpegMediaEncoder::_bind_methods()
 {
-	
-}
-
-FFmpegMediaEncoder::~FFmpegMediaEncoder() 
-{
-
+	ClassDB::bind_method(D_METHOD("push_image", "image"), &FFmpegMediaEncoder::push_image);
 }

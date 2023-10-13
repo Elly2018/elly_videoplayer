@@ -1,59 +1,33 @@
-[gd_scene load_steps=10 format=3 uid="uid://dn3rmx1bi81lv"]
+[gd_scene load_steps=7 format=3 uid="uid://dn3rmx1bi81lv"]
 
-[ext_resource type="Environment" uid="uid://co4hk2iqv5oxv" path="res://Environment/DemoScene.tres" id="1_11yc7"]
-[ext_resource type="PackedScene" uid="uid://bj6iuse67y4gl" path="res://Prefab/sphere.tscn" id="3_ihpox"]
-[ext_resource type="Script" path="res://Script/CameraControllerMouse.cs" id="4_h5p8w"]
+[ext_resource type="Script" path="res://Script/PlayerManager.gd" id="1_ymwss"]
+[ext_resource type="PackedScene" uid="uid://cn0gndd2yedja" path="res://Prefab/2DPlayer.tscn" id="2_74c40"]
+[ext_resource type="PackedScene" uid="uid://bpf8brbbdrtls" path="res://Prefab/PlayUI.tscn" id="3_5iufy"]
+[ext_resource type="PackedScene" uid="uid://bkv1c68i42g81" path="res://Prefab/Plane.tscn" id="4_7ran5"]
 
 [sub_resource type="Environment" id="Environment_24h51"]
-background_color = Color(1, 1, 1, 1)
 
 [sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_3w5hy"]
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_31pxy"]
-viewport_path = NodePath("Sprite3D/SubViewport")
-
-[sub_resource type="Gradient" id="Gradient_xmxy3"]
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_xf3bu"]
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_spevx"]
-color_ramp = SubResource("Gradient_xmxy3")
-noise = SubResource("FastNoiseLite_xf3bu")
-
 [node name="Scene" type="Node3D"]
+script = ExtResource("1_ymwss")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_24h51")
 camera_attributes = SubResource("CameraAttributesPractical_3w5hy")
 
-[node name="Node3D" type="Node3D" parent="." node_paths=PackedStringArray("self")]
-script = ExtResource("4_h5p8w")
-sensitivity = 1.0
-self = NodePath(".")
+[node name="Plane" parent="." instance=ExtResource("4_7ran5")]
 
-[node name="Camera3D" type="Camera3D" parent="Node3D"]
-environment = ExtResource("1_11yc7")
-current = true
-fov = 90.0
+[node name="2DPlayer" parent="." instance=ExtResource("2_74c40")]
 
-[node name="Sprite3D" type="Sprite3D" parent="."]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, -8)
-texture = SubResource("ViewportTexture_31pxy")
+[node name="PlayUI" parent="." instance=ExtResource("3_5iufy")]
+seek_time = 5.0
 
-[node name="SubViewport" type="SubViewport" parent="Sprite3D"]
-size_2d_override_stretch = true
-
-[node name="TextureRect" type="TextureRect" parent="Sprite3D/SubViewport"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_right = 320.0
-offset_bottom = 368.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = SubResource("NoiseTexture2D_spevx")
-stretch_mode = 2
-
-[node name="Sphere" parent="." node_paths=PackedStringArray("vieport", "plane") instance=ExtResource("3_ihpox")]
-vieport = NodePath("../Sprite3D/SubViewport")
-plane = NodePath("../Sprite3D/SubViewport/TextureRect")
+[connection signal="SeekBackward" from="PlayUI" to="Plane" method="quick_seek_backward"]
+[connection signal="SeekForward" from="PlayUI" to="Plane" method="quick_seek_forward"]
+[connection signal="ToAudio" from="PlayUI" to="Plane" method="audio_volumn"]
+[connection signal="ToLoad" from="PlayUI" to="Plane" method="load_trigger"]
+[connection signal="ToPause" from="PlayUI" to="Plane" method="pause_trigger"]
+[connection signal="ToPlay" from="PlayUI" to="Plane" method="play_trigger"]
+[connection signal="ToPlayPause" from="PlayUI" to="Plane" method="play_pause_trigger"]
+[connection signal="ToStop" from="PlayUI" to="Plane" method="stop_trigger"]

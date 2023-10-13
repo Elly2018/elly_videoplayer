@@ -9,31 +9,41 @@ public:
 
 	enum BufferState {EMPTY, NORMAL, FULL};
 
-	struct VideoInfo {
+	struct BaseInfo {
 		bool isEnabled;
-		int width;
-		int height;
+		int currentIndex;
+		int* otherIndex;
+		int otherIndexCount;
 		double lastTime;
 		double totalTime;
 		BufferState bufferState;
 	};
 
-	struct AudioInfo {
-		bool isEnabled;
+	struct VideoInfo : public BaseInfo {
+		int width;
+		int height;
+		float framerate;
+	};
+
+	struct AudioInfo : public BaseInfo {
 		unsigned int channels;
 		unsigned int sampleRate;
-		double lastTime;
-		double totalTime;
-		BufferState bufferState;
+	};
+
+	struct SubtitleInfo : public BaseInfo {
+		bool isEnabled;
 	};
 	
 	virtual bool init(const char* filePath) = 0;
 	virtual bool decode() = 0;
+	virtual bool buffering() = 0;
 	virtual void seek(double time) = 0;
 	virtual void destroy() = 0;
 
 	virtual VideoInfo getVideoInfo() = 0;
 	virtual AudioInfo getAudioInfo() = 0;
+	virtual SubtitleInfo getSubtitleInfo() = 0;
+	virtual bool isBufferingFinish() = 0;
 	virtual void setVideoEnable(bool isEnable) = 0;
 	virtual void setAudioEnable(bool isEnable) = 0;
 	virtual void setAudioAllChDataEnable(bool isEnable) = 0;
