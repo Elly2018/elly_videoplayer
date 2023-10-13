@@ -335,7 +335,6 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 				audio_data.resize(audio_size * byte_per_sample * channel);
 				memcpy(audio_data.ptrw(), raw_audio_data, audio_size * channel * byte_per_sample);
 				emit_signal("audio_update", audio_data, audio_size, channel);
-				nativeFreeAudioData(id);
 				//LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
 				float s = 0;
 
@@ -358,7 +357,7 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 					delete[] out;
 				}
 			}
-
+			nativeFreeAudioData(id);
 			bool haveUpdate = false;
 			float increment = 0.0f / 44100.0f;
 			while (c > 0 && audioFrame.size() > 0) {
