@@ -14,10 +14,14 @@ And apply to VR sphere mesh and a viewport texture in front of player
  
 ### Getting started:
 
+Windows, Linux platform build system use Visual Studio 17 2022
+
+If you are using MSYS to build the linux version you can use build/msys_install.sh for install require package
+
 In order to setup the project\
 Check this page for build process
 
-#### 1. Open build/windows_pull_submodule.bat
+#### 1. Open build/[Platform]_pull_submodule.[bat/sh]
 - This will clone the godot-cpp 4.1 in the root folder.
 - And it will download the ffmpeg 6.0 windows build from github and unzip in the src folder.
 - In the end your file structure will looks like below.
@@ -29,7 +33,7 @@ Check this page for build process
 		- ffmpeg (Add if desktop)
 	- godot-cpp (Add)
 	
-#### 2. Open build/windows_codegen.bat.
+#### 2. Open build/[Platform]_codegen.[bat/sh]
 
 - This will generate the solution in the `GDExtensionTemplate-build` folder.
 
@@ -50,15 +54,15 @@ Check this page for build process
 
 ### known issues
 
-- When play HLS stream, audio will not be load
-- Sometime in editor mode, the audio stream player will failed to initialize (Engine issue ?)
+- HLS will stuck at buffering sometimes
+- hardware acceleration not include
 
 ### Supported platfrom
 | Platform | Video | Audio | XR Support |
 |-|-|-|-|
-| Windows | O | O | X |
+| Windows | O | O | △ |
 | MacOS | X | X | X |
-| Linux | X | X | X |
+| Linux | O | O | △ |
 | Android | X | X | X |
 | IOS | X | X | X |
 | Web File | X | X | X |
