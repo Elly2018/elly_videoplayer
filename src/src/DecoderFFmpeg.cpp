@@ -203,7 +203,7 @@ bool DecoderFFmpeg::decode() {
 	if (!isBuffBlocked()) {
 		if (av_read_frame(mAVFormatContext, mPacket) < 0) {
 			updateVideoFrame();
-			LOG("End of file.");
+			LOG_VERBOSE("End of file.");
 			return false;
 		}
 
@@ -220,7 +220,7 @@ bool DecoderFFmpeg::decode() {
 		av_packet_unref(mPacket);
 	}
 
-	LOG("Video frame count: ", mVideoFrames.size(), ", Audio frame count: ", mAudioFrames.size());
+	LOG_VERBOSE("Video frame count: ", mVideoFrames.size(), ", Audio frame count: ", mAudioFrames.size());
 
 	return true;
 }
@@ -318,7 +318,7 @@ int DecoderFFmpeg::initSwrContext() {
 double DecoderFFmpeg::getVideoFrame(void** frameData) {
 	std::lock_guard<std::mutex> lock(mVideoMutex);
 	if (!mIsInitialized || mVideoFrames.size() == 0) {
-		LOG("Video frame not available. ");
+		LOG_VERBOSE("Video frame not available. ");
         *frameData = nullptr;
 		return -1;
 	}
@@ -330,7 +330,7 @@ double DecoderFFmpeg::getVideoFrame(void** frameData) {
 	double timeInSec = av_q2d(mVideoStream->time_base) * timeStamp;
 	mVideoInfo.lastTime = timeInSec;
 
- LOG("mVideoInfo.lastTime: ", timeInSec);
+ LOG_VERBOSE("mVideoInfo.lastTime: ", timeInSec);
 
 	return timeInSec;
 }
@@ -338,7 +338,7 @@ double DecoderFFmpeg::getVideoFrame(void** frameData) {
 double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
 	std::lock_guard<std::mutex> lock(mAudioMutex);
 	if (!mIsInitialized || mAudioFrames.size() == 0) {
-		LOG("Audio frame not available. ");
+		LOG_VERBOSE("Audio frame not available. ");
 		*outputFrame = nullptr;
 		return -1;
 	}
@@ -352,7 +352,7 @@ double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize,
 	double timeInSec = av_q2d(mAudioStream->time_base) * timeStamp;
 	mAudioInfo.lastTime = timeInSec;
 
-	LOG("mAudioInfo.lastTime: ", timeInSec);
+	LOG_VERBOSE("mAudioInfo.lastTime: ", timeInSec);
 
 	return timeInSec;
 }
@@ -498,7 +498,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 		int height = srcFrame->height;
 
 		const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
-		LOG("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
+		LOG_VERBOSE("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
 		AVFrame* dstFrame = av_frame_alloc();
 		av_frame_copy_props(dstFrame, srcFrame);
 
@@ -506,7 +506,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 
 		//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
 		int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
-		LOG("Number of bytes: ", numBytes);
+		LOG_VERBOSE("Number of bytes: ", numBytes);
 		AVBufferRef* buffer = av_buffer_alloc(numBytes * sizeof(uint8_t));
 		//avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
 		av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
@@ -531,7 +531,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 
 		av_frame_free(&srcFrame);
 
-		LOG("updateVideoFrame = ", (float)(clock() - start) / CLOCKS_PER_SEC);
+		LOG_VERBOSE("updateVideoFrame = ", (float)(clock() - start) / CLOCKS_PER_SEC);
 
 		std::lock_guard<std::mutex> lock(mVideoMutex);
 		mVideoFrames.push(dstFrame);
@@ -561,12 +561,12 @@ void DecoderFFmpeg::updateAudioFrame() {
 
 		ret = swr_convert_frame(mSwrContext, frame, frameDecoded);
 		if (ret != 0) {
-			LOG("Audio update failed ", ret);
+			LOG_VERBOSE("Audio update failed ", ret);
 		}
 
 		av_frame_free(&frameDecoded);
 
-		LOG("updateAudioFrame. linesize: ", frame->linesize[0]);
+		LOG_VERBOSE("updateAudioFrame. linesize: ", frame->linesize[0]);
 
 		std::lock_guard<std::mutex> lock(mAudioMutex);
 		mAudioFrames.push(frame);
@@ -640,7 +640,7 @@ void DecoderFFmpeg::print_stream_maps()
 void DecoderFFmpeg::freeFrontFrame(std::queue<AVFrame*>* frameBuff, std::mutex* mutex) {
 	std::lock_guard<std::mutex> lock(*mutex);
 	if (!mIsInitialized || frameBuff->size() == 0) {
-		LOG("Not initialized or buffer empty. ");
+		LOG_VERBOSE("Not initialized or buffer empty. ");
 		return;
 	}
 

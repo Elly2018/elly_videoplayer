@@ -62,6 +62,16 @@ void FFmpegMediaPlayer::audio_init()
 	}
 }
 
+void FFmpegMediaPlayer::load()
+{
+	load_path(path);
+}
+
+void FFmpegMediaPlayer::load_async()
+{
+	load_path_async(path);
+}
+
 bool FFmpegMediaPlayer::load_path(String path) {
 	LOG("start load path: ", path);
 	if (player == nullptr) {
@@ -128,6 +138,7 @@ void FFmpegMediaPlayer::play() {
 
 	LOG("start change to Decoding");
 	state = DECODING;
+	audio_init();
 }
 
 void FFmpegMediaPlayer::stop() {
@@ -262,10 +273,10 @@ void FFmpegMediaPlayer::_process(float delta) {
 				
 				if (frame_ready) {
 					PackedByteArray image_data;
-					//LOG("data size: %d \n", data_size);
+					LOG_VERBOSE("data size: %d \n", data_size);
 					image_data.resize(data_size);
 					memcpy(image_data.ptrw(), frame_data, data_size);
-					//LOG("actual data size: %d \n", image_data.size());
+					LOG_VERBOSE("actual data size: %d \n", image_data.size());
 					pipe_frame.push_back(image_data);
 					if (pipe_frame.size() > delay_frame) {
 						PackedByteArray buffer = pipe_frame.front()->get();
@@ -428,6 +439,22 @@ float FFmpegMediaPlayer::get_buffer_length() const
 {
 	return generator->get_buffer_length();
 }
+void FFmpegMediaPlayer::set_path(const String _path)
+{
+	path = _path;
+}
+String FFmpegMediaPlayer::get_path() const
+{
+	return path;
+}
+void FFmpegMediaPlayer::set_format(const String _format)
+{
+	format = _format;
+}
+String FFmpegMediaPlayer::get_format() const
+{
+	return format;
+}
 FFmpegMediaPlayer::FFmpegMediaPlayer() {
 	image = Image::create(1, 1, false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
@@ -447,7 +474,8 @@ void FFmpegMediaPlayer::_notification(int p_what)
 }
 
 void FFmpegMediaPlayer::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("audio_init"), &FFmpegMediaPlayer::audio_init);
+	ClassDB::bind_method(D_METHOD("load"), &FFmpegMediaPlayer::load);
+	ClassDB::bind_method(D_METHOD("load_async"), &FFmpegMediaPlayer::load_async);
 	ClassDB::bind_method(D_METHOD("load_path", "path"), &FFmpegMediaPlayer::load_path);
 	ClassDB::bind_method(D_METHOD("load_path_async", "path"), &FFmpegMediaPlayer::load_path_async);
 	ClassDB::bind_method(D_METHOD("play"), &FFmpegMediaPlayer::play);
@@ -466,6 +494,10 @@ void FFmpegMediaPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_sample_rate"), &FFmpegMediaPlayer::get_sample_rate);
 	ClassDB::bind_method(D_METHOD("set_buffer_length", "second"), &FFmpegMediaPlayer::set_buffer_length);
 	ClassDB::bind_method(D_METHOD("get_buffer_length"), &FFmpegMediaPlayer::get_buffer_length);
+	ClassDB::bind_method(D_METHOD("set_path", "second"), &FFmpegMediaPlayer::set_path);
+	ClassDB::bind_method(D_METHOD("get_path"), &FFmpegMediaPlayer::get_path);
+	ClassDB::bind_method(D_METHOD("set_format", "second"), &FFmpegMediaPlayer::set_format);
+	ClassDB::bind_method(D_METHOD("get_format"), &FFmpegMediaPlayer::get_format);
 
 	//ADD_PROPERTY(PropertyInfo(Variant::INT, "sample_rate"), "set_sample_rate", "get_sample_rate");
 	//ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buffer_length"), "set_buffer_length", "get_buffer_length");

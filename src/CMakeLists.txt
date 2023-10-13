@@ -14,8 +14,9 @@ target_link_directories( ${PROJECT_NAME} PUBLIC
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gd_videoplayer")
-
-if( WIN32 )
+file (STRINGS "Platform.txt" Platform)
+message("Target platform: ${Platform}")
+if( "${Platform}" STREQUAL "Windows" )
 # Windows config
 target_link_libraries(${PROJECT_NAME} PRIVATE avcodec.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE avdevice.lib)
@@ -27,14 +28,15 @@ target_link_libraries(${PROJECT_NAME} PRIVATE swresample.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE swscale.lib)
 else()
 # MacOS or Linux config
-target_link_libraries(${PROJECT_NAME} PRIVATE avcodec.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE avdevice.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE avfilter.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE avformat.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE avutil.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE postproc.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE swresample.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE swscale.dll.a)
+set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+target_link_libraries(${PROJECT_NAME} PRIVATE libavcodec.dll.a)
+target_link_libraries(${PROJECT_NAME} PRIVATE libavdevice.dll.a)
+target_link_libraries(${PROJECT_NAME} PRIVATE libavfilter.dll.a)
+target_link_libraries(${PROJECT_NAME} PRIVATE libavformat.dll.a)
+target_link_libraries(${PROJECT_NAME} PRIVATE libavutil.dll.a)
+target_link_libraries(${PROJECT_NAME} PRIVATE libpostproc.dll.a)
+target_link_libraries(${PROJECT_NAME} PRIVATE libswresample.dll.a)
+target_link_libraries(${PROJECT_NAME} PRIVATE libswscale.dll.a)
 endif()
 
 target_include_directories( ${PROJECT_NAME}

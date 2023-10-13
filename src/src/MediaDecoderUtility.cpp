@@ -1,6 +1,6 @@
 ﻿//========= Copyright 2015-2019, HTC Corporation. All rights reserved. ===========
 
-#include "ViveMediaDecoder.h"
+#include "MediaDecoderUtility.h"
 #include "AVDecoderHandler.h"
 #include "Logger.h"
 #include <stdio.h>
@@ -370,7 +370,7 @@ void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady) {
     std::shared_ptr<VideoContext> videoCtx;
     if (!getVideoContext(id, videoCtx) || videoCtx->avhandler == nullptr) { return; }
     if (videoCtx->videoFrameLocked) {
-        LOG("[ViveMediaDecoder] Release last video frame first");
+        LOG_VERBOSE("[ViveMediaDecoder] Release last video frame first");
         return;
     }
 

@@ -27,6 +27,7 @@ var aspect: float
 var rootInterface:Control
 var phase = 0.0
 
+var current_size: Vector2i = Vector2i(1, 1)
 
 func _ready():
 	if(geo != null):
@@ -38,24 +39,34 @@ func _ready():
 	if (play_on_start):
 		player.load_path(uri);
 		player.play();
-		player.audio_init();
+
+func _process(delta):
+	_update_size();
+
+func _update_size():
+	aspect = float(current_size.x) / float(current_size.y);
+	var root_size = rootInterface.get_rect().size
+	var root_aspect = root_size.x / root_size.y
+	if current_size == Vector2i(1, 1):
+		texture_rect.size = Vector2(root_size.x, root_size.y)
+		texture_rect.position = Vector2(0,0)
+		return	
+	if root_aspect > aspect:
+		# Fit height
+		texture_rect.size = Vector2(root_size.y * aspect, root_size.y)
+		texture_rect.position = Vector2((root_size.x - (root_size.y * aspect)) / 2.0, 0.0)
+	else:
+		# Fit width
+		texture_rect.size = Vector2(root_size.x, root_size.x / aspect)
+		texture_rect.position = Vector2(0.0, (root_size.y - (root_size.x / aspect)) / 2.0)
 
 func texture_update(tex:ImageTexture, size:Vector2i):
-	aspect = float(size.x) / float(size.y);
+	current_size = size;
 	if (mat != null):
 		mat.set_deferred("shader_parameter/tex", tex);
 	if (texture_rect != null):
 		texture_rect.set_deferred("texture", tex);
-		var root_size = rootInterface.get_rect().size
-		var root_aspect = root_size.x / root_size.y
-		if root_aspect > aspect:
-			# Fit height
-			texture_rect.size = Vector2(root_size.y * aspect, root_size.y)
-			texture_rect.position = Vector2((root_size.x - (root_size.y * aspect)) / 2.0, 0.0)
-		else:
-			# Fit width
-			texture_rect.size = Vector2(root_size.x, root_size.x / aspect)
-			texture_rect.position = Vector2(0.0, (root_size.y - (root_size.x / aspect)) / 2.0)
+	
 		
 func audio_update(data:PackedFloat32Array, size:int, channel:int):
 	pass
@@ -83,7 +94,6 @@ func load_trigger(p:String):
 	print("Loading: ", p)
 	player.load_path(p);
 	player.play();
-	player.audio_init();
 		
 func async_load_finish(result):
 	print("Loading result: ", result)

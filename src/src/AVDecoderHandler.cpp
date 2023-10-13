@@ -47,10 +47,10 @@ double AVDecoderHandler::getVideoFrame(void** frameData) {
 	bool decoder_disable = !mIDecoder->getVideoInfo().isEnabled;
 	bool decoder_seek = mDecoderState == SEEK;
 	if (decoder_null || decoder_disable || decoder_seek) {
-		LOG_ERROR("[AVDecoderHandler] Video is not available: ");
-		LOG_ERROR("[AVDecoderHandler] decoder_null: ", decoder_null);
-		LOG_ERROR("[AVDecoderHandler] decoder_disable: ", decoder_disable);
-		LOG_ERROR("[AVDecoderHandler] decoder_seek: ", decoder_seek);
+		LOG_ERROR_VERBOSE("[AVDecoderHandler] Video is not available: ");
+		LOG_ERROR_VERBOSE("[AVDecoderHandler] decoder_null: ", decoder_null);
+		LOG_ERROR_VERBOSE("[AVDecoderHandler] decoder_disable: ", decoder_disable);
+		LOG_ERROR_VERBOSE("[AVDecoderHandler] decoder_seek: ", decoder_seek);
 		*frameData = nullptr;
 		return -1;
 	}
@@ -63,10 +63,10 @@ double AVDecoderHandler::getAudioFrame(unsigned char** outputFrame, int& frameSi
 	bool decoder_disable = !mIDecoder->getAudioInfo().isEnabled;
 	bool decoder_seek = mDecoderState == SEEK;
 	if (decoder_null || decoder_disable || decoder_seek) {
-		LOG_ERROR("[AVDecoderHandler] Audio is not available. ");
-		LOG_ERROR("[AVDecoderHandler] decoder_null: ", decoder_null);
-		LOG_ERROR("[AVDecoderHandler] decoder_disable: ", decoder_disable);
-		LOG_ERROR("[AVDecoderHandler] decoder_seek: ", decoder_seek);
+		LOG_ERROR_VERBOSE("[AVDecoderHandler] Audio is not available. ");
+		LOG_ERROR_VERBOSE("[AVDecoderHandler] decoder_null: ", decoder_null);
+		LOG_ERROR_VERBOSE("[AVDecoderHandler] decoder_disable: ", decoder_disable);
+		LOG_ERROR_VERBOSE("[AVDecoderHandler] decoder_seek: ", decoder_seek);
 		*outputFrame = nullptr;
 		return -1;
 	}
