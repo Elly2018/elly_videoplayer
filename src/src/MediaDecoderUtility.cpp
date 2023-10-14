@@ -22,7 +22,8 @@ typedef struct _VideoContext {
   bool destroying = false;
   std::unique_ptr<AVDecoderHandler> avhandler = nullptr;
 	float progressTime = 0.0f;
-	float lastUpdateTime = -1.0f;
+	float lastUpdateTimeV = -1.0f;
+	float lastUpdateTimeA = -1.0f;
   bool videoFrameLocked = false;
 	bool audioFrameLocked = false;
 	bool isContentReady = false;	//	This flag is used to indicate the period that seek over until first data is got.
@@ -172,7 +173,8 @@ void nativeDestroyDecoder(int id) {
 
 	videoCtx->path.clear();
 	videoCtx->progressTime = 0.0f;
-	videoCtx->lastUpdateTime = 0.0f;
+	videoCtx->lastUpdateTimeV = 0.0f;
+	videoCtx->lastUpdateTimeA = 0.0f;
 
 	videoCtx->isContentReady = false;
 	removeVideoContext(videoCtx->id);
@@ -263,7 +265,18 @@ float nativeGetAudioData(int id, unsigned char** audioData, int& frameSize, int&
 	}
 
 	AVDecoderHandler* localAVDecoderHandler = videoCtx->avhandler.get();
+	float currentTimeV = videoCtx->lastUpdateTimeV;
 	double curFrameTime = (localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample));
+	if (curFrameTime == -1) return -1;
+	double diff = curFrameTime - videoCtx->lastUpdateTimeA;
+	videoCtx->lastUpdateTimeA = curFrameTime;
+	if (curFrameTime > currentTimeV && currentTimeV - curFrameTime > diff) {
+		frameSize *= (diff * 1000);
+		return -1.0;
+	}
+	else if (curFrameTime < currentTimeV && curFrameTime - currentTimeV > diff) {
+		curFrameTime = (localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample));
+	}
 	return curFrameTime;
 }
 
@@ -385,9 +398,9 @@ void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady) {
           double curFrameTime = localAVDecoderHandler->getVideoFrame(frameData);
           if (frameData != nullptr && 
 			curFrameTime != -1 && 
-			videoCtx->lastUpdateTime != curFrameTime) {
+			videoCtx->lastUpdateTimeV != curFrameTime) {
               frameReady = true;
-              videoCtx->lastUpdateTime = (float)curFrameTime;
+              videoCtx->lastUpdateTimeV = (float)curFrameTime;
               videoCtx->isContentReady = true;
               videoCtx->videoFrameLocked = true;
           }

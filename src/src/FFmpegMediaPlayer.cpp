@@ -42,6 +42,7 @@ void FFmpegMediaPlayer::_init_media() {
 		LOG("\tSamplerate: ", sampleRate);
 		LOG("\tFLength: ", audio_length);
 		LOG("Audio info. channel: ", channels, ", samplerate: ", sampleRate, ", audio_length: ", audio_length);
+		delay_audio = 0.0;
 		player->play();
 	}
 
@@ -216,6 +217,7 @@ void FFmpegMediaPlayer::seek(float p_time) {
 	nativeSetVideoTime(id, p_time);
 
 	hang_time = p_time;
+	delay_audio = 0.0;
 
 	audioFrame.clear();
 	pipe_frame.clear();
@@ -336,18 +338,9 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 		* AV_SAMPLE_FMT_FLT will usually give us byte_per_sample = 4
 		*/
 		double audio_time = nativeGetAudioData(id, &raw_audio_data, audio_size, channel, byte_per_sample);
-		double bufferTime = generator->get_buffer_length();
 		if (playback != nullptr) {
-			double diff = audio_time - video_current_time;
-			LOG("get_frames_available: ", audio_time, ", ", video_current_time, ", ", delay_audio, ", ", diff, ", ", abs(diff - delay_audio));
-			if (audio_time != -1.0f && abs(diff - delay_audio) > 1.0) {
-				delay_audio = diff;
-				int count = sampleRate * 0.1;
-				for (int i = 0; i < count; i++) {
-					audioFrame.push_back(lastSubmitAudioFrame);
-				}
-			}
-			else if (audio_time != -1.0f) {
+			LOG("get_frames_available: ", audio_time, ", ", video_current_time);
+			if (audio_time > 0) {
 				PackedFloat32Array audio_data = PackedFloat32Array();
 				audio_data.resize(audio_size * byte_per_sample * channel);
 				memcpy(audio_data.ptrw(), raw_audio_data, audio_size * channel * byte_per_sample);
@@ -374,6 +367,11 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 					delete[] out;
 				}
 				lastSubmitAudioFrame = audioFrame.back()->get();
+			}
+			else {
+				for (int i = 0; i < audio_size; i++) {
+					audioFrame.push_back(lastSubmitAudioFrame);
+				}
 			}
 			while (c > 0 && audioFrame.size() > 0) {
 				if (audioFrame.size() > 0) {
