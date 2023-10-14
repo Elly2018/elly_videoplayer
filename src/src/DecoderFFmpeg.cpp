@@ -375,6 +375,7 @@ void DecoderFFmpeg::seek(double time) {
 			avcodec_flush_buffers(mVideoCodecContext);
 		}
 		flushBuffer(&mVideoFrames, &mVideoMutex);
+		freeAllFrame(&mVideoFramesPreload);
 		mVideoInfo.lastTime = -1;
 	}
 	
@@ -383,6 +384,7 @@ void DecoderFFmpeg::seek(double time) {
 			avcodec_flush_buffers(mAudioCodecContext);
 		}
 		flushBuffer(&mAudioFrames, &mAudioMutex);
+		freeAllFrame(&mAudioFramesPreload);
 		mAudioInfo.lastTime = -1;
 	}
 }

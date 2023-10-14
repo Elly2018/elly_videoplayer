@@ -3,6 +3,10 @@
 file(GLOB_RECURSE SRC src/*.h src/*.hpp src/*.cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE "/WX-")
+target_compile_options(${PROJECT_NAME} PRIVATE "/O2")
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY
+             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:DLL>")
 
 target_sources( ${PROJECT_NAME}
     PRIVATE

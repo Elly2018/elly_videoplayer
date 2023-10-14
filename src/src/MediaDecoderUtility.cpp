@@ -24,7 +24,8 @@ typedef struct _VideoContext {
 	float progressTime = 0.0f;
 	float lastUpdateTimeV = -1.0f;
 	float lastUpdateTimeA = -1.0f;
-  bool videoFrameLocked = false;
+	bool audioFirstFrame = false;
+    bool videoFrameLocked = false;
 	bool audioFrameLocked = false;
 	bool isContentReady = false;	//	This flag is used to indicate the period that seek over until first data is got.
 									//	Usually used for AV sync problem, in pure audio case, it should be discard.
@@ -270,6 +271,12 @@ float nativeGetAudioData(int id, unsigned char** audioData, int& frameSize, int&
 	if (curFrameTime == -1) return -1;
 	double diff = curFrameTime - videoCtx->lastUpdateTimeA;
 	videoCtx->lastUpdateTimeA = curFrameTime;
+	if (videoCtx->audioFirstFrame) {
+		return curFrameTime;
+	}
+	else {
+		videoCtx->audioFirstFrame = false;
+	}
 	if (curFrameTime > currentTimeV && currentTimeV - curFrameTime > diff) {
 		frameSize *= (diff * 1000);
 		return -1.0;
@@ -298,6 +305,7 @@ void nativeSetSeekTime(int id, float sec) {
 
 	LOG("[ViveMediaDecoder] nativeSetSeekTime: ", sec);
 	videoCtx->avhandler->setSeekTime(sec);
+	videoCtx->audioFirstFrame = true;
 	if (!videoCtx->avhandler->getVideoInfo().isEnabled) {
 		videoCtx->isContentReady = true;
 	} else {
