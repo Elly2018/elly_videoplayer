@@ -29,17 +29,27 @@ void AVDecoderHandler::stopDecoding() {
 	if (mDecodeThread.joinable()) {
 		mDecodeThread.join();
 	}
+	mBufferState = NONE;
+	if (mBufferThread.joinable()) {
+		mBufferThread.join();
+	}
 
+	freeAllPreloadFrame();
 	mIDecoder = nullptr;
 	mDecoderState = UNINITIALIZED;
 }
 
 void AVDecoderHandler::stop() {
     mDecoderState = STOP;
+	mBufferState = NONE;
 }
 
 bool AVDecoderHandler::isDecoderRunning() const {
     return mDecodeThreadRunning;
+}
+
+bool AVDecoderHandler::isPreloadRunning() const {
+	return mBufferThreadRunning;
 }
 
 double AVDecoderHandler::getVideoFrame(void** frameData) {
@@ -125,14 +135,50 @@ void AVDecoderHandler::freeAudioFrame() {
 	mIDecoder->freeAudioFrame();
 }
 
+void AVDecoderHandler::freeAllPreloadFrame()
+{
+	if (mIDecoder == nullptr) return;
+	mIDecoder->freePreloadFrame();
+}
+
+void AVDecoderHandler::freeAllBufferFrame()
+{
+	if (mIDecoder == nullptr) return;
+	mIDecoder->freeBufferFrame();
+}
+
 void AVDecoderHandler::startDecoding() {
 	if (mIDecoder == nullptr || mDecoderState != INITIALIZED) {
 		LOG("[AVDecoderHandler] Not initialized, decode thread would not start.");
 		return;
 	}
 
+	mBufferThread = std::thread([&]() {
+		LOG("[AVDecoderHandler] Buffer thread start running.");
+		mBufferThreadRunning = true;
+		if (!(mIDecoder->getVideoInfo().isEnabled || mIDecoder->getAudioInfo().isEnabled)) {
+			LOG("[AVDecoderHandler] No stream enabled.");
+			LOG("[AVDecoderHandler] Decode thread would not start.");
+			return;
+		}
+		mBufferState = LOADING;
+		while (mBufferState != NONE) {
+			switch (mBufferState) {
+			case LOADING:
+				if (!mIDecoder->buffering()) {
+					mBufferState = NONE;
+				}
+				break;
+			case NONE:
+				break;
+			}
+		}
+		mBufferThreadRunning = false;
+	});
+
 	mDecodeThread = std::thread([&]() {
-    mDecodeThreadRunning = true;
+		LOG("[AVDecoderHandler] Decode thread start running.");
+		mDecodeThreadRunning = true;
 		if (!(mIDecoder->getVideoInfo().isEnabled || mIDecoder->getAudioInfo().isEnabled)) {
 			LOG("[AVDecoderHandler] No stream enabled.");
 			LOG("[AVDecoderHandler] Decode thread would not start.");

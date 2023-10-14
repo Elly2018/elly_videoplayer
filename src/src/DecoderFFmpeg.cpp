@@ -25,6 +25,9 @@ DecoderFFmpeg::DecoderFFmpeg() {
 	mVideoBuffMax = DEFAULT_VIDEO_BUFFER;
 	mAudioBuffMax = DEFAULT_AUDIO_BUFFER;
 
+	mVideoPreloadMax = DEFAULT_VIDEO_PRELOAD;
+	mAudioPreloadMax = DEFAULT_AUDIO_PRELOAD;
+
 	memset(&mVideoInfo, 0, sizeof(VideoInfo));
 	memset(&mAudioInfo, 0, sizeof(AudioInfo));
 	mIsInitialized = false;
@@ -62,15 +65,6 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 	}
 
 	int errorCode = 0;
-	errorCode = loadConfig();
-	if (errorCode < 0) {
-		LOG("config loading error. \n");
-		LOG("Use default settings. \n");
-		mVideoBuffMax = DEFAULT_VIDEO_BUFFER;
-		mAudioBuffMax = DEFAULT_AUDIO_BUFFER;
-		mUseTCP = false;
-		mIsSeekToAny = false;
-	}
 
 	AVDictionary* opts = nullptr;
 	av_dict_set(&opts, "buffer_size", "655360", 0);
@@ -199,25 +193,11 @@ bool DecoderFFmpeg::decode() {
 		return false;
 	}
 
-	// Five iteration ahead
 	if (!isBuffBlocked()) {
-		if (av_read_frame(mAVFormatContext, mPacket) < 0) {
-			updateVideoFrame();
-			LOG_VERBOSE("End of file.");
-			return false;
-		}
-
-		if (mVideoInfo.isEnabled && mPacket->stream_index == mVideoStream->index) {
-			updateVideoFrame();
-		}
-		else if (mAudioInfo.isEnabled && mPacket->stream_index == mAudioStream->index) {
-			updateAudioFrame();
-		}
-		else if (mSubtitleInfo.isEnabled && mPacket->stream_index == mSubtitleStream->index) {
-			//updateSubtitleFrame();
-		}
-
-		av_packet_unref(mPacket);
+		updateVideoFrame();
+		updateAudioFrame();
+		updateAudioFrame();
+		//updateSubtitleFrame();
 	}
 
 	LOG_VERBOSE("Video frame count: ", mVideoFrames.size(), ", Audio frame count: ", mAudioFrames.size());
@@ -225,14 +205,34 @@ bool DecoderFFmpeg::decode() {
 	return true;
 }
 
-bool DecoderFFmpeg::buffering()
-{
+bool DecoderFFmpeg::buffering() {
 	if (!mIsInitialized) {
 		LOG("Not initialized. ");
 		return false;
 	}
 
-	return false;
+	if (!isPreloadBlocked()) {
+		if (av_read_frame(mAVFormatContext, mPacket) < 0) {
+			preloadVideoFrame();
+			LOG_VERBOSE("End of file.");
+			return true;
+		}
+
+		if (mVideoInfo.isEnabled && mPacket->stream_index == mVideoStream->index) {
+			preloadVideoFrame();
+		}
+		else if (mAudioInfo.isEnabled && mPacket->stream_index == mAudioStream->index) {
+			preloadAudioFrame();
+		}
+		else if (mSubtitleInfo.isEnabled && mPacket->stream_index == mSubtitleStream->index) {
+			//preloadSubtitleFrame();
+		}
+
+		LOG_VERBOSE("Video preload count: ", mVideoFramesPreload.size(), ", Audio preload count: ", mAudioFramesPreload.size());
+
+		av_packet_unref(mPacket);
+	}
+	return true;
 }
 
 IDecoder::VideoInfo DecoderFFmpeg::getVideoInfo() {
@@ -446,7 +446,12 @@ void DecoderFFmpeg::destroy() {
 	
 	flushBuffer(&mVideoFrames, &mVideoMutex);
 	flushBuffer(&mAudioFrames, &mAudioMutex);
-	
+
+	freePreloadFrame();
+	freeAllFrame(&mVideoFrames);
+	freeAllFrame(&mAudioFrames);
+	freeAllFrame(&mSubtitleFrames);
+
 	mVideoCodec = nullptr;
 	mAudioCodec = nullptr;
 	
@@ -479,99 +484,135 @@ bool DecoderFFmpeg::isBuffBlocked() {
 	return ret;
 }
 
-void DecoderFFmpeg::updateVideoFrame() {
+bool DecoderFFmpeg::isPreloadBlocked() {
+	bool ret = false;
+	if (mVideoInfo.isEnabled && mVideoFramesPreload.size() >= mVideoPreloadMax) {
+		ret = true;
+	}
+
+	if (mAudioInfo.isEnabled && mVideoFramesPreload.size() >= mAudioPreloadMax) {
+		ret = true;
+	}
+
+	return ret;
+}
+
+void DecoderFFmpeg::preloadVideoFrame()
+{
 	int ret = avcodec_send_packet(mVideoCodecContext, mPacket);
 	if (ret != 0) {
-		LOG("Video frame update failed: avcodec_send_packet ", ret);
+		LOG_VERBOSE("Video frame update failed: avcodec_send_packet ", ret);
 		return;
 	}
 	do {
 		AVFrame* srcFrame = av_frame_alloc();
-		clock_t start = clock();
 		ret = avcodec_receive_frame(mVideoCodecContext, srcFrame);
 		if (ret != 0) {
-			//LOG("Video frame update failed: avcodec_receive_frame ", ret);
+			LOG_VERBOSE("Audio frame update failed: avcodec_receive_frame ", ret);
 			return;
 		}
-
-		int width = srcFrame->width;
-		int height = srcFrame->height;
-
-		const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
-		LOG_VERBOSE("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
-		AVFrame* dstFrame = av_frame_alloc();
-		av_frame_copy_props(dstFrame, srcFrame);
-
-		dstFrame->format = dstFormat;
-
-		//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
-		int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
-		LOG_VERBOSE("Number of bytes: ", numBytes);
-		AVBufferRef* buffer = av_buffer_alloc(numBytes * sizeof(uint8_t));
-		//avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
-		av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
-		dstFrame->buf[0] = buffer;
-
-		SwsContext* conversion = sws_getContext(width,
-			height,
-			(AVPixelFormat)srcFrame->format,
-			width,
-			height,
-			dstFormat,
-			SWS_FAST_BILINEAR,
-			nullptr,
-			nullptr,
-			nullptr);
-		sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
-		sws_freeContext(conversion);
-
-		dstFrame->format = dstFormat;
-		dstFrame->width = srcFrame->width;
-		dstFrame->height = srcFrame->height;
-
-		av_frame_free(&srcFrame);
-
-		LOG_VERBOSE("updateVideoFrame = ", (float)(clock() - start) / CLOCKS_PER_SEC);
-
-		std::lock_guard<std::mutex> lock(mVideoMutex);
-		mVideoFrames.push(dstFrame);
-		updateBufferState();
+		mVideoFramesPreload.push(srcFrame);
 	} while (ret != AVERROR(EAGAIN));
 }
 
-void DecoderFFmpeg::updateAudioFrame() {
+void DecoderFFmpeg::preloadAudioFrame()
+{
 	int ret = avcodec_send_packet(mAudioCodecContext, mPacket);
 	if (ret != 0) {
-		LOG("Audio frame update failed: avcodec_send_packet ", ret);
+		LOG_VERBOSE("Audio frame update failed: avcodec_send_packet ", ret);
 		return;
 	}
 	do {
-		AVFrame* frameDecoded = av_frame_alloc();
-		ret = avcodec_receive_frame(mAudioCodecContext, frameDecoded);
+		AVFrame* srcFrame = av_frame_alloc();
+		ret = avcodec_receive_frame(mAudioCodecContext, srcFrame);
 		if (ret != 0) {
-			//LOG("Audio frame update failed: avcodec_receive_frame ", ret);
+			LOG_VERBOSE("Audio frame update failed: avcodec_receive_frame ", ret);
 			return;
 		}
-
-		AVFrame* frame = av_frame_alloc();
-		frame->sample_rate = frameDecoded->sample_rate;
-		frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
-		frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
-		frame->best_effort_timestamp = frameDecoded->best_effort_timestamp;
-
-		ret = swr_convert_frame(mSwrContext, frame, frameDecoded);
-		if (ret != 0) {
-			LOG_VERBOSE("Audio update failed ", ret);
-		}
-
-		av_frame_free(&frameDecoded);
-
-		LOG_VERBOSE("updateAudioFrame. linesize: ", frame->linesize[0]);
-
-		std::lock_guard<std::mutex> lock(mAudioMutex);
-		mAudioFrames.push(frame);
-		updateBufferState();
+		mAudioFramesPreload.push(srcFrame);
 	} while (ret != AVERROR(EAGAIN));
+}
+
+void DecoderFFmpeg::preloadSubtitleFrame()
+{
+}
+
+void DecoderFFmpeg::updateVideoFrame() {
+	if (mVideoFramesPreload.size() <= 0) return;
+	AVFrame* srcFrame = mVideoFramesPreload.front();
+	mVideoFramesPreload.pop();
+
+	clock_t start = clock();
+
+	int width = srcFrame->width;
+	int height = srcFrame->height;
+
+	const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
+	LOG_VERBOSE("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
+	AVFrame* dstFrame = av_frame_alloc();
+	av_frame_copy_props(dstFrame, srcFrame);
+
+	dstFrame->format = dstFormat;
+
+	//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
+	int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
+	LOG_VERBOSE("Number of bytes: ", numBytes);
+	AVBufferRef* buffer = av_buffer_alloc(numBytes * sizeof(uint8_t));
+	//avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
+	av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
+	dstFrame->buf[0] = buffer;
+
+	SwsContext* conversion = sws_getContext(width,
+		height,
+		(AVPixelFormat)srcFrame->format,
+		width,
+		height,
+		dstFormat,
+		SWS_FAST_BILINEAR,
+		nullptr,
+		nullptr,
+		nullptr);
+	sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
+	sws_freeContext(conversion);
+
+	dstFrame->format = dstFormat;
+	dstFrame->width = srcFrame->width;
+	dstFrame->height = srcFrame->height;
+
+	av_frame_free(&srcFrame);
+
+	LOG_VERBOSE("updateVideoFrame = ", (float)(clock() - start) / CLOCKS_PER_SEC);
+
+	std::lock_guard<std::mutex> lock(mVideoMutex);
+	mVideoFrames.push(dstFrame);
+	updateBufferState();
+}
+
+void DecoderFFmpeg::updateAudioFrame() {
+	if (mAudioFramesPreload.size() <= 0) return;
+	AVFrame* srcFrame = mAudioFramesPreload.front();
+	mAudioFramesPreload.pop();
+
+	clock_t start = clock();
+
+	AVFrame* frame = av_frame_alloc();
+	frame->sample_rate = srcFrame->sample_rate;
+	frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
+	frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
+	frame->best_effort_timestamp = srcFrame->best_effort_timestamp;
+
+	int ret = swr_convert_frame(mSwrContext, frame, srcFrame);
+	if (ret != 0) {
+		LOG_VERBOSE("Audio update failed ", ret);
+	}
+
+	av_frame_free(&srcFrame);
+
+	LOG_VERBOSE("updateAudioFrame. linesize: ", frame->linesize[0]);
+
+	std::lock_guard<std::mutex> lock(mAudioMutex);
+	mAudioFrames.push(frame);
+	updateBufferState();
 }
 
 void DecoderFFmpeg::updateSubtitleFrame()
@@ -602,6 +643,20 @@ void DecoderFFmpeg::freeVideoFrame() {
 
 void DecoderFFmpeg::freeAudioFrame() {
 	freeFrontFrame(&mAudioFrames, &mAudioMutex);
+}
+
+void DecoderFFmpeg::freePreloadFrame()
+{
+	freeAllFrame(&mVideoFramesPreload);
+	freeAllFrame(&mAudioFramesPreload);
+	freeAllFrame(&mSubtitleFramesPreload);
+}
+
+void DecoderFFmpeg::freeBufferFrame() 
+{
+	freeAllFrame(&mVideoFrames);
+	freeAllFrame(&mAudioFrames);
+	freeAllFrame(&mSubtitleFrames);
 }
 
 void DecoderFFmpeg::print_stream_maps()
@@ -648,6 +703,15 @@ void DecoderFFmpeg::freeFrontFrame(std::queue<AVFrame*>* frameBuff, std::mutex* 
 	av_frame_free(&frame);
 	frameBuff->pop();
 	updateBufferState();
+}
+
+void DecoderFFmpeg::freeAllFrame(std::queue<AVFrame*>* frameBuff)
+{
+	while (frameBuff->size() > 0) {
+		AVFrame* f = frameBuff->front();
+		av_frame_free(&f);
+		frameBuff->pop();
+	}
 }
 
 //	frameBuff.clear would only clean the pointer rather than whole resources. So we need to clear frameBuff by ourself.
@@ -710,44 +774,6 @@ void DecoderFFmpeg::updateBufferState() {
 			mAudioInfo.bufferState = BufferState::NORMAL;
 		}
 	}
-}
-
-int DecoderFFmpeg::loadConfig() {
-	std::ifstream configFile("config", std::ifstream::in);
-	if (!configFile) {
-		LOG("config does not exist.");
-		return -1;
-	}
-
-	enum CONFIG { NONE, USE_TCP, BUFF_MIN, BUFF_MAX };
-	int buffVideoMax = 0, buffAudioMax = 0, tcp = 0, seekAny = 0;
-	std::string line;
-	while (configFile >> line) {
-		std::string token = line.substr(0, line.find("="));
-		CONFIG config = NONE;
-		std::string value = line.substr(line.find("=") + 1);
-		try {
-			if (token == "USE_TCP") { tcp = stoi(value); }
-			else if (token == "BUFF_VIDEO_MAX") { buffVideoMax = stoi(value); }
-			else if (token == "BUFF_AUDIO_MAX") { buffAudioMax = stoi(value); }
-			else if (token == "SEEK_ANY") { seekAny = stoi(value); }
-		
-		} catch (...) {
-			return -1;
-		}
-	}
-
-	mUseTCP = tcp != 0;
-	mVideoBuffMax = buffVideoMax;
-	mAudioBuffMax = buffAudioMax;
-	mIsSeekToAny = seekAny != 0;
-	LOG("config loading success.");
-	LOG("USE_TCP=", mUseTCP ? "true" : "false");
-	LOG("BUFF_VIDEO_MAX=", mVideoBuffMax);
-	LOG("BUFF_AUDIO_MAX=", mAudioBuffMax);
-	LOG("SEEK_ANY=", mIsSeekToAny ? "true" : "false");
-
-	return 0;
 }
 
 void DecoderFFmpeg::printErrorMsg(int errorCode) {

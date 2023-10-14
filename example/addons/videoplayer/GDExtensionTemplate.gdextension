@@ -6,24 +6,24 @@ compatibility_minimum = 4.1
 [dependencies]
 
 windows.x86_64 = {
-"lib/Dep/avcodec-60.dll":".",
-"lib/Dep/avdevice-60.dll":".",
-"lib/Dep/avfilter-9.dll":".",
-"lib/Dep/avformat-60.dll":".",
-"lib/Dep/avutil-58.dll":".",
-"lib/Dep/postproc-57.dll":".",
-"lib/Dep/swresample-4.dll":".",
-"lib/Dep/swscale-7.dll":"."
+"lib/Windows-AMD64/avcodec-60.dll":".",
+"lib/Windows-AMD64/avdevice-60.dll":".",
+"lib/Windows-AMD64/avfilter-9.dll":".",
+"lib/Windows-AMD64/avformat-60.dll":".",
+"lib/Windows-AMD64/avutil-58.dll":".",
+"lib/Windows-AMD64/postproc-57.dll":".",
+"lib/Windows-AMD64/swresample-4.dll":".",
+"lib/Windows-AMD64/swscale-7.dll":"."
 }
 Linux-AMD64 = {
-"lib/Dep/avcodec-60.dll":".",
-"lib/Dep/avdevice-60.dll":".",
-"lib/Dep/avfilter-9.dll":".",
-"lib/Dep/avformat-60.dll":".",
-"lib/Dep/avutil-58.dll":".",
-"lib/Dep/postproc-57.dll":".",
-"lib/Dep/swresample-4.dll":".",
-"lib/Dep/swscale-7.dll":"."
+"lib/Linux-AMD64/avcodec-60.dll":".",
+"lib/Linux-AMD64/avdevice-60.dll":".",
+"lib/Linux-AMD64/avfilter-9.dll":".",
+"lib/Linux-AMD64/avformat-60.dll":".",
+"lib/Linux-AMD64/avutil-58.dll":".",
+"lib/Linux-AMD64/postproc-57.dll":".",
+"lib/Linux-AMD64/swresample-4.dll":".",
+"lib/Linux-AMD64/swscale-7.dll":"."
 }
 
 [libraries]

@@ -42,7 +42,6 @@ void FFmpegMediaPlayer::_init_media() {
 		LOG("\tSamplerate: ", sampleRate);
 		LOG("\tFLength: ", audio_length);
 		LOG("Audio info. channel: ", channels, ", samplerate: ", sampleRate, ", audio_length: ", audio_length);
-		delay_audio = sampleRate * 0.4;
 		player->play();
 	}
 
@@ -323,10 +322,11 @@ void FFmpegMediaPlayer::_process(float delta) {
 
 void FFmpegMediaPlayer::_physics_process(float delta) {
 	int c = 0;
+	video_current_time = Time::get_singleton()->get_unix_time_from_system() - global_start_time;
 	if (playback.is_valid()) {
 		c = playback->get_frames_available();
 	}
-	if (state > INITIALIZED && state != SEEK && state != END_OF_FILE) {
+	if ((state == DECODING || state == BUFFERING)) {
 		// TODO: Implement audio.
 		unsigned char* raw_audio_data = nullptr;
 		int audio_size = 0;
@@ -336,12 +336,18 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 		* AV_SAMPLE_FMT_FLT will usually give us byte_per_sample = 4
 		*/
 		double audio_time = nativeGetAudioData(id, &raw_audio_data, audio_size, channel, byte_per_sample);
-		if (playback == nullptr) {
-			nativeFreeAudioData(id);
-		}
-		else {			
-			//LOG("get_frames_available: %d \n", c);
-			if (audio_time != -1.0f) {
+		double bufferTime = generator->get_buffer_length();
+		if (playback != nullptr) {
+			double diff = audio_time - video_current_time;
+			LOG("get_frames_available: ", audio_time, ", ", video_current_time, ", ", delay_audio, ", ", diff, ", ", abs(diff - delay_audio));
+			if (audio_time != -1.0f && abs(diff - delay_audio) > 1.0) {
+				delay_audio = diff;
+				int count = sampleRate * 0.1;
+				for (int i = 0; i < count; i++) {
+					audioFrame.push_back(lastSubmitAudioFrame);
+				}
+			}
+			else if (audio_time != -1.0f) {
 				PackedFloat32Array audio_data = PackedFloat32Array();
 				audio_data.resize(audio_size * byte_per_sample * channel);
 				memcpy(audio_data.ptrw(), raw_audio_data, audio_size * channel * byte_per_sample);
@@ -367,39 +373,28 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 					//LOG("Push frame, out: %f, sin: [%f, %f] \n", out, left, right);
 					delete[] out;
 				}
+				lastSubmitAudioFrame = audioFrame.back()->get();
 			}
-			nativeFreeAudioData(id);
-			bool haveUpdate = false;
-			float increment = 0.0f / 44100.0f;
 			while (c > 0 && audioFrame.size() > 0) {
-				haveUpdate = true;
-				bool pass = false;
 				if (audioFrame.size() > 0) {
-					pass = true;
-					if (delay_audio > 0)
+					Vector2 element = audioFrame.front()->get();
+					if (playback.is_valid())
 					{
-						playback->push_frame(Vector2(0, 0));
-						delay_audio -= 1;
+						playback->push_frame(element);
 					}
-					else 
-					{
-						Vector2 element = audioFrame.front()->get();
-						if (playback.is_valid())
-						{
-							playback->push_frame(element);
-						}
-						audioFrame.pop_front();
-					}
+					audioFrame.pop_front();
 				}
 				c -= 1;
 			}
 		}
+		nativeFreeAudioData(id);
 	}
 	if (playback.is_valid()) {
 		while (c > 0) {
 			playback->push_frame(Vector2(0, 0));
 			c -= 1;
 		}
+		lastSubmitAudioFrame = Vector2(0, 0);
 	}
 }
 

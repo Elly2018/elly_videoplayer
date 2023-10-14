@@ -29,6 +29,7 @@ public:
     void stop();
 
     bool isDecoderRunning() const;
+    bool isPreloadRunning() const;
 
 	void setSeekTime(float sec);
 	
@@ -37,6 +38,8 @@ public:
 	bool getOtherIndex(MediaType type, int* li, int& count, int& current);
 	void freeVideoFrame();
 	void freeAudioFrame();
+	void freeAllPreloadFrame();
+	void freeAllBufferFrame();
 	void setVideoEnable(bool isEnable);
 	void setAudioEnable(bool isEnable);
 	void setAudioAllChDataEnable(bool isEnable);
@@ -57,6 +60,6 @@ private:
 	
 	std::thread mDecodeThread;
 	std::thread mBufferThread;
-  bool mDecodeThreadRunning = false;
+    bool mDecodeThreadRunning = false;
 	bool mBufferThreadRunning = false;
 };

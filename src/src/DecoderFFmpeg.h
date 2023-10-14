@@ -36,6 +36,8 @@ public:
 	double getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample);
 	void freeVideoFrame();
 	void freeAudioFrame();
+	void freePreloadFrame();
+	void freeBufferFrame();
 	void print_stream_maps();
 
 	int getMetaData(char**& key, char**& value);
@@ -74,6 +76,13 @@ private:
 	unsigned int mAudioBuffMax;
 	unsigned int mSubtitleBuffMax;
 
+	std::queue<AVFrame*> mVideoFramesPreload;
+	std::queue<AVFrame*> mAudioFramesPreload;
+	std::queue<AVFrame*> mSubtitleFramesPreload;
+	unsigned int mVideoPreloadMax;
+	unsigned int mAudioPreloadMax;
+	unsigned int mSubtitlePreloadMax;
+
 	SwrContext*	mSwrContext;
 	int initSwrContext();
 
@@ -85,10 +94,15 @@ private:
 	int mFrameBufferNum;
 
 	bool isBuffBlocked();
+	bool isPreloadBlocked();
+	void preloadVideoFrame();
+	void preloadAudioFrame();
+	void preloadSubtitleFrame();
 	void updateVideoFrame();
 	void updateAudioFrame();
 	void updateSubtitleFrame();
 	void freeFrontFrame(std::queue<AVFrame*>* frameBuff, std::mutex* mutex);
+	void freeAllFrame(std::queue<AVFrame*>* frameBuff);
 	void flushBuffer(std::queue<AVFrame*>* frameBuff, std::mutex* mutex);
 	AVCodecContext* getStreamCodecContext(int index);
 	void freeStreamCodecContext(AVCodecContext* codec);
@@ -99,6 +113,5 @@ private:
 
 	bool mIsSeekToAny;
 
-	int loadConfig();
 	void printErrorMsg(int errorCode);
 };

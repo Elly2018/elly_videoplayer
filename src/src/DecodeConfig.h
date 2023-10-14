@@ -53,6 +53,9 @@
 #define DEFAULT_VIDEO_BUFFER 64 * 1
 #define DEFAULT_AUDIO_BUFFER 64 * 1
 
+#define DEFAULT_VIDEO_PRELOAD 64 * 10
+#define DEFAULT_AUDIO_PRELOAD 64 * 10
+
 enum {
     AV_SYNC_AUDIO_MASTER, /* default choice */
     AV_SYNC_VIDEO_MASTER,
