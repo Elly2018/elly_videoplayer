@@ -21,7 +21,7 @@ camera_attributes = SubResource("CameraAttributesPractical_3w5hy")
 [node name="2DPlayer" parent="." instance=ExtResource("2_74c40")]
 
 [node name="PlayUI" parent="." instance=ExtResource("3_5iufy")]
-seek_time = 5.0
+seek_time = 20.0
 
 [connection signal="SeekBackward" from="PlayUI" to="Plane" method="quick_seek_backward"]
 [connection signal="SeekForward" from="PlayUI" to="Plane" method="quick_seek_forward"]

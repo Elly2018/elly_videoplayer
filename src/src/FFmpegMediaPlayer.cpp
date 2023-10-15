@@ -42,6 +42,7 @@ void FFmpegMediaPlayer::_init_media() {
 		LOG("\tSamplerate: ", sampleRate);
 		LOG("\tFLength: ", audio_length);
 		LOG("Audio info. channel: ", channels, ", samplerate: ", sampleRate, ", audio_length: ", audio_length);
+		nativeSetAudioBufferTime(id, get_buffer_length());
 		delay_audio = 0.0;
 		player->play();
 	}
@@ -339,7 +340,7 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 		*/
 		double audio_time = nativeGetAudioData(id, &raw_audio_data, audio_size, channel, byte_per_sample);
 		if (playback != nullptr) {
-			LOG("get_frames_available: ", audio_time, ", ", video_current_time);
+			LOG_VERBOSE("get_frames_available: ", audio_time, ", ", video_current_time);
 			if (audio_time > 0) {
 				PackedFloat32Array audio_data = PackedFloat32Array();
 				audio_data.resize(audio_size * byte_per_sample * channel);
