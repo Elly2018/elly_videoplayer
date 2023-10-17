@@ -24,9 +24,7 @@ typedef struct _VideoContext {
 	float progressTime = 0.0f;
 	float lastUpdateTimeV = -1.0f;
 	float lastUpdateTimeA = -1.0f;
-	float delayCount = 0.0f;
-	float audioBufferTime = 0.0f;
-	bool audioFirstFrame = false;
+	float audioBufferTime = -1.0f;
     bool videoFrameLocked = false;
 	bool audioFrameLocked = false;
 	bool isContentReady = false;	//	This flag is used to indicate the period that seek over until first data is got.
@@ -120,8 +118,6 @@ int nativeCreateDecoder(const char* filePath, int& id) {
     id = videoCtx->id;
     videoCtx->path = std::string(filePath);
     videoCtx->isContentReady = false;
-	videoCtx->audioFirstFrame = true;
-	videoCtx->delayCount = 0;
 	videoCtx->avhandler->init(filePath);
 
 	videoContexts.push_back(videoCtx);
@@ -268,7 +264,8 @@ bool nativeSetAudioBufferTime(int id, float time)
 	videoCtx->audioBufferTime = time;
 }
 
-float nativeGetAudioData(int id, unsigned char** audioData, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
+float nativeGetAudioData(int id, bool& frame_ready, unsigned char** audioData, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
+	frame_ready = false;
   std::shared_ptr<VideoContext> videoCtx;
 	if (!getVideoContext(id, videoCtx)) { return -1.0f; }
 	if (videoCtx->audioFrameLocked) {
@@ -277,46 +274,17 @@ float nativeGetAudioData(int id, unsigned char** audioData, int& frameSize, int&
 	}
 
 	AVDecoderHandler* localAVDecoderHandler = videoCtx->avhandler.get();
-	double curFrameTime = (localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample));
-	return curFrameTime;
 
-	float currentTimeV = videoCtx->lastUpdateTimeV;
 	double curFrameTime = (localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample));
-	if (curFrameTime == -1) return -1;
-	double diff = curFrameTime - videoCtx->lastUpdateTimeA;
-	videoCtx->lastUpdateTimeA = curFrameTime;
-	double realCurFrameTime = curFrameTime - (videoCtx->delayCount * diff) + videoCtx->audioBufferTime;
-	bool delay = currentTimeV != -1.0 && realCurFrameTime > currentTimeV && realCurFrameTime - currentTimeV > diff * 1.5f;
-	bool drop = currentTimeV != -1.0 && realCurFrameTime < currentTimeV && currentTimeV - realCurFrameTime > diff * 1.5f;
-	LOG("Audio update. diff: ", diff, ", V: ", currentTimeV, ", curTime: ", realCurFrameTime, ", delay: ", delay, ", drop: ", drop);
-	if (videoCtx->audioFirstFrame) {
-		LOG("Audio First Frame");
-		videoCtx->audioFirstFrame = false;
-		return curFrameTime;
-	}
-	if (delay) {
-		// When audio is ahead
-		int delaytime = (realCurFrameTime - currentTimeV) / diff;
-		videoCtx->delayCount += delaytime;
-		frameSize *= delaytime;
-		LOG("Delay audio frame, ", frameSize);
-		return -1.0;
-	}
-	else if (drop) {
-		// When audio is behide
-		int droptime = (currentTimeV - realCurFrameTime) / diff;
-		for (int i = 0; i < droptime; i++) {
-			curFrameTime = (localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample));
-		}
-		LOG("Drop audio frame, ", droptime);
-	}
+	frame_ready = true;
+	videoCtx->lastUpdateTimeA = (float)curFrameTime;
 	return curFrameTime;
 }
 
 void nativeFreeAudioData(int id) {
     std::shared_ptr<VideoContext> videoCtx;
 	if (!getVideoContext(id, videoCtx)) { return; }
-	//videoCtx->audioFrameLocked = false;
+	videoCtx->audioFrameLocked = false;
 	videoCtx->avhandler->freeAudioFrame();
 }
 
@@ -331,8 +299,6 @@ void nativeSetSeekTime(int id, float sec) {
 
 	LOG("[ViveMediaDecoder] nativeSetSeekTime: ", sec);
 	videoCtx->avhandler->setSeekTime(sec);
-	videoCtx->audioFirstFrame = true;
-	videoCtx->delayCount = 0;
 	if (!videoCtx->avhandler->getVideoInfo().isEnabled) {
 		videoCtx->isContentReady = true;
 	} else {

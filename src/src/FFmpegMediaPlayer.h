@@ -55,7 +55,8 @@ private:
 	int id = 0;
 	int state = UNINITIALIZED;
 
-	bool first_frame = true;
+	bool first_frame_v = true;
+	bool first_frame_a = true;
 	bool paused = false;
 	bool looping = false;
 
@@ -68,7 +69,6 @@ private:
 	float video_length = 0.0f;
 	Vector2 lastSubmitAudioFrame;
 	List<Vector2> audioFrame;
-	List<PackedByteArray> pipe_frame;
 	double video_current_time = 0.0f;
 	int data_size = 0;
 	

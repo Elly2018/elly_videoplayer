@@ -69,6 +69,8 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 	AVDictionary* opts = nullptr;
 	av_dict_set(&opts, "buffer_size", "655360", 0);
 	av_dict_set(&opts, "hwaccel", "auto", 0);
+	av_dict_set(&opts, "movflags", "faststart", 0);
+	av_dict_set(&opts, "refcounted_frames", "1", 0);
 	if (mUseTCP) {
 		av_dict_set(&opts, "rtsp_transport", "tcp", 0);
 	}
@@ -576,6 +578,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 		nullptr);
 	sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
 	sws_freeContext(conversion);
+	av_frame_copy_props(dstFrame, srcFrame);
 
 	dstFrame->format = dstFormat;
 	dstFrame->width = srcFrame->width;
