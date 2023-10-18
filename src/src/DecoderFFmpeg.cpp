@@ -118,6 +118,7 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 		}
 		AVDictionary *autoThread = nullptr;
 		av_dict_set(&autoThread, "threads", "auto", 0);
+		mVideoCodecContext->flags2 |= AV_CODEC_FLAG2_FAST;
 		errorCode = avcodec_open2(mVideoCodecContext, mVideoCodec, &autoThread);
 		av_dict_free(&autoThread);
 		if (errorCode < 0) {
@@ -154,7 +155,7 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 			LOG("Audio codec not available. \n");
 			return false;
 		}
-
+		mAudioCodecContext->flags2 |= AV_CODEC_FLAG2_FAST;
 		errorCode = avcodec_open2(mAudioCodecContext, mAudioCodec, nullptr);
 		if (errorCode < 0) {
 			LOG("Could not open audio codec(%x). \n", errorCode);
@@ -599,7 +600,6 @@ void DecoderFFmpeg::updateAudioFrame() {
 	mAudioFramesPreload.pop();
 
 	clock_t start = clock();
-
 	AVFrame* frame = av_frame_alloc();
 	frame->sample_rate = srcFrame->sample_rate;
 	frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);

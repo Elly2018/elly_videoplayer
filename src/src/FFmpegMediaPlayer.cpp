@@ -44,11 +44,6 @@ void FFmpegMediaPlayer::_init_media() {
 		LOG("\tFLength: ", audio_length);
 		LOG("Audio info. channel: ", channels, ", samplerate: ", sampleRate, ", audio_length: ", audio_length);
 		nativeSetAudioBufferTime(id, get_buffer_length());
-		delay_audio = 0.0;
-		int k = sampleRate * 0.4f;
-		//for (int i = 0; i < k; i++) {
-			//audioFrame.push_back(Vector2(0, 0));
-		//}
 		player->play();
 	}
 
@@ -222,7 +217,6 @@ void FFmpegMediaPlayer::seek(float p_time) {
 	nativeSetVideoTime(id, p_time);
 
 	hang_time = p_time;
-	delay_audio = 0.0;
 
 	audioFrame.clear();
 
@@ -230,6 +224,7 @@ void FFmpegMediaPlayer::seek(float p_time) {
 }
 
 void FFmpegMediaPlayer::_process(float delta) {
+	LOG("state: ", state);
 	switch (state) {
 		case FAILED: {
 			state = UNINITIALIZED;
@@ -275,12 +270,11 @@ void FFmpegMediaPlayer::_process(float delta) {
 				bool frame_ready = false;
 
 				nativeGrabVideoFrame(id, &frame_data, frame_ready);
-				//LOG("state: ", state, ", ready: ", frame_ready);
 				if (frame_ready) {
 					PackedByteArray image_data;
 					image_data.resize(data_size);
 					memcpy(image_data.ptrw(), frame_data, data_size);
-					LOG_VERBOSE("data size: ", data_size, ", actual frame size: ", image_data.size());
+					LOG("data size: ", data_size, ", actual frame size: ", image_data.size());
 					PackedByteArray buffer = image_data;
 					image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, buffer);
 					texture->set_deferred("image", image);
@@ -383,11 +377,8 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 		while (c > 0 && audioFrame.size() > 0 && !first_frame_v && state == DECODING) {
 			if (audioFrame.size() > 0) {
 				Vector2 element = audioFrame.front()->get();
-				if (playback.is_valid())
-				{
-					playback->push_frame(element);
-					lastSubmitAudioFrame = element;
-				}
+				playback->push_frame(element);
+				lastSubmitAudioFrame = element;
 				audioFrame.pop_front();
 			}
 			c -= 1;

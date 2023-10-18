@@ -64,8 +64,6 @@ private:
 	int width = 0;
 	int height = 0;
 	float framerate = 0.0f;
-	int delay_frame = 0;
-	double delay_audio = 0;
 	float video_length = 0.0f;
 	Vector2 lastSubmitAudioFrame;
 	List<Vector2> audioFrame;
