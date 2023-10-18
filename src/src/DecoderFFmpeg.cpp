@@ -329,7 +329,7 @@ double DecoderFFmpeg::getVideoFrame(void** frameData) {
 	AVFrame* frame = mVideoFrames.front();
 	*frameData = frame->data[0];
 
-	int64_t timeStamp = frame->best_effort_timestamp;
+	int64_t timeStamp = frame->pts;
 	double timeInSec = av_q2d(mVideoStream->time_base) * timeStamp;
 	mVideoInfo.lastTime = timeInSec;
 
@@ -351,7 +351,7 @@ double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize,
 	frameSize = frame->nb_samples;
 	*outputFrame = frame->data[0];
 	byte_per_sample = (size_t)av_get_bytes_per_sample(mAudioCodecContext->sample_fmt);
-	int64_t timeStamp = frame->best_effort_timestamp;
+	int64_t timeStamp = frame->pts;
 	double timeInSec = av_q2d(mAudioStream->time_base) * timeStamp;
 	mAudioInfo.lastTime = timeInSec;
 
@@ -558,6 +558,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 	av_frame_copy_props(dstFrame, srcFrame);
 
 	dstFrame->format = dstFormat;
+	dstFrame->pts = srcFrame->best_effort_timestamp;
 
 	//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
 	int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
@@ -605,10 +606,7 @@ void DecoderFFmpeg::updateAudioFrame() {
 	frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
 	frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
 	frame->best_effort_timestamp = srcFrame->best_effort_timestamp;
-	AVRational tb = AVRational();
-	tb.num = 1;
-	tb.den = frame->sample_rate;
-	frame->pts = av_rescale_q(frame->pts, mAudioCodecContext->pkt_timebase, tb);
+	frame->pts = frame->best_effort_timestamp;
 
 	int ret = swr_convert_frame(mSwrContext, frame, srcFrame);
 	if (ret != 0) {
