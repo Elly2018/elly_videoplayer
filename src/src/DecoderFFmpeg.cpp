@@ -598,13 +598,17 @@ void DecoderFFmpeg::updateAudioFrame() {
 	if (mAudioFramesPreload.size() <= 0) return;
 	AVFrame* srcFrame = mAudioFramesPreload.front();
 	mAudioFramesPreload.pop();
-
+	
 	clock_t start = clock();
 	AVFrame* frame = av_frame_alloc();
 	frame->sample_rate = srcFrame->sample_rate;
 	frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
 	frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
 	frame->best_effort_timestamp = srcFrame->best_effort_timestamp;
+	AVRational tb = AVRational();
+	tb.num = 1;
+	tb.den = frame->sample_rate;
+	frame->pts = av_rescale_q(frame->pts, mAudioCodecContext->pkt_timebase, tb);
 
 	int ret = swr_convert_frame(mSwrContext, frame, srcFrame);
 	if (ret != 0) {
