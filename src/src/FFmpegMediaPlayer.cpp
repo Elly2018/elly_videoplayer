@@ -224,7 +224,6 @@ void FFmpegMediaPlayer::seek(float p_time) {
 }
 
 void FFmpegMediaPlayer::_process(float delta) {
-	LOG("state: ", state);
 	switch (state) {
 		case FAILED: {
 			state = UNINITIALIZED;
