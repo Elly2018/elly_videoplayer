@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: Unlicense
-
 file(GLOB_RECURSE SRC src/*.h src/*.hpp src/*.cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE "/WX-")
@@ -11,6 +10,7 @@ target_sources( ${PROJECT_NAME}
     PRIVATE
 	${SRC}
 )
+SOURCE_GROUP(${PROJECT_NAME} FILES ${SRC})
 
 target_link_directories( ${PROJECT_NAME} PUBLIC
   "ffmpeg/lib"

@@ -1,7 +1,7 @@
 //========= Copyright 2015-2019, HTC Corporation. All rights reserved. ===========
 
 #pragma once
-#include "IDecoder.h"
+#include <decoder/IDecoder.h>
 #include <thread>
 #include <mutex>
 #include <memory>

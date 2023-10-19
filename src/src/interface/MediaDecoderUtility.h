@@ -1,5 +1,6 @@
-//========= Copyright 2015-2019, HTC Corporation. All rights reserved. ===========
-
+/*
+* The low-level global functions responsible for manage decoders.
+*/
 #pragma once
 
 extern "C" {

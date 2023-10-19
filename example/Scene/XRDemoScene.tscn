@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Script/PlayerManager.gd" id="1_o4cmg"]
 [ext_resource type="PackedScene" uid="uid://nepgy2yvue6r" path="res://Prefab/XRPlayer.tscn" id="2_jmy22"]
-[ext_resource type="PackedScene" uid="uid://bn064jv76jmaw" path="res://Prefab/Sphere.tscn" id="3_alk7n"]
+[ext_resource type="PackedScene" uid="uid://bn064jv76jmaw" path="res://Prefab/sphere.tscn" id="3_alk7n"]
 [ext_resource type="PackedScene" uid="uid://ciy3ke0sxpite" path="res://Prefab/XRPlayUI.tscn" id="4_bs2wu"]
 
 [sub_resource type="Environment" id="Environment_24h51"]

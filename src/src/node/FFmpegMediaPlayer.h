@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MediaDecoderUtility.h"
+#include <interface/MediaDecoderUtility.h>
 #include <string>
 
 #include <godot_cpp/classes/audio_stream_playback.hpp>
@@ -185,8 +185,8 @@ public:
 
 	void set_sample_rate(const int rate);
 	int get_sample_rate() const;
-	void set_buffer_length(const float second);
-	float get_buffer_length() const;
+	void set_buffer_length(const double second);
+	double get_buffer_length() const;
 	void set_path(const String _path);
 	String get_path() const;
 	void set_format(const String _format);

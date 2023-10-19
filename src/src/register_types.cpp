@@ -5,9 +5,9 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/godot.hpp>
 
-#include "FFmpegMediaPlayer.h"
-#include "FFmpegMediaEncoder.h"
-#include "VRVideoFilter.h"
+#include <node/FFmpegMediaPlayer.h>
+#include <node/FFmpegMediaEncoder.h>
+#include <node/VRVideoFilter.h>
 
 using namespace godot;
 

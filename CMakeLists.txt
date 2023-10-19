@@ -20,6 +20,8 @@ set( CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON )
 # Output compile commands to compile_commands.json (for debugging CMake issues)
 set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 # Build universal lib on macOS
 # Note that CMAKE_OSX_ARCHITECTURES must be set before project().
 if ( APPLE )

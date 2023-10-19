@@ -225,19 +225,12 @@ void FFmpegMediaPlayer::seek(float p_time) {
 
 void FFmpegMediaPlayer::_process(float delta) {
 	switch (state) {
-		case FAILED: {
-			state = UNINITIALIZED;
-			LOG_ERROR("Main loop, async loading failed, nativeGetDecoderState == -1");
-			LOG_ERROR("Init failed");
-			emit_signal("async_loaded", false);
-		} break;
-
 		case LOADING: {
 			if (nativeGetDecoderState(id) == INITIALIZED) {
 				_init_media();
 				emit_signal("async_loaded", true);
 				LOG("Loading successful");
-			} else if (nativeGetDecoderState(id) == -1) {
+			} else if (nativeGetDecoderState(id) == FAILED) {
 				state = UNINITIALIZED;
 				LOG_ERROR("Main loop, async loading failed, nativeGetDecoderState == -1");
 				LOG_ERROR("Init failed");
@@ -393,7 +386,6 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 
 void FFmpegMediaPlayer::set_player(AudioStreamPlayer* _player)
 {
-	NodePath np;
 	player = _player;
 	player->set_autoplay(true);
 	generator = player->get_stream();
@@ -410,21 +402,25 @@ AudioStreamPlayer* FFmpegMediaPlayer::get_player() const
 
 void FFmpegMediaPlayer::set_sample_rate(const int rate)
 {
+	if (generator == nullptr) return;
 	generator->set_mix_rate(rate);
 }
 
 int FFmpegMediaPlayer::get_sample_rate() const
 {
+	if (generator == nullptr) return -1;
 	return generator->get_mix_rate();
 }
 
-void FFmpegMediaPlayer::set_buffer_length(const float second)
+void FFmpegMediaPlayer::set_buffer_length(const double second)
 {
+	if (generator == nullptr) return;
 	generator->set_buffer_length(second);
 }
 
-float FFmpegMediaPlayer::get_buffer_length() const
+double FFmpegMediaPlayer::get_buffer_length() const
 {
+	if (generator == nullptr) return -1.0;
 	return generator->get_buffer_length();
 }
 void FFmpegMediaPlayer::set_path(const String _path)
@@ -485,9 +481,6 @@ void FFmpegMediaPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_path"), &FFmpegMediaPlayer::get_path);
 	ClassDB::bind_method(D_METHOD("set_format", "second"), &FFmpegMediaPlayer::set_format);
 	ClassDB::bind_method(D_METHOD("get_format"), &FFmpegMediaPlayer::get_format);
-
-	//ADD_PROPERTY(PropertyInfo(Variant::INT, "sample_rate"), "set_sample_rate", "get_sample_rate");
-	//ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buffer_length"), "set_buffer_length", "get_buffer_length");
 
 	ADD_SIGNAL(MethodInfo("async_loaded", PropertyInfo(Variant::BOOL, "successful")));
 	ADD_SIGNAL(MethodInfo("video_update", PropertyInfo(Variant::RID, "image", PROPERTY_HINT_RESOURCE_TYPE, "ImageTexture"), PropertyInfo(Variant::VECTOR2I, "size")));

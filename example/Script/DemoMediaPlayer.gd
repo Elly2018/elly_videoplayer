@@ -37,8 +37,7 @@ func _ready():
 	player.set_player(audio_stream);
 	player.set_loop(loop);
 	if (play_on_start):
-		player.load_path(uri);
-		player.play();
+		player.load_path_async(uri);
 
 func _process(delta):
 	_update_size();
@@ -92,12 +91,12 @@ func stop_trigger():
 	
 func load_trigger(p:String):
 	print("Loading: ", p)
-	player.load_path(p);
-	player.play();
+	player.load_path_async(p);
 		
 func async_load_finish(result):
 	print("Loading result: ", result)
-	player.play()
+	if (result):
+		player.play()
 	
 func message_feedback(m:String):
 	print(m)
