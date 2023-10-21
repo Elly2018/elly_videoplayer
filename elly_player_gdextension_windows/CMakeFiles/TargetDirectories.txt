@@ -1,0 +1,10 @@
+C:/msys64/home/chuel/elly_videoplayer/elly_player_gdextension_windows/CMakeFiles/GDExtensionTemplate.dir
+C:/msys64/home/chuel/elly_videoplayer/elly_player_gdextension_windows/CMakeFiles/INSTALL.dir
+C:/msys64/home/chuel/elly_videoplayer/elly_player_gdextension_windows/CMakeFiles/ALL_BUILD.dir
+C:/msys64/home/chuel/elly_videoplayer/elly_player_gdextension_windows/CMakeFiles/ZERO_CHECK.dir
+C:/msys64/home/chuel/elly_videoplayer/elly_player_gdextension_windows/src/CMakeFiles/INSTALL.dir
+C:/msys64/home/chuel/elly_videoplayer/elly_player_gdextension_windows/templates/CMakeFiles/templates.dir
+C:/msys64/home/chuel/elly_videoplayer/elly_player_gdextension_windows/templates/CMakeFiles/INSTALL.dir
+C:/msys64/home/chuel/elly_videoplayer/elly_player_gdextension_windows/libs/godot-cpp/CMakeFiles/godot-cpp.dir
+C:/msys64/home/chuel/elly_videoplayer/elly_player_gdextension_windows/libs/godot-cpp/CMakeFiles/INSTALL.dir
+C:/msys64/home/chuel/elly_videoplayer/elly_player_gdextension_windows/libs/godot-cpp/CMakeFiles/ALL_BUILD.dir

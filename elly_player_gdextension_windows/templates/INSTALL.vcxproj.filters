@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\msys64\home\chuel\elly_videoplayer\elly_player_gdextension_windows\CMakeFiles\210cdfdb3f8c717396abc393cd0fb5c8\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{EA99BF14-AFC4-3E02-85B9-763F356FCF80}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

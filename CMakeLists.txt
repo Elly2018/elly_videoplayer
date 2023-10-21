@@ -108,7 +108,7 @@ include( ClangFormat )
 
 # godot-cpp
 # From here: https://github.com/godotengine/godot-cpp
-if ( NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/godot-cpp/Makefile" )
+if ( NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/libs/godot-cpp/Makefile" )
     message(
         FATAL_ERROR
             "[${PROJECT_NAME}] The godot-cpp submodule was not downloaded. Please update submodules: git submodule update --init --recursive."
@@ -117,7 +117,7 @@ endif()
 
 set( GODOT_CPP_SYSTEM_HEADERS ON CACHE BOOL "" FORCE )
 
-add_subdirectory( godot-cpp )
+add_subdirectory( libs/godot-cpp )
 
 set_target_properties( godot-cpp
     PROPERTIES
@@ -126,5 +126,5 @@ set_target_properties( godot-cpp
 
 target_link_libraries( ${PROJECT_NAME}
     PRIVATE
-        godot-cpp
+        libs/godot-cpp
 )

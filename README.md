@@ -1,8 +1,8 @@
-# gd-videoplayer
+# elly-videoplayer
 
-A GDExtension for godot 4.x to play video, this is a wrapper of ffmpeg for decode
+A general video player for godot 4.x, unity, unreal to play video, this is a wrapper of ffmpeg for decode
 
-Some showcase in below
+Below example use godot engine import gdextension for video player
 
 ![v8](img/v8.gif)
 
