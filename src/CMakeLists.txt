@@ -1,5 +1,28 @@
 # SPDX-License-Identifier: Unlicense
-file(GLOB_RECURSE SRC src/*.h src/*.hpp src/*.cpp)
+file(GLOB_RECURSE CORESRC 
+	src/encoder/*.hpp src/encoder/*.h src/encoder/*.cpp src/encoder/*.c
+	src/decoder/*.hpp src/decoder/*.h src/decoder/*.cpp src/decoder/*.c
+	src/interface/*.hpp src/interface/*.h src/interface/*.cpp src/interface/*.c
+	src/DecodeConfig.h
+	src/Logger.h)
+
+file(GLOB_RECURSE GDSRC src/gd/*.hpp src/gd/*.h src/gd/*.cpp src/gd/*.c)
+file(GLOB_RECURSE UnitySRC src/unity/*.hpp src/unity/*.h src/unity/*.cpp src/unity/*.c)
+file(GLOB_RECURSE UnrealSRC src/unreal/*.hpp src/unreal/*.h src/unreal/*.cpp src/unreal/*.c)
+
+if( "${Engine}" STREQUAL "Godot" )
+	add_definitions(GODOT)
+	list(APPEND SRC "${CORESRC}" "${GDSRC}")
+elseif( "${Engine}" STREQUAL "Unity" )
+	add_definitions(UNITY)
+	list(APPEND SRC "${CORESRC}" "${UnitySRC}")
+elseif( "${Engine}" STREQUAL "Unreal" )
+	add_definitions(UNREAL)
+	list(APPEND SRC "${CORESRC}" "${UnrealSRC}")
+else()
+	add_definitions(NATIVE)
+	list(APPEND SRC "${CORESRC}")
+endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "/WX-")
 
@@ -10,7 +33,6 @@ target_sources( ${PROJECT_NAME}
     PRIVATE
 	${SRC}
 )
-SOURCE_GROUP(${PROJECT_NAME} FILES ${SRC})
 
 target_link_directories( ${PROJECT_NAME} PUBLIC
   "ffmpeg/lib"

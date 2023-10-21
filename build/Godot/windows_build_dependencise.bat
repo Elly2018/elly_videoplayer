@@ -1,5 +1,5 @@
 @echo off
-cd ..
+cd ../..
 copy "src\ffmpeg\bin\avcodec-60.dll" %projectpath% /Y
 copy "src\ffmpeg\bin\avdevice-60.dll" %projectpath% /Y
 copy "src\ffmpeg\bin\avfilter-9.dll" %projectpath% /Y

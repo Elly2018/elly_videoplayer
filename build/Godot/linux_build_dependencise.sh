@@ -1,5 +1,5 @@
 #!/bin/sh
-cd ..
+cd ../..
 cp -f "src\ffmpeg\bin\avcodec-60.dll" $projectpath
 cp -f "src\ffmpeg\bin\avdevice-60.dll" $projectpath
 cp -f "src\ffmpeg\bin\avfilter-9.dll" $projectpath

@@ -2,7 +2,7 @@
 
 #include "AVDecoderHandler.h"
 #include "DecoderFFmpeg.h"
-#include "Logger.h"
+#include <Logger.h>
 #include <Windows.h>
 
 AVDecoderHandler::AVDecoderHandler() {

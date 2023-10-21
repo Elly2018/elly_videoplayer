@@ -1,5 +1,5 @@
 #!/bin/sh
-cd ..
+cd ../..
 mkdir libs
 cd libs
 git clone -b 4.1 https://github.com/godotengine/godot-cpp.git
