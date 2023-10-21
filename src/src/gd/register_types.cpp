@@ -5,7 +5,7 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/godot.hpp>
 
-#include <godot/FFmpegMediaPlayer.h>
+#include <gd/FFmpegMediaPlayer.h>
 
 using namespace godot;
 
