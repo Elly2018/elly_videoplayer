@@ -2,7 +2,10 @@
 .scons-cache/
 *.os
 
-GDExtensionTemplate-build/
+elly_player_gdextension_windows/
+elly_player_gdextension_linux/
+elly_player_gdextension_native/
+elly_player_gdextension_unreal/
 
 # SConstruct
 .sconf_temp
