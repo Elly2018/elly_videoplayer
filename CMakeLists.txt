@@ -129,4 +129,10 @@ if( "${Engine}" STREQUAL "Godot" )
 		PRIVATE
 			godot-cpp
 	)
+elseif( "${Engine}" STREQUAL "Unity" )
+	add_library(unity-native)
+	target_link_libraries( ${PROJECT_NAME}
+		PRIVATE
+			unity-native
+	)
 endif()

@@ -2,6 +2,7 @@
 .scons-cache/
 *.os
 
+# Solutions
 NativeExtensionTemplate-build/
 GDExtensionTemplate-build/
 UnityExtensionTemplate-build/
@@ -19,6 +20,9 @@ x64/
 bin/
 libs/
 VideoPlayer.dir/
+
+# Extension
+src/unity-native/
 FFmpeg/
 godot-cpp/
 
