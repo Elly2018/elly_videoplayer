@@ -36,5 +36,4 @@ grow_horizontal = 2
 grow_vertical = 2
 expand_mode = 1
 
-[connection signal="async_loaded" from="FFmpegMediaPlayer" to="." method="async_load_finish"]
 [connection signal="video_update" from="FFmpegMediaPlayer" to="." method="texture_update"]

@@ -109,17 +109,16 @@ void FFmpegMediaPlayer::load_path_async(String path) {
 	int d_state = nativeGetDecoderState(id);
 	if (d_state > 1) {
 		LOG_ERROR("Decoder state: ", d_state);
-		emit_signal("async_loaded", false);
 		return;
 	}
 
 	CharString utf8 = path.utf8();
 	const char *cstr = utf8.get_data();
 
-	nativeCreateDecoderAsync(cstr, id);
-
 	LOG("State change to LOADING");
 	state = LOADING;
+
+	nativeCreateDecoderAsync(cstr, id);
 }
 
 void FFmpegMediaPlayer::play() {
@@ -226,15 +225,14 @@ void FFmpegMediaPlayer::seek(float p_time) {
 void FFmpegMediaPlayer::_process(float delta) {
 	switch (state) {
 		case LOADING: {
-			if (nativeGetDecoderState(id) == INITIALIZED) {
+			if (nativeGetDecoderState(id) == 1) {
 				_init_media();
-				emit_signal("async_loaded", true);
+				play();
 				LOG("Loading successful");
-			} else if (nativeGetDecoderState(id) == FAILED) {
+			} else if (nativeGetDecoderState(id) == -1) {
 				state = UNINITIALIZED;
 				LOG_ERROR("Main loop, async loading failed, nativeGetDecoderState == -1");
 				LOG_ERROR("Init failed");
-				emit_signal("async_loaded", false);
 			}
 		} break;
 
@@ -261,7 +259,7 @@ void FFmpegMediaPlayer::_process(float delta) {
 				void *frame_data = nullptr;
 				bool frame_ready = false;
 
-				nativeGrabVideoFrame(id, &frame_data, frame_ready);
+				nativeGrabVideoFrame(id, &frame_data, frame_ready, width, height);
 				if (frame_ready) {
 					PackedByteArray image_data;
 					image_data.resize(data_size);
@@ -488,7 +486,6 @@ void FFmpegMediaPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_format", "second"), &FFmpegMediaPlayer::set_format);
 	ClassDB::bind_method(D_METHOD("get_format"), &FFmpegMediaPlayer::get_format);
 
-	ADD_SIGNAL(MethodInfo("async_loaded", PropertyInfo(Variant::BOOL, "successful")));
 	ADD_SIGNAL(MethodInfo("video_update", PropertyInfo(Variant::RID, "image", PROPERTY_HINT_RESOURCE_TYPE, "ImageTexture"), PropertyInfo(Variant::VECTOR2I, "size")));
 	ADD_SIGNAL(MethodInfo("audio_update", PropertyInfo(Variant::PACKED_FLOAT32_ARRAY, "sample"), PropertyInfo(Variant::INT, "size"), PropertyInfo(Variant::INT, "channel")));
 }

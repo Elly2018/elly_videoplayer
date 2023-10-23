@@ -32,7 +32,7 @@ public:
 	void setVideoEnable(bool isEnable);
 	void setAudioEnable(bool isEnable);
 	void setAudioAllChDataEnable(bool isEnable);
-	double getVideoFrame(void** frameData);
+	double getVideoFrame(void** frameData, int& width, int& height);
 	double getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample);
 	void freeVideoFrame();
 	void freeAudioFrame();

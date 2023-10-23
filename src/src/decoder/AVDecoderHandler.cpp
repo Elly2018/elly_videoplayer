@@ -13,10 +13,13 @@ AVDecoderHandler::AVDecoderHandler() {
 }
 
 void AVDecoderHandler::init(const char* filePath) {
-	if (mIDecoder == nullptr || !mIDecoder->init(filePath)) {
+	bool init_r = mIDecoder->init(filePath);
+	if (mIDecoder == nullptr || !init_r) {
 		mDecoderState = INIT_FAIL;
+		LOG("Init result: INIT_FAIL");
 	} else {
 		mDecoderState = INITIALIZED;
+		LOG("Init result: INITIALIZED");
 	}
 }
 
@@ -52,7 +55,7 @@ bool AVDecoderHandler::isPreloadRunning() const {
 	return mBufferThreadRunning;
 }
 
-double AVDecoderHandler::getVideoFrame(void** frameData) {
+double AVDecoderHandler::getVideoFrame(void** frameData, int& width, int& height) {
 	bool decoder_null = mIDecoder == nullptr;
 	bool decoder_disable = !mIDecoder->getVideoInfo().isEnabled;
 	bool decoder_seek = mDecoderState == SEEK;
@@ -65,7 +68,7 @@ double AVDecoderHandler::getVideoFrame(void** frameData) {
 		return -1;
 	}
 
-	return mIDecoder->getVideoFrame(frameData);
+	return mIDecoder->getVideoFrame(frameData, width, height);
 }
 
 double AVDecoderHandler::getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
