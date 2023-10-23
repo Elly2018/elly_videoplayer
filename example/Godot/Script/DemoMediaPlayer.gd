@@ -37,7 +37,8 @@ func _ready():
 	player.set_player(audio_stream);
 	player.set_loop(loop);
 	if (play_on_start):
-		player.load_path_async(uri);
+		player.load_path(uri);
+		player.play()
 
 func _process(delta):
 	_update_size();
@@ -59,7 +60,7 @@ func _update_size():
 		texture_rect.size = Vector2(root_size.x, root_size.x / aspect)
 		texture_rect.position = Vector2(0.0, (root_size.y - (root_size.x / aspect)) / 2.0)
 
-func texture_update(tex:ImageTexture, size:Vector2i):
+func texture_update(tex:Texture2D, size:Vector2i):
 	current_size = size;
 	if (mat != null):
 		mat.set_deferred("shader_parameter/tex", tex);
@@ -91,7 +92,8 @@ func stop_trigger():
 	
 func load_trigger(p:String):
 	print("Loading: ", p)
-	player.load_path_async(p);
+	player.load_path(p);
+	player.play()
 		
 func async_load_finish(result):
 	print("Loading result: ", result)

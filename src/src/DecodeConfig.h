@@ -4,6 +4,8 @@
 /* This is the timeout value which corresponds to never time out. */
 #define MUTEX_MAXWAIT   -1
 
+#define DECODER_HW
+
 #define MAX_QUEUE_SIZE (15 * 1024 * 1024)
 #define MIN_FRAMES 25
 #define EXTERNAL_CLOCK_MIN_FRAMES 2

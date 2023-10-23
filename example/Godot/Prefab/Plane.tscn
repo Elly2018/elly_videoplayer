@@ -19,8 +19,6 @@ autoplay = true
 
 [node name="FFmpegMediaPlayer" type="FFmpegMediaPlayer" parent="."]
 
-[node name="FFmpegMediaEncoder" type="FFmpegMediaEncoder" parent="."]
-
 [node name="Container" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 15
@@ -39,5 +37,4 @@ grow_vertical = 2
 expand_mode = 1
 
 [connection signal="async_loaded" from="FFmpegMediaPlayer" to="." method="async_load_finish"]
-[connection signal="audio_update" from="FFmpegMediaPlayer" to="." method="audio_update"]
 [connection signal="video_update" from="FFmpegMediaPlayer" to="." method="texture_update"]

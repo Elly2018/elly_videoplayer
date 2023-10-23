@@ -1,3 +1,3 @@
 @echo off
-SET projectpath=example\addons\videoplayer\lib\Windows-AMD64
+SET projectpath=example\Godot\addons\videoplayer\lib\Windows-AMD64
 call windows_build_post.bat

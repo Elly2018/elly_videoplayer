@@ -17,9 +17,9 @@ transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0.203564, -0.109128, 0.122
 script = ExtResource("1_lg4ib")
 play_on_start = true
 loop = true
-geo = NodePath("MeshInstance3D")
-player = NodePath("FFmpegMediaPlayer")
-audio_stream = NodePath("Player")
+geo = NodePath("")
+player = NodePath("")
+audio_stream = NodePath("")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 0, 0)
@@ -33,9 +33,3 @@ stream = SubResource("AudioStreamGenerator_cr308")
 autoplay = true
 
 [node name="FFmpegMediaPlayer" type="FFmpegMediaPlayer" parent="."]
-
-[node name="FFmpegMediaEncoder" type="FFmpegMediaEncoder" parent="."]
-
-[connection signal="async_loaded" from="FFmpegMediaPlayer" to="." method="async_load_finish"]
-[connection signal="audio_update" from="FFmpegMediaPlayer" to="." method="audio_update"]
-[connection signal="video_update" from="FFmpegMediaPlayer" to="." method="texture_update"]

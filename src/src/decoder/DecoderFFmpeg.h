@@ -57,6 +57,8 @@ private:
 	bool mIsAudioAllChEnabled;
 	bool mUseTCP;				//	For RTSP stream.
 
+	enum AVHWDeviceType type = AVHWDeviceType::AV_HWDEVICE_TYPE_NONE;
+
 	AVFormatContext* mAVFormatContext;
 	AVStream*		mVideoStream;
 	AVStream*		mAudioStream;

@@ -1,5 +1,5 @@
+#include <Logger.h>
 #include "FFmpegMediaPlayer.h"
-#include "Logger.h"
 
 #include <cstring>
 #include <math.h>
@@ -45,7 +45,7 @@ void FFmpegMediaPlayer::_init_media() {
 		LOG("Audio info. channel: ", channels, ", samplerate: ", sampleRate, ", audio_length: ", audio_length);
 		nativeSetAudioBufferTime(id, get_buffer_length());
 		player->play();
-	}
+	} 
 
 	state = INITIALIZED;
 	LOG("start change to INITIALIZED");
@@ -266,7 +266,7 @@ void FFmpegMediaPlayer::_process(float delta) {
 					PackedByteArray image_data;
 					image_data.resize(data_size);
 					memcpy(image_data.ptrw(), frame_data, data_size);
-					LOG("data size: ", data_size, ", actual frame size: ", image_data.size());
+					LOG_VERBOSE("data size: ", data_size, ", actual frame size: ", image_data.size());
 					PackedByteArray buffer = image_data;
 					image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, buffer);
 					texture->set_deferred("image", image);
@@ -443,6 +443,12 @@ FFmpegMediaPlayer::FFmpegMediaPlayer() {
 	image = Image::create(1, 1, false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
 	audioFrame = List<Vector2>();
+
+	PackedByteArray empty = PackedByteArray();
+	empty.append(0); empty.append(0); empty.append(0);
+	image->call_deferred("set_data", 1, 1, false, Image::FORMAT_RGB8, empty);
+	texture->set_deferred("image", image);
+	emit_signal("video_update", texture, Vector2i(1, 1));
 
 	LOG("FFmpegMediaPlayer instance created.");
 }

@@ -27,7 +27,7 @@ Check this page for build process
 
 #### 1. Open build/Godot/[Platform]_pull_submodule.[bat/sh]
 
-- This will clone the godot-cpp 4.1 in the root folder.
+- This will clone the godot-cpp 4.2 in the root folder.
 - And it will download the ffmpeg 6.0 windows build from github and unzip in the src folder.
 - In the end your file structure will looks like below.
 
