@@ -77,6 +77,8 @@ bool DecoderFFmpeg::init(const char* filePath) {
 }
 
 bool DecoderFFmpeg::init(const char* format, const char* filePath) {
+	int st_index[AVMEDIA_TYPE_NB];
+
 	if (mIsInitialized) {
 		LOG("Decoder has been init.");
 		return true;
@@ -131,13 +133,13 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 	type = av_hwdevice_iterate_types(type);
 	/* Video initialization */
 	LOG("Video initialization  ");
-	int videoStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
-	if (videoStreamIndex < 0) {
+	st_index[AVMEDIA_TYPE_VIDEO] = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_VIDEO, st_index[AVMEDIA_TYPE_VIDEO], -1, nullptr, 0);
+	if (st_index[AVMEDIA_TYPE_VIDEO] < 0) {
 		LOG("video stream not found.");
 		mVideoInfo.isEnabled = false;
 	} else {
 		mVideoInfo.isEnabled = true;
-		mVideoStream = mAVFormatContext->streams[videoStreamIndex];
+		mVideoStream = mAVFormatContext->streams[st_index[AVMEDIA_TYPE_VIDEO]];
         mVideoCodecContext = avcodec_alloc_context3(NULL);
         mVideoCodecContext->refs = 1;
         avcodec_parameters_to_context(mVideoCodecContext, mVideoStream->codecpar);
@@ -156,6 +158,7 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 		}
 		AVDictionary *autoThread = nullptr;
 		av_dict_set(&autoThread, "threads", "auto", 0);
+		av_dict_set(&autoThread, "flags", "+copy_opaque", AV_DICT_MULTIKEY);
 		mVideoCodecContext->flags2 |= AV_CODEC_FLAG2_FAST;
 		errorCode = avcodec_open2(mVideoCodecContext, mVideoCodec, &autoThread);
 		av_dict_free(&autoThread);
@@ -169,10 +172,9 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 		//	Duration / time_base = video time (seconds)
 		mVideoInfo.width = mVideoCodecContext->width;
 		mVideoInfo.height = mVideoCodecContext->height;
-		mVideoInfo.currentIndex = videoStreamIndex;
+		mVideoInfo.currentIndex = st_index[AVMEDIA_TYPE_VIDEO];
 		mVideoInfo.framerate = av_q2d(mVideoCodecContext->framerate);
 		mVideoInfo.totalTime = mVideoStream->duration <= 0 ? ctxDuration : mVideoStream->duration * av_q2d(mVideoStream->time_base);
-
 		//mVideoFrames.swap(decltype(mVideoFrames)());
 	}
 
@@ -193,13 +195,13 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 
 	/* Audio initialization */
 	LOG("Audio initialization ");
-	int audioStreamIndex = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-	if (audioStreamIndex < 0) {
+	st_index[AVMEDIA_TYPE_AUDIO] = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_AUDIO, st_index[AVMEDIA_TYPE_AUDIO], st_index[AVMEDIA_TYPE_VIDEO], nullptr, 0);
+	if (st_index[AVMEDIA_TYPE_AUDIO] < 0) {
 		LOG("audio stream not found. \n");
 		mAudioInfo.isEnabled = false;
 	} else {
 		mAudioInfo.isEnabled = true;
-		mAudioStream = mAVFormatContext->streams[audioStreamIndex];
+		mAudioStream = mAVFormatContext->streams[st_index[AVMEDIA_TYPE_AUDIO]];
 		mAudioCodecContext = avcodec_alloc_context3(NULL);
         avcodec_parameters_to_context(mAudioCodecContext, mAudioStream->codecpar);
 		LOG("Audio codec id: ", mAudioCodecContext->codec_id);
@@ -208,8 +210,11 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 			LOG("Audio codec not available. \n");
 			return false;
 		}
+		AVDictionary* autoThread = nullptr;
+		av_dict_set(&autoThread, "threads", "auto", 0);
+		av_dict_set(&autoThread, "flags", "+copy_opaque", AV_DICT_MULTIKEY);
 		mAudioCodecContext->flags2 |= AV_CODEC_FLAG2_FAST;
-		errorCode = avcodec_open2(mAudioCodecContext, mAudioCodec, nullptr);
+		errorCode = avcodec_open2(mAudioCodecContext, mAudioCodec, &autoThread);
 		if (errorCode < 0) {
 			LOG("Could not open audio codec(%x). \n", errorCode);
 			printErrorMsg(errorCode);
@@ -224,6 +229,7 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 		}
 
 		//mAudioFrames.swap(decltype(mAudioFrames)());
+		mAudioInfo.currentIndex = st_index[AVMEDIA_TYPE_AUDIO];
 	}
 
 	std::vector<int> videoIndex = std::vector<int>();
