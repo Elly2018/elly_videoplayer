@@ -272,8 +272,6 @@ bool DecoderFFmpeg::decode() {
 		//updateSubtitleFrame();
 	}
 
-	LOG_VERBOSE("Video frame count: ", mVideoFrames.size(), ", Audio frame count: ", mAudioFrames.size());
-
 	return true;
 }
 
@@ -304,8 +302,6 @@ bool DecoderFFmpeg::buffering() {
 		else if (mSubtitleInfo.isEnabled && mSubtitleStream != nullptr && mPacket->stream_index == mSubtitleStream->index) {
 			//preloadSubtitleFrame();
 		}
-
-		LOG_VERBOSE("Video preload count: ", mVideoFramesPreload.size(), ", Audio preload count: ", mAudioFramesPreload.size());
 
 		av_packet_unref(mPacket);
 	}
@@ -443,12 +439,8 @@ void DecoderFFmpeg::seek(double time) {
 	}
 
 	uint64_t timeStamp = (uint64_t) time * AV_TIME_BASE;
-	int ret = -1;
-	{
-		std::lock_guard<std::mutex> lock(mPacketMutex);
-		ret = av_seek_frame(mAVFormatContext, -1, timeStamp, mIsSeekToAny ? AVSEEK_FLAG_ANY : AVSEEK_FLAG_BACKWARD);
-	}
-
+	std::lock_guard<std::mutex> lock(mPacketMutex);
+	int ret = av_seek_frame(mAVFormatContext, -1, timeStamp, AVSEEK_FLAG_ANY);
 	if (ret < 0) {
 		LOG("Seek time fail.");
 		return;
