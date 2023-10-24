@@ -4,7 +4,7 @@
 /* This is the timeout value which corresponds to never time out. */
 #define MUTEX_MAXWAIT   -1
 
-#define DECODER_HW
+//#define DECODER_HW
 
 #define MAX_QUEUE_SIZE (15 * 1024 * 1024)
 #define MIN_FRAMES 25
@@ -52,8 +52,8 @@
 
 #define MIX_MAXVOLUME 128
 
-#define DEFAULT_VIDEO_BUFFER 64 * 1
-#define DEFAULT_AUDIO_BUFFER 64 * 1
+#define DEFAULT_VIDEO_BUFFER 64 * 3
+#define DEFAULT_AUDIO_BUFFER 64 * 3
 
 #define DEFAULT_VIDEO_PRELOAD 64 * 10
 #define DEFAULT_AUDIO_PRELOAD 64 * 10

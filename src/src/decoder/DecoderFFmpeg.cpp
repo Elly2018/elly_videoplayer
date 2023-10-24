@@ -4,12 +4,15 @@
 #include "DecodeConfig.h"
 #include <fstream>
 #include <string>
+#include <thread>
+#include <future>
 
 extern "C" {
 #include <libavutil/imgutils.h>
 #include <libavutil/hwcontext.h>
 }
 
+const auto processor_count = std::thread::hardware_concurrency();
 
 #ifdef DECODER_HW
 static AVBufferRef* hw_device_ctx = NULL;
@@ -130,7 +133,9 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 	}
 
 	double ctxDuration = (double)(mAVFormatContext->duration) / AV_TIME_BASE;
+#ifdef DECODER_HW
 	type = av_hwdevice_iterate_types(type);
+#endif
 	/* Video initialization */
 	LOG("Video initialization  ");
 	st_index[AVMEDIA_TYPE_VIDEO] = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_VIDEO, st_index[AVMEDIA_TYPE_VIDEO], -1, nullptr, 0);
@@ -197,7 +202,7 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 	LOG("Audio initialization ");
 	st_index[AVMEDIA_TYPE_AUDIO] = av_find_best_stream(mAVFormatContext, AVMEDIA_TYPE_AUDIO, st_index[AVMEDIA_TYPE_AUDIO], st_index[AVMEDIA_TYPE_VIDEO], nullptr, 0);
 	if (st_index[AVMEDIA_TYPE_AUDIO] < 0) {
-		LOG("audio stream not found. \n");
+		LOG("audio stream not found. ");
 		mAudioInfo.isEnabled = false;
 	} else {
 		mAudioInfo.isEnabled = true;
@@ -207,7 +212,7 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 		LOG("Audio codec id: ", mAudioCodecContext->codec_id);
         mAudioCodec = avcodec_find_decoder(mAudioCodecContext->codec_id);
 		if (mAudioCodec == nullptr) {
-			LOG("Audio codec not available. \n");
+			LOG("Audio codec not available. ");
 			return false;
 		}
 		AVDictionary* autoThread = nullptr;
@@ -216,14 +221,14 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 		mAudioCodecContext->flags2 |= AV_CODEC_FLAG2_FAST;
 		errorCode = avcodec_open2(mAudioCodecContext, mAudioCodec, &autoThread);
 		if (errorCode < 0) {
-			LOG("Could not open audio codec(%x). \n", errorCode);
+			LOG("Could not open audio codec(%x). ", errorCode);
 			printErrorMsg(errorCode);
 			return false;
 		}
 
 		errorCode = initSwrContext();
 		if (errorCode < 0) {
-			LOG("Init SwrContext error.(%x) \n", errorCode);
+			LOG("Init SwrContext error.(%x) ", errorCode);
 			printErrorMsg(errorCode);
 			return false;
 		}
@@ -394,7 +399,7 @@ double DecoderFFmpeg::getVideoFrame(void** frameData, int& width, int& height) {
 	double timeInSec = av_q2d(mVideoStream->time_base) * timeStamp;
 	mVideoInfo.lastTime = timeInSec;
 
-	LOG("mVideoInfo.lastTime: ", timeInSec);
+	LOG_VERBOSE("mVideoInfo.lastTime: ", timeInSec);
 
 	return timeInSec;
 }
@@ -626,81 +631,116 @@ void DecoderFFmpeg::preloadSubtitleFrame()
 
 void DecoderFFmpeg::updateVideoFrame() {
 	if (mVideoFramesPreload.size() <= 0) return;
-	AVFrame* srcFrame = mVideoFramesPreload.front();
-	mVideoFramesPreload.pop();
 
-	clock_t start = clock();
+	int thread_spawn_count = std::min((long)processor_count, (long)mVideoFramesPreload.size());
+	thread_spawn_count = std::min(thread_spawn_count, 64);
 
-	int width = srcFrame->width;
-	int height = srcFrame->height;
+	std::thread ths[64];
+	AVFrame* r[64];
 
-	const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
-	LOG_VERBOSE("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
-	AVFrame* dstFrame = av_frame_alloc();
-	av_frame_copy_props(dstFrame, srcFrame);
+	for (int i = 0; i < thread_spawn_count; i++) {
+		AVFrame* _srcFrame = mVideoFramesPreload.front();
+		mVideoFramesPreload.pop();
+		ths[i] = std::thread([&](AVFrame* srcFrame, int index){
+			clock_t start = clock();
 
-	dstFrame->format = dstFormat;
-	dstFrame->pts = srcFrame->best_effort_timestamp;
+			int width = srcFrame->width;
+			int height = srcFrame->height;
 
-	//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
-	int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
-	LOG_VERBOSE("Number of bytes: ", numBytes);
-	AVBufferRef* buffer = av_buffer_alloc(numBytes * sizeof(uint8_t));
-	//avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
-	av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
-	dstFrame->buf[0] = buffer;
+			const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
+			LOG_VERBOSE("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
+			AVFrame* dstFrame = av_frame_alloc();
+			av_frame_copy_props(dstFrame, srcFrame);
 
-	SwsContext* conversion = sws_getContext(width,
-		height,
-		(AVPixelFormat)srcFrame->format,
-		width,
-		height,
-		dstFormat,
-		SWS_FAST_BILINEAR,
-		nullptr,
-		nullptr,
-		nullptr);
-	sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
-	sws_freeContext(conversion);
-	av_frame_copy_props(dstFrame, srcFrame);
+			dstFrame->format = dstFormat;
+			dstFrame->pts = srcFrame->best_effort_timestamp;
 
-	dstFrame->format = dstFormat;
-	dstFrame->width = srcFrame->width;
-	dstFrame->height = srcFrame->height;
+			//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
+			int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
+			LOG_VERBOSE("Number of bytes: ", numBytes);
+			AVBufferRef* buffer = av_buffer_alloc(numBytes * sizeof(uint8_t));
+			//avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
+			av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
+			dstFrame->buf[0] = buffer;
 
-	av_frame_free(&srcFrame);
+			SwsContext* conversion = sws_getContext(width,
+				height,
+				(AVPixelFormat)srcFrame->format,
+				width,
+				height,
+				dstFormat,
+				SWS_FAST_BILINEAR,
+				nullptr,
+				nullptr,
+				nullptr);
+			sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
+			sws_freeContext(conversion);
+			av_frame_copy_props(dstFrame, srcFrame);
 
-	LOG_VERBOSE("updateVideoFrame = ", (float)(clock() - start) / CLOCKS_PER_SEC);
+			dstFrame->format = dstFormat;
+			dstFrame->width = srcFrame->width;
+			dstFrame->height = srcFrame->height;
+
+			av_frame_free(&srcFrame);
+
+			LOG_VERBOSE("updateVideoFrame = ", (float)(clock() - start) / CLOCKS_PER_SEC);
+			r[index] = dstFrame;
+		}, _srcFrame, i);
+	}
+
+	for (int i = 0; i < thread_spawn_count; i++) {
+		ths[i].join();
+	}
 
 	std::lock_guard<std::mutex> lock(mVideoMutex);
-	mVideoFrames.push(dstFrame);
+	for (int i = 0; i < thread_spawn_count; i++) {
+		mVideoFrames.push(r[i]);
+	}
 	updateBufferState();
 }
 
 void DecoderFFmpeg::updateAudioFrame() {
 	if (mAudioFramesPreload.size() <= 0) return;
-	AVFrame* srcFrame = mAudioFramesPreload.front();
-	mAudioFramesPreload.pop();
-	
-	clock_t start = clock();
-	AVFrame* frame = av_frame_alloc();
-	frame->sample_rate = srcFrame->sample_rate;
-	frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
-	frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
-	frame->best_effort_timestamp = srcFrame->best_effort_timestamp;
-	frame->pts = frame->best_effort_timestamp;
 
-	int ret = swr_convert_frame(mSwrContext, frame, srcFrame);
-	if (ret != 0) {
-		LOG_VERBOSE("Audio update failed ", ret);
+	int thread_spawn_count = std::min((long)processor_count, (long)mAudioFramesPreload.size());
+	thread_spawn_count = std::min(thread_spawn_count, 64);
+
+	std::thread ths[64];
+	AVFrame* r[64];
+
+	for (int i = 0; i < thread_spawn_count; i++) {
+		AVFrame* _srcFrame = mAudioFramesPreload.front();
+		mAudioFramesPreload.pop();
+		ths[i] = std::thread([&](AVFrame* srcFrame, int index) {
+			clock_t start = clock();
+			AVFrame* frame = av_frame_alloc();
+			frame->sample_rate = srcFrame->sample_rate;
+			frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
+			frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
+			frame->best_effort_timestamp = srcFrame->best_effort_timestamp;
+			frame->pts = frame->best_effort_timestamp;
+
+			int ret = swr_convert_frame(mSwrContext, frame, srcFrame);
+			if (ret != 0) {
+				LOG_VERBOSE("Audio update failed ", ret);
+			}
+
+			av_frame_free(&srcFrame);
+
+			LOG_VERBOSE("updateAudioFrame. linesize: ", frame->linesize[0]);
+
+			r[index] = frame;
+		}, _srcFrame, i);
 	}
 
-	av_frame_free(&srcFrame);
-
-	LOG_VERBOSE("updateAudioFrame. linesize: ", frame->linesize[0]);
+	for (int i = 0; i < thread_spawn_count; i++) {
+		ths[i].join();
+	}
 
 	std::lock_guard<std::mutex> lock(mAudioMutex);
-	mAudioFrames.push(frame);
+	for (int i = 0; i < thread_spawn_count; i++) {
+		mAudioFrames.push(r[i]);
+	}
 	updateBufferState();
 }
 

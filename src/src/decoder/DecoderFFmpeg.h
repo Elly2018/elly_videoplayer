@@ -10,6 +10,7 @@ extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libswresample/swresample.h"
 #include "libswscale/swscale.h"
+#include <libavutil/fifo.h>
 }
 
 class DecoderFFmpeg : public virtual IDecoder
