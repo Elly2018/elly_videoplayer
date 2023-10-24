@@ -110,6 +110,7 @@ private:
 	AVCodecContext* getStreamCodecContext(int index);
 	void freeStreamCodecContext(AVCodecContext* codec);
 	void getListType(AVFormatContext* format, std::vector<int>& v, std::vector<int>& a, std::vector<int>& s);
+	std::mutex mPacketMutex;
 	std::mutex mVideoMutex;
 	std::mutex mAudioMutex;
 	std::mutex mSubtitleMutex;

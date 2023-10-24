@@ -12,7 +12,9 @@ extern "C" {
 #include <libavutil/hwcontext.h>
 }
 
+#ifdef DECODER_MULTIPLE_CORE
 const auto processor_count = std::thread::hardware_concurrency();
+#endif
 
 #ifdef DECODER_HW
 static AVBufferRef* hw_device_ctx = NULL;
@@ -48,10 +50,13 @@ DecoderFFmpeg::DecoderFFmpeg() {
 	mAVFormatContext = nullptr;
 	mVideoStream = nullptr;
 	mAudioStream = nullptr;
+	mSubtitleStream = nullptr;
 	mVideoCodec = nullptr;
 	mAudioCodec = nullptr;
+	mSubtitleCodec = nullptr;
 	mVideoCodecContext = nullptr;
 	mAudioCodecContext = nullptr;
+	mSubtitleCodecContext = nullptr;
 	mPacket = av_packet_alloc();
 
 	mSwrContext = nullptr;
@@ -279,19 +284,24 @@ bool DecoderFFmpeg::buffering() {
 	}
 
 	if (!isPreloadBlocked()) {
-		if (av_read_frame(mAVFormatContext, mPacket) < 0) {
+		int ret = -1;
+		{
+			std::lock_guard<std::mutex> lock(mPacketMutex);
+			ret = av_read_frame(mAVFormatContext, mPacket);
+		}
+		if (ret < 0) {
 			preloadVideoFrame();
 			LOG_VERBOSE("End of file.");
 			return true;
 		}
 
-		if (mVideoInfo.isEnabled && mPacket->stream_index == mVideoStream->index) {
+		if (mVideoInfo.isEnabled && mVideoStream != nullptr && mPacket->stream_index == mVideoStream->index) {
 			preloadVideoFrame();
 		}
-		else if (mAudioInfo.isEnabled && mPacket->stream_index == mAudioStream->index) {
+		else if (mAudioInfo.isEnabled && mAudioStream != nullptr && mPacket->stream_index == mAudioStream->index) {
 			preloadAudioFrame();
 		}
-		else if (mSubtitleInfo.isEnabled && mPacket->stream_index == mSubtitleStream->index) {
+		else if (mSubtitleInfo.isEnabled && mSubtitleStream != nullptr && mPacket->stream_index == mSubtitleStream->index) {
 			//preloadSubtitleFrame();
 		}
 
@@ -433,8 +443,13 @@ void DecoderFFmpeg::seek(double time) {
 	}
 
 	uint64_t timeStamp = (uint64_t) time * AV_TIME_BASE;
+	int ret = -1;
+	{
+		std::lock_guard<std::mutex> lock(mPacketMutex);
+		ret = av_seek_frame(mAVFormatContext, -1, timeStamp, mIsSeekToAny ? AVSEEK_FLAG_ANY : AVSEEK_FLAG_BACKWARD);
+	}
 
-	if (0 > av_seek_frame(mAVFormatContext, -1, timeStamp, mIsSeekToAny ? AVSEEK_FLAG_ANY : AVSEEK_FLAG_BACKWARD)) {
+	if (ret < 0) {
 		LOG("Seek time fail.");
 		return;
 	}
@@ -631,7 +646,7 @@ void DecoderFFmpeg::preloadSubtitleFrame()
 
 void DecoderFFmpeg::updateVideoFrame() {
 	if (mVideoFramesPreload.size() <= 0) return;
-
+#ifdef DECODER_MULTIPLE_CORE
 	int thread_spawn_count = std::min((long)processor_count, (long)mVideoFramesPreload.size());
 	thread_spawn_count = std::min(thread_spawn_count, 64);
 
@@ -696,12 +711,65 @@ void DecoderFFmpeg::updateVideoFrame() {
 	for (int i = 0; i < thread_spawn_count; i++) {
 		mVideoFrames.push(r[i]);
 	}
+#else
+	AVFrame* srcFrame = mVideoFramesPreload.front();
+	mVideoFramesPreload.pop();
+	clock_t start = clock();
+
+	int width = srcFrame->width;
+	int height = srcFrame->height;
+
+	const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
+	LOG_VERBOSE("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
+	AVFrame* dstFrame = av_frame_alloc();
+	av_frame_copy_props(dstFrame, srcFrame);
+
+	dstFrame->format = dstFormat;
+	dstFrame->pts = srcFrame->best_effort_timestamp;
+
+	//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
+	int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
+	LOG_VERBOSE("Number of bytes: ", numBytes);
+	AVBufferRef* buffer = av_buffer_alloc(numBytes * sizeof(uint8_t));
+	//avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
+	if (buffer == nullptr) {
+		LOG_VERBOSE("The video frame buffer is nullptr");
+		return;
+	}
+	av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
+	dstFrame->buf[0] = buffer;
+
+	SwsContext* conversion = sws_getContext(width,
+		height,
+		(AVPixelFormat)srcFrame->format,
+		width,
+		height,
+		dstFormat,
+		SWS_FAST_BILINEAR,
+		nullptr,
+		nullptr,
+		nullptr);
+	sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
+	sws_freeContext(conversion);
+	av_frame_copy_props(dstFrame, srcFrame);
+
+	dstFrame->format = dstFormat;
+	dstFrame->width = srcFrame->width;
+	dstFrame->height = srcFrame->height;
+
+	av_frame_free(&srcFrame);
+
+	LOG_VERBOSE("updateVideoFrame = ", (float)(clock() - start) / CLOCKS_PER_SEC);
+
+	std::lock_guard<std::mutex> lock(mVideoMutex);
+	mVideoFrames.push(dstFrame);
+#endif
 	updateBufferState();
 }
 
 void DecoderFFmpeg::updateAudioFrame() {
 	if (mAudioFramesPreload.size() <= 0) return;
-
+#ifdef DECODER_MULTIPLE_CORE
 	int thread_spawn_count = std::min((long)processor_count, (long)mAudioFramesPreload.size());
 	thread_spawn_count = std::min(thread_spawn_count, 64);
 
@@ -741,6 +809,28 @@ void DecoderFFmpeg::updateAudioFrame() {
 	for (int i = 0; i < thread_spawn_count; i++) {
 		mAudioFrames.push(r[i]);
 	}
+#else
+	AVFrame* srcFrame = mAudioFramesPreload.front();
+	mAudioFramesPreload.pop();
+	clock_t start = clock();
+	AVFrame* frame = av_frame_alloc();
+	frame->sample_rate = srcFrame->sample_rate;
+	frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
+	frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
+	frame->best_effort_timestamp = srcFrame->best_effort_timestamp;
+	frame->pts = frame->best_effort_timestamp;
+
+	int ret = swr_convert_frame(mSwrContext, frame, srcFrame);
+	if (ret != 0) {
+		LOG_VERBOSE("Audio update failed ", ret);
+	}
+
+	av_frame_free(&srcFrame);
+
+	LOG_VERBOSE("updateAudioFrame. linesize: ", frame->linesize[0]);
+	std::lock_guard<std::mutex> lock(mAudioMutex);
+	mAudioFrames.push(frame);
+#endif
 	updateBufferState();
 }
 

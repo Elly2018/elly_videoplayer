@@ -5,6 +5,7 @@
 #define MUTEX_MAXWAIT   -1
 
 //#define DECODER_HW
+//#define DECODER_MULTIPLE_CORE
 
 #define MAX_QUEUE_SIZE (15 * 1024 * 1024)
 #define MIN_FRAMES 25
