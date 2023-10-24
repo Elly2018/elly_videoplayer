@@ -168,6 +168,7 @@ void AVDecoderHandler::startDecoding() {
 		while (mBufferState != NONE) {
 			switch (mBufferState) {
 			case LOADING:
+				if (mDecoderState == SEEK) continue;
 				if (!mIDecoder->buffering()) {
 					mBufferState = NONE;
 				}

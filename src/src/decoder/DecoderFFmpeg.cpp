@@ -440,7 +440,7 @@ void DecoderFFmpeg::seek(double time) {
 
 	uint64_t timeStamp = (uint64_t) time * AV_TIME_BASE;
 	std::lock_guard<std::mutex> lock(mPacketMutex);
-	int ret = av_seek_frame(mAVFormatContext, -1, timeStamp, AVSEEK_FLAG_ANY);
+	int ret = av_seek_frame(mAVFormatContext, -1, timeStamp, AVSEEK_FLAG_FRAME);
 	if (ret < 0) {
 		LOG("Seek time fail.");
 		return;
