@@ -32,7 +32,7 @@ extern "C" {
 	void nativeSetAudioAllChDataEnable(int id, bool isEnable);
 	void nativeGetAudioFormat(int id, int& channel, int& sampleRate, float& totalTime);
 	bool nativeSetAudioBufferTime(int id, float time);
-	float nativeGetAudioData(int id, bool& frame_ready, unsigned char** audioData, int& frameSize, int& nb_channel, size_t& byte_per_sample);
+	void nativeGetAudioData(int id, bool& frame_ready, unsigned char** audioData, int& frameSize, int& nb_channel, size_t& byte_per_sample);
 	void nativeFreeAudioData(int id);
 	//	Seek
 	void nativeSetSeekTime(int id, float sec);

@@ -264,21 +264,24 @@ bool nativeSetAudioBufferTime(int id, float time)
 	videoCtx->audioBufferTime = time;
 }
 
-float nativeGetAudioData(int id, bool& frame_ready, unsigned char** audioData, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
-	frame_ready = false;
-  std::shared_ptr<VideoContext> videoCtx;
-	if (!getVideoContext(id, videoCtx)) { return -1.0f; }
+void nativeGetAudioData(int id, bool& frameReady, unsigned char** audioData, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
+	frameReady = false;
+    std::shared_ptr<VideoContext> videoCtx;
+	if (!getVideoContext(id, videoCtx)) { return; }
 	if (videoCtx->audioFrameLocked) {
 		LOG("[ViveMediaDecoder] Release last audio frame first");
-		return -1.0f;
+		return;
 	}
 
 	AVDecoderHandler* localAVDecoderHandler = videoCtx->avhandler.get();
 
-	double curFrameTime = (localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample));
-	frame_ready = true;
-	videoCtx->lastUpdateTimeA = (float)curFrameTime;
-	return curFrameTime;
+	if (localAVDecoderHandler != nullptr &&
+		localAVDecoderHandler->getDecoderState() >= AVDecoderHandler::DecoderState::INITIALIZED &&
+		localAVDecoderHandler->getAudioInfo().isEnabled) {
+		double curFrameTime = (localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample));
+		frameReady = true;
+		videoCtx->lastUpdateTimeA = (float)curFrameTime;
+	}
 }
 
 void nativeFreeAudioData(int id) {
@@ -395,7 +398,6 @@ void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady, int& width
 	localAVDecoderHandler->getVideoInfo().isEnabled) {
       double videoDecCurTime = localAVDecoderHandler->getVideoInfo().lastTime;
       if (videoDecCurTime <= videoCtx->progressTime) {
-
           double curFrameTime = localAVDecoderHandler->getVideoFrame(frameData, width, height);
           if (frameData != nullptr && 
 			curFrameTime != -1 && 

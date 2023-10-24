@@ -3,25 +3,21 @@ file(GLOB_RECURSE CORESRC
 	src/encoder/*.hpp src/encoder/*.h src/encoder/*.cpp src/encoder/*.c
 	src/decoder/*.hpp src/decoder/*.h src/decoder/*.cpp src/decoder/*.c
 	src/interface/*.hpp src/interface/*.h src/interface/*.cpp src/interface/*.c
-	src/DecodeConfig.h
-	src/Logger.h)
+	src/DecodeConfig.h)
 
 file(GLOB_RECURSE GDSRC src/gd/*.hpp src/gd/*.h src/gd/*.cpp src/gd/*.c)
 file(GLOB_RECURSE UnitySRC src/unity/*.hpp src/unity/*.h src/unity/*.cpp src/unity/*.c)
 file(GLOB_RECURSE UnrealSRC src/unreal/*.hpp src/unreal/*.h src/unreal/*.cpp src/unreal/*.c)
+file(GLOB_RECURSE NativeSRC src/Logger.h)
 
 if( "${Engine}" STREQUAL "Godot" )
-	add_definitions(GODOT)
 	list(APPEND SRC "${CORESRC}" "${GDSRC}")
 elseif( "${Engine}" STREQUAL "Unity" )
-	add_definitions(UNITY)
 	list(APPEND SRC "${CORESRC}" "${UnitySRC}")
 elseif( "${Engine}" STREQUAL "Unreal" )
-	add_definitions(UNREAL)
 	list(APPEND SRC "${CORESRC}" "${UnrealSRC}")
 else()
-	add_definitions(NATIVE)
-	list(APPEND SRC "${CORESRC}")
+	list(APPEND SRC "${CORESRC}" "${NativeSRC}")
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "/WX-")

@@ -4,6 +4,16 @@ cmake_minimum_required( VERSION 3.22 )
 
 message( STATUS "Using CMake ${CMAKE_VERSION}" )
 
+if( "${Engine}" STREQUAL "Godot" )
+	add_compile_definitions(GODOT)
+elseif( "${Engine}" STREQUAL "Unity" )
+	add_compile_definitions(UNITY)
+elseif( "${Engine}" STREQUAL "Unreal" )
+	add_compile_definitions(UNREAL)
+else()
+	add_compile_definitions(NATIVE)
+endif()
+
 # Require out-of-source builds
 file( TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH )
 
@@ -128,11 +138,5 @@ if( "${Engine}" STREQUAL "Godot" )
 	target_link_libraries( ${PROJECT_NAME}
 		PRIVATE
 			godot-cpp
-	)
-elseif( "${Engine}" STREQUAL "Unity" )
-	add_library(unity-native)
-	target_link_libraries( ${PROJECT_NAME}
-		PRIVATE
-			unity-native
 	)
 endif()

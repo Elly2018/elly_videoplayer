@@ -276,7 +276,6 @@ void FFmpegMediaPlayer::_process(float delta) {
 				}
 
 				video_current_time = Time::get_singleton()->get_unix_time_from_system() - global_start_time;
-
 				if (video_current_time < video_length || video_length == -1.0f) {
 					nativeSetVideoTime(id, video_current_time);
 				} else {
@@ -308,8 +307,11 @@ void FFmpegMediaPlayer::_process(float delta) {
 void FFmpegMediaPlayer::_physics_process(float delta) {
 	int c = 0;
 	video_current_time = Time::get_singleton()->get_unix_time_from_system() - global_start_time;
-	if (playback.is_valid()) {
+	if (playback != nullptr && playback.is_valid()) {
 		c = playback->get_frames_available();
+	}
+	else {
+		return;
 	}
 	bool state_check = state == DECODING || state == BUFFERING;
 	if (state_check) {
@@ -321,47 +323,43 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 		/*
 		* AV_SAMPLE_FMT_FLT will usually give us byte_per_sample = 4
 		*/
-		double audio_time = -1;
 		bool ready = false;
-		audio_time = nativeGetAudioData(id, ready, &raw_audio_data, audio_size, channel, byte_per_sample);
-		if (playback != nullptr) {
-			LOG_VERBOSE("get_frames_available: ", audio_time, ", ", video_current_time);
-			if (audio_time > 0 && ready) {
-				PackedFloat32Array audio_data = PackedFloat32Array();
-				audio_data.resize(audio_size * byte_per_sample * channel);
-				memcpy(audio_data.ptrw(), raw_audio_data, audio_size * channel * byte_per_sample);
-				emit_signal("audio_update", audio_data, audio_size, channel);
-				//LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
-				float s = 0;
+		nativeGetAudioData(id, ready, &raw_audio_data, audio_size, channel, byte_per_sample);
+		if (ready) {
+			PackedFloat32Array audio_data = PackedFloat32Array();
+			audio_data.resize(audio_size * byte_per_sample * channel);
+			memcpy(audio_data.ptrw(), raw_audio_data, audio_size * channel * byte_per_sample);
+			emit_signal("audio_update", audio_data, audio_size, channel);
+			//LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
+			float s = 0;
 
-				first_frame_a = false;
+			first_frame_a = false;
 
-				for (int i = 0; i < audio_size * channel; i += channel) {
-					float* out = new float[channel];
-					for (int j = 0; j < channel; j++) { // j have byte per sample padding for each sample
-						s = audio_data[i + j];
-						out[j] = s;
-					}
-					float left = out[0];
-					float right;
-					if (channel <= 1) {
-						right = out[0];
-					}
-					else {
-						right = out[1];
-					}
-					audioFrame.push_back(Vector2(left, right));
-					//LOG("Push frame, out: %f, sin: [%f, %f] \n", out, left, right);
-					delete[] out;
+			for (int i = 0; i < audio_size * channel; i += channel) {
+				float* out = new float[channel];
+				for (int j = 0; j < channel; j++) { // j have byte per sample padding for each sample
+					s = audio_data[i + j];
+					out[j] = s;
 				}
+				float left = out[0];
+				float right;
+				if (channel <= 1) {
+					right = out[0];
+				}
+				else {
+					right = out[1];
+				}
+				audioFrame.push_back(Vector2(left, right));
+				//LOG("Push frame, out: %f, sin: [%f, %f] \n", out, left, right);
+				delete[] out;
 			}
-			else {
-				for (int i = 0; i < audio_size; i++) {
-					audioFrame.push_back(lastSubmitAudioFrame);
-				}
+			nativeFreeAudioData(id);
+		}
+		else {
+			for (int i = 0; i < audio_size; i++) {
+				audioFrame.push_back(lastSubmitAudioFrame);
 			}
 		}
-		if(ready) nativeFreeAudioData(id);
 	}
 	if (playback.is_valid()) {
 		while (c > 0 && audioFrame.size() > 0 && !first_frame_v && state == DECODING) {

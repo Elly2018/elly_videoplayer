@@ -12,10 +12,6 @@ extern "C" {
 #include <libavutil/hwcontext.h>
 }
 
-#ifdef DECODER_MULTIPLE_CORE
-const auto processor_count = std::thread::hardware_concurrency();
-#endif
-
 #ifdef DECODER_HW
 static AVBufferRef* hw_device_ctx = NULL;
 static enum AVPixelFormat hw_pix_fmt;
@@ -638,74 +634,9 @@ void DecoderFFmpeg::preloadSubtitleFrame()
 
 void DecoderFFmpeg::updateVideoFrame() {
 	if (mVideoFramesPreload.size() <= 0) return;
-#ifdef DECODER_MULTIPLE_CORE
-	int thread_spawn_count = std::min((long)processor_count, (long)mVideoFramesPreload.size());
-	thread_spawn_count = std::min(thread_spawn_count, 64);
-
-	std::thread ths[64];
-	AVFrame* r[64];
-
-	for (int i = 0; i < thread_spawn_count; i++) {
-		AVFrame* _srcFrame = mVideoFramesPreload.front();
-		mVideoFramesPreload.pop();
-		ths[i] = std::thread([&](AVFrame* srcFrame, int index){
-			clock_t start = clock();
-
-			int width = srcFrame->width;
-			int height = srcFrame->height;
-
-			const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
-			LOG_VERBOSE("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
-			AVFrame* dstFrame = av_frame_alloc();
-			av_frame_copy_props(dstFrame, srcFrame);
-
-			dstFrame->format = dstFormat;
-			dstFrame->pts = srcFrame->best_effort_timestamp;
-
-			//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
-			int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
-			LOG_VERBOSE("Number of bytes: ", numBytes);
-			AVBufferRef* buffer = av_buffer_alloc(numBytes * sizeof(uint8_t));
-			//avpicture_fill((AVPicture *)dstFrame,buffer->data,dstFormat,width,height);
-			av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
-			dstFrame->buf[0] = buffer;
-
-			SwsContext* conversion = sws_getContext(width,
-				height,
-				(AVPixelFormat)srcFrame->format,
-				width,
-				height,
-				dstFormat,
-				SWS_FAST_BILINEAR,
-				nullptr,
-				nullptr,
-				nullptr);
-			sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
-			sws_freeContext(conversion);
-			av_frame_copy_props(dstFrame, srcFrame);
-
-			dstFrame->format = dstFormat;
-			dstFrame->width = srcFrame->width;
-			dstFrame->height = srcFrame->height;
-
-			av_frame_free(&srcFrame);
-
-			LOG_VERBOSE("updateVideoFrame = ", (float)(clock() - start) / CLOCKS_PER_SEC);
-			r[index] = dstFrame;
-		}, _srcFrame, i);
-	}
-
-	for (int i = 0; i < thread_spawn_count; i++) {
-		ths[i].join();
-	}
-
-	std::lock_guard<std::mutex> lock(mVideoMutex);
-	for (int i = 0; i < thread_spawn_count; i++) {
-		mVideoFrames.push(r[i]);
-	}
-#else
 	AVFrame* srcFrame = mVideoFramesPreload.front();
 	mVideoFramesPreload.pop();
+
 	clock_t start = clock();
 
 	int width = srcFrame->width;
@@ -715,7 +646,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 	LOG_VERBOSE("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
 	AVFrame* dstFrame = av_frame_alloc();
 	av_frame_copy_props(dstFrame, srcFrame);
-
+	
 	dstFrame->format = dstFormat;
 	dstFrame->pts = srcFrame->best_effort_timestamp;
 
@@ -737,7 +668,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 		width,
 		height,
 		dstFormat,
-		SWS_FAST_BILINEAR,
+		SWS_POINT | SWS_FULL_CHR_H_INT | SWS_ACCURATE_RND,
 		nullptr,
 		nullptr,
 		nullptr);
@@ -755,53 +686,11 @@ void DecoderFFmpeg::updateVideoFrame() {
 
 	std::lock_guard<std::mutex> lock(mVideoMutex);
 	mVideoFrames.push(dstFrame);
-#endif
 	updateBufferState();
 }
 
 void DecoderFFmpeg::updateAudioFrame() {
 	if (mAudioFramesPreload.size() <= 0) return;
-#ifdef DECODER_MULTIPLE_CORE
-	int thread_spawn_count = std::min((long)processor_count, (long)mAudioFramesPreload.size());
-	thread_spawn_count = std::min(thread_spawn_count, 64);
-
-	std::thread ths[64];
-	AVFrame* r[64];
-
-	for (int i = 0; i < thread_spawn_count; i++) {
-		AVFrame* _srcFrame = mAudioFramesPreload.front();
-		mAudioFramesPreload.pop();
-		ths[i] = std::thread([&](AVFrame* srcFrame, int index) {
-			clock_t start = clock();
-			AVFrame* frame = av_frame_alloc();
-			frame->sample_rate = srcFrame->sample_rate;
-			frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
-			frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
-			frame->best_effort_timestamp = srcFrame->best_effort_timestamp;
-			frame->pts = frame->best_effort_timestamp;
-
-			int ret = swr_convert_frame(mSwrContext, frame, srcFrame);
-			if (ret != 0) {
-				LOG_VERBOSE("Audio update failed ", ret);
-			}
-
-			av_frame_free(&srcFrame);
-
-			LOG_VERBOSE("updateAudioFrame. linesize: ", frame->linesize[0]);
-
-			r[index] = frame;
-		}, _srcFrame, i);
-	}
-
-	for (int i = 0; i < thread_spawn_count; i++) {
-		ths[i].join();
-	}
-
-	std::lock_guard<std::mutex> lock(mAudioMutex);
-	for (int i = 0; i < thread_spawn_count; i++) {
-		mAudioFrames.push(r[i]);
-	}
-#else
 	AVFrame* srcFrame = mAudioFramesPreload.front();
 	mAudioFramesPreload.pop();
 	clock_t start = clock();
@@ -822,7 +711,6 @@ void DecoderFFmpeg::updateAudioFrame() {
 	LOG_VERBOSE("updateAudioFrame. linesize: ", frame->linesize[0]);
 	std::lock_guard<std::mutex> lock(mAudioMutex);
 	mAudioFrames.push(frame);
-#endif
 	updateBufferState();
 }
 
