@@ -8,6 +8,7 @@
 #include <future>
 
 extern "C" {
+#include <libyuv.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/hwcontext.h>
 }
@@ -646,7 +647,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 	LOG_VERBOSE("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
 	AVFrame* dstFrame = av_frame_alloc();
 	av_frame_copy_props(dstFrame, srcFrame);
-	
+
 	dstFrame->format = dstFormat;
 	dstFrame->pts = srcFrame->best_effort_timestamp;
 
@@ -672,6 +673,13 @@ void DecoderFFmpeg::updateVideoFrame() {
 		nullptr,
 		nullptr,
 		nullptr);
+	/*
+	libyuv::I420ToRAW((const uint8_t*)srcFrame->data, width,
+		(const uint8_t*)(srcFrame->data + width * height), width / 2,
+		(const uint8_t*)(srcFrame->data + width * height * 5 / 4), width / 2,
+		(uint8_t*)dstFrame->data, width * 3,
+		width, height);
+	*/
 	sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
 	sws_freeContext(conversion);
 	av_frame_copy_props(dstFrame, srcFrame);

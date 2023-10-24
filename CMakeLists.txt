@@ -94,6 +94,8 @@ include( GitVersionInfo )
 
 add_subdirectory( src )
 
+add_subdirectory( libyuv )
+
 # Install library and extension file in ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}
 set( INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/" )
 

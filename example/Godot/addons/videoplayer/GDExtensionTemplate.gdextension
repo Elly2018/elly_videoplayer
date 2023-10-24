@@ -13,7 +13,8 @@ windows.x86_64 = {
 "lib/Windows-AMD64/avutil-58.dll":".",
 "lib/Windows-AMD64/postproc-57.dll":".",
 "lib/Windows-AMD64/swresample-4.dll":".",
-"lib/Windows-AMD64/swscale-7.dll":"."
+"lib/Windows-AMD64/swscale-7.dll":".",
+"lib/Windows-AMD64/libyuv.dll":"."
 }
 Linux-AMD64 = {
 "lib/Linux-AMD64/avcodec-60.dll":".",
@@ -23,7 +24,8 @@ Linux-AMD64 = {
 "lib/Linux-AMD64/avutil-58.dll":".",
 "lib/Linux-AMD64/postproc-57.dll":".",
 "lib/Linux-AMD64/swresample-4.dll":".",
-"lib/Linux-AMD64/swscale-7.dll":"."
+"lib/Linux-AMD64/swscale-7.dll":".",
+"lib/Linux-AMD64/libyuv.dll":"."
 }
 
 [libraries]

@@ -5,14 +5,28 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-//#define ENABLE_LOG
+#ifdef UNITY
+
+#endif
+
+#define ENABLE_LOG
 //#define ENABLE_LOG_VERBOSE
 #ifdef ENABLE_LOG
-	#define LOG(...) godot::UtilityFunctions::print( __VA_ARGS__ )
-	#define LOG_ERROR(...) godot::UtilityFunctions::printerr( __VA_ARGS__ )
+	#ifdef UNITY
+		#define LOG(...)
+		#define LOG_ERROR(...)
+	#else
+		#define LOG
+		#define LOG_ERROR
+	#endif
 #ifdef ENABLE_LOG_VERBOSE
-	#define LOG_VERBOSE(...) godot::UtilityFunctions::print( __VA_ARGS__ )
-	#define LOG_ERROR_VERBOSE(...) godot::UtilityFunctions::printerr( __VA_ARGS__ )
+	#ifdef UNITY
+		#define LOG_VERBOSE(...)
+		#define LOG_ERROR_VERBOSE(...)
+	#else
+		#define LOG_VERBOSE
+		#define LOG_ERROR_VERBOSE
+	#endif
 #else
 	#define LOG_VERBOSE
 	#define LOG_ERROR_VERBOSE

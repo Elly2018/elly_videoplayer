@@ -12,12 +12,16 @@ file(GLOB_RECURSE NativeSRC src/Logger.h)
 
 if( "${Engine}" STREQUAL "Godot" )
 	list(APPEND SRC "${CORESRC}" "${GDSRC}")
+	set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gd_videoplayer")
 elseif( "${Engine}" STREQUAL "Unity" )
 	list(APPEND SRC "${CORESRC}" "${UnitySRC}")
+	set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "unity_videoplayer")
 elseif( "${Engine}" STREQUAL "Unreal" )
 	list(APPEND SRC "${CORESRC}" "${UnrealSRC}")
+	set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "unreal_videoplayer")
 else()
 	list(APPEND SRC "${CORESRC}" "${NativeSRC}")
+	set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "native_videoplayer")
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE "/WX-")
@@ -32,9 +36,9 @@ target_sources( ${PROJECT_NAME}
 
 target_link_directories( ${PROJECT_NAME} PUBLIC
   "ffmpeg/lib"
+  "${CMAKE_CURRENT_BINARY_DIR}/../libyuv/Debug"
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gd_videoplayer")
 file (STRINGS "Platform.txt" Platform)
 message("Target platform: ${Platform}")
 if( "${Platform}" STREQUAL "Windows" )
@@ -47,6 +51,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE avutil.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE postproc.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE swresample.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE swscale.lib)
+target_link_libraries(${PROJECT_NAME} PRIVATE yuv.lib)
 else()
 # MacOS or Linux config
 set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
@@ -58,11 +63,13 @@ target_link_libraries(${PROJECT_NAME} PRIVATE libavutil.dll.a)
 target_link_libraries(${PROJECT_NAME} PRIVATE libpostproc.dll.a)
 target_link_libraries(${PROJECT_NAME} PRIVATE libswresample.dll.a)
 target_link_libraries(${PROJECT_NAME} PRIVATE libswscale.dll.a)
+target_link_libraries(${PROJECT_NAME} PRIVATE yuv.lib)
 endif()
 
 target_include_directories( ${PROJECT_NAME}
     PRIVATE
         "src"
+		"${CMAKE_SOURCE_DIR}/libyuv/include"
 )
 
 target_include_directories( ${PROJECT_NAME}
