@@ -32,7 +32,9 @@ public:
 	void setSeekTime(float sec);
 	
 	double getVideoFrame(void** frameData, int& width, int& height);
+	double getNextVideoFrameTime();
 	double getAudioFrame(uint8_t** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample);
+	double getNextAudioFrameTime();
 	bool getOtherIndex(MediaType type, int* li, int& count, int& current);
 	void freeVideoFrame();
 	void freeAudioFrame();

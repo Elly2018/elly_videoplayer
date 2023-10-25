@@ -33,6 +33,8 @@ public:
 	void setAudioAllChDataEnable(bool isEnable);
 	double getVideoFrame(void** frameData, int& width, int& height);
 	double getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample);
+	double getNextVideoFrameTime();
+	double getNextAudioFrameTime();
 	void freeVideoFrame();
 	void freeAudioFrame();
 	void freePreloadFrame();

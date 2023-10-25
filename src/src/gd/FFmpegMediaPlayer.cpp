@@ -1,4 +1,4 @@
-#include <Logger.h>
+#include <gd/Logger.h>
 #include "FFmpegMediaPlayer.h"
 
 #include <cstring>
@@ -261,12 +261,16 @@ void FFmpegMediaPlayer::_process(float delta) {
 
 				nativeGrabVideoFrame(id, &frame_data, frame_ready, width, height);
 				if (frame_ready) {
+					data_size = width * height * 3;
 					PackedByteArray image_data;
 					image_data.resize(data_size);
-					memcpy(image_data.ptrw(), frame_data, data_size);
-					LOG_VERBOSE("data size: ", data_size, ", actual frame size: ", image_data.size());
-					PackedByteArray buffer = image_data;
-					image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, buffer);
+					PackedByteArray* pba_ptr = &image_data;
+					uint8_t* u8_ptr = (uint8_t*)pba_ptr;
+					uint8_t f = (uint8_t)frame_data;
+					u8_ptr[0] = f;
+					//memcpy(image_data.ptrw(), frame_data, data_size);
+					LOG_VERBOSE("data size: ", data_size, ", actual frame size: ", image_data);
+					image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, image_data);
 					texture->set_deferred("image", image);
 					emit_signal("video_update", texture, Vector2i(width, height));
 					
@@ -287,7 +291,7 @@ void FFmpegMediaPlayer::_process(float delta) {
 				}
 			}
 
-			if (nativeIsVideoBufferEmpty(id) && !nativeIsEOF(id)) {
+			if (nativeIsVideoBufferEmpty(id) && !nativeIsEOF(id) && first_frame_a && first_frame_v) {
 				hang_time = Time::get_singleton()->get_unix_time_from_system() - global_start_time;
 				state = BUFFERING;
 			}

@@ -46,7 +46,9 @@ public:
 	virtual void setAudioEnable(bool isEnable) = 0;
 	virtual void setAudioAllChDataEnable(bool isEnable) = 0;
 	virtual double getVideoFrame(void** frameData, int& width, int& height) = 0;
+	virtual double getNextVideoFrameTime() = 0;
 	virtual double getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample) = 0;
+	virtual double getNextAudioFrameTime() = 0;
 	virtual void freeVideoFrame() = 0;
 	virtual void freeAudioFrame() = 0;
 	virtual void freePreloadFrame() = 0;

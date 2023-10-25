@@ -1,4 +1,4 @@
-#include "Logger.h"
+#include "gd/Logger.h"
 #include "DecoderFFmpeg.h"
 #include "DecodeConfig.h"
 #include <fstream>
@@ -424,6 +424,22 @@ double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize,
 
 	LOG_VERBOSE("mAudioInfo.lastTime: ", timeInSec);
 
+	return timeInSec;
+}
+
+double DecoderFFmpeg::getNextVideoFrameTime() {
+	if (mVideoFrames.size() <= 1) return -1;
+	AVFrame* frame = mVideoFrames.front() + 1;
+	int64_t timeStamp = frame->pts;
+	double timeInSec = av_q2d(mVideoStream->time_base) * timeStamp;
+	return timeInSec;
+}
+
+double DecoderFFmpeg::getNextAudioFrameTime() {
+	if (mAudioFrames.size() <= 1) return -1;
+	AVFrame* frame = mAudioFrames.front() + 1;
+	int64_t timeStamp = frame->pts;
+	double timeInSec = av_q2d(mAudioStream->time_base) * timeStamp;
 	return timeInSec;
 }
 

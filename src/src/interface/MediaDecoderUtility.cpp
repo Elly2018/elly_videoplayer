@@ -1,6 +1,6 @@
 ﻿#include <interface/MediaDecoderUtility.h>
 #include <decoder/AVDecoderHandler.h>
-#include <Logger.h>
+#include <gd/Logger.h>
 #include <stdio.h>
 #include <string>
 #include <memory>
@@ -276,9 +276,27 @@ void nativeGetAudioData(int id, bool& frameReady, unsigned char** audioData, int
 	if (localAVDecoderHandler != nullptr &&
 		localAVDecoderHandler->getDecoderState() >= AVDecoderHandler::DecoderState::INITIALIZED &&
 		localAVDecoderHandler->getAudioInfo().isEnabled) {
-		double curFrameTime = (localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample));
-		frameReady = true;
-		videoCtx->lastUpdateTimeA = (float)curFrameTime;
+		double audioDecCurTime = localAVDecoderHandler->getAudioInfo().lastTime;
+		if (audioDecCurTime <= videoCtx->progressTime) {
+			double curFrameTime = -1;
+			double nextFrameTime = -1;
+			bool drop = true;
+			while (drop) {
+				curFrameTime = localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample);
+				nextFrameTime = localAVDecoderHandler->getNextAudioFrameTime();
+				drop = curFrameTime <= videoCtx->progressTime && nextFrameTime <= videoCtx->progressTime && nextFrameTime != -1 && curFrameTime != -1;
+				if (drop) {
+					drop = true;
+					nativeFreeAudioData(id);
+				}
+			}
+			bool pass = audioData != nullptr && curFrameTime != -1 && videoCtx->lastUpdateTimeA != curFrameTime;
+			if (pass) {
+				frameReady = true;
+				videoCtx->lastUpdateTimeA = (float)curFrameTime;
+				videoCtx->audioFrameLocked = true;
+			}
+		}
 	}
 }
 
@@ -396,10 +414,20 @@ void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady, int& width
 	localAVDecoderHandler->getVideoInfo().isEnabled) {
       double videoDecCurTime = localAVDecoderHandler->getVideoInfo().lastTime;
       if (videoDecCurTime <= videoCtx->progressTime) {
-          double curFrameTime = localAVDecoderHandler->getVideoFrame(frameData, width, height);
-          if (frameData != nullptr && 
-			curFrameTime != -1 && 
-			videoCtx->lastUpdateTimeV != curFrameTime) {
+		  bool drop = true;
+		  double curFrameTime = -1;
+		  double nextFrameTime = -1;
+		  while (drop) {
+			  curFrameTime = localAVDecoderHandler->getVideoFrame(frameData, width, height);
+			  nextFrameTime = localAVDecoderHandler->getNextVideoFrameTime();
+			  drop = curFrameTime <= videoCtx->progressTime && nextFrameTime <= videoCtx->progressTime && nextFrameTime != -1 && curFrameTime != -1;
+			  if (drop) {
+				  drop = true;
+				  nativeReleaseVideoFrame(id);
+			  }
+		  }
+		  bool pass = frameData != nullptr && curFrameTime != -1 && videoCtx->lastUpdateTimeV != curFrameTime;
+          if (pass) {
               frameReady = true;
               videoCtx->lastUpdateTimeV = (float)curFrameTime;
               videoCtx->isContentReady = true;
