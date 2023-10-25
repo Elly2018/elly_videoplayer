@@ -1,4 +1,3 @@
-//========= Copyright 2015-2019, HTC Corporation. All rights reserved. ===========
 #include "Logger.h"
 #include "DecoderFFmpeg.h"
 #include "DecodeConfig.h"

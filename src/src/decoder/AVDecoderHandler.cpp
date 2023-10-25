@@ -1,5 +1,3 @@
-//========= Copyright 2015-2019, HTC Corporation. All rights reserved. ===========
-
 #include "AVDecoderHandler.h"
 #include "DecoderFFmpeg.h"
 #include <Logger.h>

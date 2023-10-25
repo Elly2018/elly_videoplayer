@@ -1,6 +1,4 @@
-﻿//========= Copyright 2015-2019, HTC Corporation. All rights reserved. ===========
-
-#include <interface/MediaDecoderUtility.h>
+﻿#include <interface/MediaDecoderUtility.h>
 #include <decoder/AVDecoderHandler.h>
 #include <Logger.h>
 #include <stdio.h>
