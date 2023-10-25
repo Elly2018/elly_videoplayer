@@ -7,14 +7,18 @@ file(GLOB_RECURSE CORESRC
 
 file(GLOB_RECURSE GDSRC src/gd/*.hpp src/gd/*.h src/gd/*.cpp src/gd/*.c)
 file(GLOB_RECURSE UnitySRC src/unity/*.hpp src/unity/*.h src/unity/*.cpp src/unity/*.c)
+file(GLOB_RECURSE UnityNativeSRC src/unity-native/PluginSource/source/*.cpp)
 file(GLOB_RECURSE UnrealSRC src/unreal/*.hpp src/unreal/*.h src/unreal/*.cpp src/unreal/*.c)
 file(GLOB_RECURSE NativeSRC src/Logger.h)
+
+list(APPEND HSRC "src")
 
 if( "${Engine}" STREQUAL "Godot" )
 	list(APPEND SRC "${CORESRC}" "${GDSRC}")
 	set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gd_videoplayer")
 elseif( "${Engine}" STREQUAL "Unity" )
-	list(APPEND SRC "${CORESRC}" "${UnitySRC}")
+	list(APPEND SRC "${CORESRC}" "${UnitySRC}" "${UnityNativeSRC}")
+	list(APPEND HSRC "src/unity-native/PluginSource/source/*.h")
 	set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "unity_videoplayer")
 elseif( "${Engine}" STREQUAL "Unreal" )
 	list(APPEND SRC "${CORESRC}" "${UnrealSRC}")
@@ -36,7 +40,6 @@ target_sources( ${PROJECT_NAME}
 
 target_link_directories( ${PROJECT_NAME} PUBLIC
   "ffmpeg/lib"
-  "${CMAKE_CURRENT_BINARY_DIR}/../libyuv/Debug"
 )
 
 file (STRINGS "Platform.txt" Platform)
@@ -68,8 +71,7 @@ endif()
 
 target_include_directories( ${PROJECT_NAME}
     PRIVATE
-        "src"
-		"${CMAKE_SOURCE_DIR}/libyuv/include"
+        "${HSRC}"
 )
 
 target_include_directories( ${PROJECT_NAME}

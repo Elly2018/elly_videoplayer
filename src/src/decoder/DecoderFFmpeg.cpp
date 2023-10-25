@@ -8,7 +8,6 @@
 #include <future>
 
 extern "C" {
-#include <libyuv.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/hwcontext.h>
 }
@@ -650,7 +649,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 
 	dstFrame->format = dstFormat;
 	dstFrame->pts = srcFrame->best_effort_timestamp;
-
+	
 	//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
 	int numBytes = av_image_get_buffer_size(dstFormat, width, height, 1);
 	LOG_VERBOSE("Number of bytes: ", numBytes);
@@ -660,6 +659,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 		LOG_VERBOSE("The video frame buffer is nullptr");
 		return;
 	}
+
 	av_image_fill_arrays(dstFrame->data, dstFrame->linesize, buffer->data, dstFormat, width, height, 1);
 	dstFrame->buf[0] = buffer;
 
@@ -673,13 +673,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 		nullptr,
 		nullptr,
 		nullptr);
-	/*
-	libyuv::I420ToRAW((const uint8_t*)srcFrame->data, width,
-		(const uint8_t*)(srcFrame->data + width * height), width / 2,
-		(const uint8_t*)(srcFrame->data + width * height * 5 / 4), width / 2,
-		(uint8_t*)dstFrame->data, width * 3,
-		width, height);
-	*/
+	
 	sws_scale(conversion, srcFrame->data, srcFrame->linesize, 0, height, dstFrame->data, dstFrame->linesize);
 	sws_freeContext(conversion);
 	av_frame_copy_props(dstFrame, srcFrame);

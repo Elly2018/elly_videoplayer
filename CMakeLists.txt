@@ -39,12 +39,35 @@ if ( APPLE )
 endif()
 
 # Main project information
+if( "${Engine}" STREQUAL "Godot" )
 project( GDExtensionTemplate
     LANGUAGES
         CXX
     VERSION
         0.1.0
 )
+elseif( "${Engine}" STREQUAL "Unity" )
+project( UnityExtensionTemplate
+    LANGUAGES
+        CXX
+    VERSION
+        0.1.0
+)
+elseif( "${Engine}" STREQUAL "Unreal" )
+project( UnrealExtensionTemplate
+    LANGUAGES
+        CXX
+    VERSION
+        0.1.0
+)
+elseif( "${Engine}" STREQUAL "Native" )
+project( NativeExtensionTemplate
+    LANGUAGES
+        CXX
+    VERSION
+        0.1.0
+)
+endif()
 
 # Create our library
 add_library( ${PROJECT_NAME} SHARED )
@@ -93,8 +116,6 @@ include( CompilerWarnings )
 include( GitVersionInfo )
 
 add_subdirectory( src )
-
-add_subdirectory( libyuv )
 
 # Install library and extension file in ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}
 set( INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/" )
