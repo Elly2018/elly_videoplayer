@@ -5,6 +5,9 @@
 #include "Unity/IUnityInterface.h"
 #include "Unity/IUnityGraphics.h"
 
+typedef void (UNITY_INTERFACE_API* LogFunc)(const char* log);
+
+extern "C" UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceRegisterDebug(LogFunc logfunc);
 extern "C" UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceCreatePlayer();
 extern "C" UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceGetPlayerState(int id);
 extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceDestroyPlayer(int id);
