@@ -11,14 +11,14 @@ file(GLOB_RECURSE UnityNativeSRC src/unity-native/PluginSource/source/*.cpp)
 file(GLOB_RECURSE UnrealSRC src/unreal/*.hpp src/unreal/*.h src/unreal/*.cpp src/unreal/*.c)
 file(GLOB_RECURSE NativeSRC src/Logger.h)
 
-list(APPEND HSRC "src")
+target_include_directories( ${PROJECT_NAME} PRIVATE "src")
 
 if( "${Engine}" STREQUAL "Godot" )
 	list(APPEND SRC "${CORESRC}" "${GDSRC}")
 	set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gd_videoplayer")
 elseif( "${Engine}" STREQUAL "Unity" )
 	list(APPEND SRC "${CORESRC}" "${UnitySRC}" "${UnityNativeSRC}")
-	list(APPEND HSRC "src/unity-native/PluginSource/source/*.h")
+	target_include_directories( ${PROJECT_NAME} PRIVATE "src/unity-native/PluginSource/source/*.h")
 	set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "unity_videoplayer")
 elseif( "${Engine}" STREQUAL "Unreal" )
 	list(APPEND SRC "${CORESRC}" "${UnrealSRC}")
@@ -54,7 +54,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE avutil.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE postproc.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE swresample.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE swscale.lib)
-target_link_libraries(${PROJECT_NAME} PRIVATE yuv.lib)
 else()
 # MacOS or Linux config
 set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
@@ -66,15 +65,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE libavutil.dll.a)
 target_link_libraries(${PROJECT_NAME} PRIVATE libpostproc.dll.a)
 target_link_libraries(${PROJECT_NAME} PRIVATE libswresample.dll.a)
 target_link_libraries(${PROJECT_NAME} PRIVATE libswscale.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE yuv.lib)
 endif()
 
-target_include_directories( ${PROJECT_NAME}
-    PRIVATE
-        "${HSRC}"
-)
-
-target_include_directories( ${PROJECT_NAME}
-	PUBLIC
-		"ffmpeg/include"
-)
+target_include_directories( ${PROJECT_NAME} PUBLIC "ffmpeg/include")
