@@ -30,7 +30,7 @@ int interfaceCreatePlayer()
 }
 int interfaceGetPlayerState(int id)
 {
-
+	return -1;
 }
 void interfaceDestroyPlayer(int id)
 {
@@ -54,11 +54,11 @@ void interfaceSeek(int id, double time)
 }
 double interfaceGetCurrentTime(int id)
 {
-
+	return -1.0;
 }
 double interfaceMediaLength(int id)
 {
-
+	return -1.0;
 }
 void interfaceLoadPath(int id, const char* path)
 {
