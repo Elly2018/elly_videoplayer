@@ -7,7 +7,7 @@ file(GLOB_RECURSE CORESRC
 
 file(GLOB_RECURSE GDSRC src/gd/*.hpp src/gd/*.h src/gd/*.cpp src/gd/*.c)
 file(GLOB_RECURSE UnitySRC src/unity/*.hpp src/unity/*.h src/unity/*.cpp src/unity/*.c)
-file(GLOB_RECURSE UnityNativeSRC unity-native/PluginSource/source/*.cpp)
+file(GLOB_RECURSE UnityNativeSRC unity-native/PluginSource/source/*.hpp unity-native/PluginSource/source/*.h unity-native/PluginSource/source/*.cpp unity-native/PluginSource/source/*.c)
 file(GLOB_RECURSE UnrealSRC src/unreal/*.hpp src/unreal/*.h src/unreal/*.cpp src/unreal/*.c)
 file(GLOB_RECURSE NativeSRC src/Logger.h)
 
@@ -20,6 +20,7 @@ elseif( "${Engine}" STREQUAL "Unity" )
 	list(APPEND SRC "${CORESRC}" "${UnitySRC}" "${UnityNativeSRC}")
 	target_include_directories( ${PROJECT_NAME} PRIVATE "unity-native/PluginSource/source")
 	set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "unity_videoplayer")
+	target_link_libraries(${PROJECT_NAME} PRIVATE opengl32.lib)
 elseif( "${Engine}" STREQUAL "Unreal" )
 	list(APPEND SRC "${CORESRC}" "${UnrealSRC}")
 	set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "unreal_videoplayer")

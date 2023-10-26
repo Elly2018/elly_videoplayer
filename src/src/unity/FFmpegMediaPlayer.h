@@ -2,9 +2,7 @@
 #include <string>
 #include <queue>
 
-extern "C" {
 #include <unity/IUnityInterface.h>
-}
 
 struct Vector2 {
 	float x;
