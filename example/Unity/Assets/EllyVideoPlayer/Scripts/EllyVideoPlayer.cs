@@ -1,17 +1,20 @@
-using System.Runtime.InteropServices;
+using UnityEngine;
 
-public struct EllyVideoPlayer
+namespace Elly
 {
-    [DllImport("unity_videoplayer-d.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
-    public static extern void Play(int id);
-    [DllImport("unity_videoplayer-d.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
-    public static extern void Pause(int id);
-    [DllImport("unity_videoplayer-d.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
-    public static extern void stop(int id);
-    [DllImport("unity_videoplayer-d.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
-    public static extern void load(int id);
-    [DllImport("unity_videoplayer-d.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
-    public static extern void set_sample_rate(int id);
-    [DllImport("unity_videoplayer-d.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
-    public static extern float get_timer(int id);
+    [AddComponentMenu("Elly/Video Player")]
+    public class EllyVideoPlayer : MonoBehaviour
+    {
+        int id;
+
+        private void Awake()
+        {
+            id = PlayerLowLevelInterface.CreatePlayer();
+        }
+
+        private void OnDestroy()
+        {
+            PlayerLowLevelInterface.DestroyPlayer(id);
+        }
+    }
 }

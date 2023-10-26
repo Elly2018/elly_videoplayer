@@ -663,6 +663,8 @@ void DecoderFFmpeg::updateVideoFrame() {
 	av_frame_copy_props(dstFrame, srcFrame);
 
 	dstFrame->format = dstFormat;
+	dstFrame->best_effort_timestamp = srcFrame->best_effort_timestamp;
+	dstFrame->pkt_dts = srcFrame->pkt_dts;
 	dstFrame->pts = srcFrame->best_effort_timestamp;
 	
 	//av_image_alloc(dstFrame->data, dstFrame->linesize, dstFrame->width, dstFrame->height, dstFormat, 0)
@@ -711,12 +713,13 @@ void DecoderFFmpeg::updateAudioFrame() {
 	AVFrame* srcFrame = mAudioFramesPreload.front();
 	mAudioFramesPreload.pop();
 	clock_t start = clock();
-	AVFrame* frame = av_frame_alloc();
+	AVFrame* frame = av_frame_alloc();	
+
 	frame->sample_rate = srcFrame->sample_rate;
 	frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
 	frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
 	frame->best_effort_timestamp = srcFrame->best_effort_timestamp;
-	frame->pts = frame->best_effort_timestamp;
+	frame->pts = srcFrame->best_effort_timestamp;
 
 	int ret = swr_convert_frame(mSwrContext, frame, srcFrame);
 	if (ret != 0) {

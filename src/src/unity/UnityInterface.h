@@ -6,6 +6,9 @@
 #include "Unity/IUnityGraphics.h"
 #include <Logger.h>
 
+extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces * unityInterfaces);
+extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UnityPluginUnload();
+
 extern "C" UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceCreatePlayer();
 extern "C" UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceGetPlayerState(int id);
 extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceDestroyPlayer(int id);

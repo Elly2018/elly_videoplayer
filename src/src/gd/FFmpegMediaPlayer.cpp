@@ -264,11 +264,8 @@ void FFmpegMediaPlayer::_process(float delta) {
 					data_size = width * height * 3;
 					PackedByteArray image_data;
 					image_data.resize(data_size);
-					PackedByteArray* pba_ptr = &image_data;
-					uint8_t* u8_ptr = (uint8_t*)pba_ptr;
-					uint8_t f = (uint8_t)frame_data;
-					u8_ptr[0] = f;
-					//memcpy(image_data.ptrw(), frame_data, data_size);
+					memcpy(image_data.ptrw(), frame_data, data_size);
+					//memmove(image_data.ptrw(), frame_data, data_size);
 					LOG_VERBOSE("data size: ", data_size, ", actual frame size: ", image_data);
 					image->call_deferred("set_data", width, height, false, Image::FORMAT_RGB8, image_data);
 					texture->set_deferred("image", image);

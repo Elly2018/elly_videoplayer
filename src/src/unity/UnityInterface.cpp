@@ -3,6 +3,9 @@
 #include <unity/FFmpegMediaPlayer.h>
 #include <memory>
 
+static IUnityInterfaces* s_UnityInterfaces = 0;
+static IUnityGraphics* s_Graphics = 0;
+
 std::list<std::shared_ptr<FFmpegMediaPlayer>> playerContexts;
 typedef std::list<std::shared_ptr<FFmpegMediaPlayer>>::iterator PlayerContextIter;
 
