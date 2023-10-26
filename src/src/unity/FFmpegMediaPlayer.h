@@ -11,9 +11,6 @@ struct Vector2 {
 	float y;
 };
 
-// raw float data, channel, sample rate
-typedef void (*SubmitAudioSample)(float*, int, int);
-
 class FFmpegMediaPlayer{
 private:
 	/**
