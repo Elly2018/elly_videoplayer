@@ -161,64 +161,65 @@ public:
 	*/
 	void play();
 	/*
-	* Check current state is playing media
+	  Check current state is playing media
 	*/
 	bool is_playing() const;
 
 
 	/*
-	* Pause decoder
+	  Pause decoder
 	*/
 	void set_paused(bool p_paused);
 	/*
-	* Check pause state
+	  Check pause state
 	*/
 	bool is_paused() const;
 
 
 	/*
 	* Set the loop trigger
-	* Looping will decide if end of file will causing seek to start
+	  Set the loop trigger
+	  Looping will decide if end of file will causing seek to start
 	*/
 	void set_loop(bool p_enable);
 	/*
-	* Check loop state
+	  Check loop state
 	*/
 	bool has_loop() const;
 	/*
-	* Get the media length (second)
+	  Get the media length (second)
 	*/
 	float get_length() const;
 	/*
-	* Get current play position (second)
+	  Get current play position (second)
 	*/
 	float get_playback_position() const;
 	/*
-	* Seeking to particular position within the loaded media
+	  Seeking to particular position within the loaded media
 	*/
 	void seek(float p_time);
 
 
 	/*
-	* Godot update method
-	* This will trying to update the video part
-	* And handle some stage of player events
+	  Godot update method
+	  This will trying to update the video part
+	  And handle some stage of player events
 	*/
 	void _process(float delta);
 	/*
-	* Godot fixed update method
-	* This will trying to update the audio part
+	  Godot fixed update method
+	  This will trying to update the audio part
 	*/
  	void _physics_process(float delta);
 
 
 	/*
-	* Set the audio player instance to it
-	* This instance will become the primary source of audio player for it
+	  Set the audio player instance to it
+	  This instance will become the primary source of audio player for it
 	*/
 	void set_player(AudioStreamPlayer* _player);
 	/*
-	* Get current use audio player
+	  Get current use audio player
 	*/
 	AudioStreamPlayer* get_player() const;
 
