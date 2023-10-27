@@ -26,8 +26,6 @@ void FFmpegMediaPlayer::_init_media() {
 		LOG("\tWidth: ", width);
 		LOG("\tHeight: ", height);
 		LOG("\tFramerate: ", framerate);
-		//delay_frame = Math::ceil(framerate / 4.0f);
-		data_size = width * height * 3;
 	}
 
 	audio_playback = nativeIsAudioEnabled(id);
@@ -47,6 +45,7 @@ void FFmpegMediaPlayer::_init_media() {
 		player->play();
 	} 
 
+	clock = nativeGetClock(id);
 	state = INITIALIZED;
 	LOG("start change to INITIALIZED");
 }
@@ -259,7 +258,7 @@ void FFmpegMediaPlayer::_process(float delta) {
 				void *frame_data = nullptr;
 				bool frame_ready = false;
 
-				nativeGrabVideoFrame(id, &frame_data, frame_ready, width, height);
+				double frameTime = nativeGrabVideoFrame(id, &frame_data, frame_ready, width, height);
 				if (frame_ready) {
 					data_size = width * height * 3;
 					PackedByteArray image_data;
@@ -276,14 +275,18 @@ void FFmpegMediaPlayer::_process(float delta) {
 					nativeReleaseVideoFrame(id);
 				}
 
-				video_current_time = Time::get_singleton()->get_unix_time_from_system() - global_start_time;
-				if (video_current_time < video_length || video_length == -1.0f) {
-					nativeSetVideoTime(id, video_current_time);
-				} else {
-					if (!nativeIsVideoBufferEmpty(id)) {
+				if (clock == -1) {
+					video_current_time = Time::get_singleton()->get_unix_time_from_system() - global_start_time;
+					if (video_current_time < video_length || video_length == -1.0f) {
 						nativeSetVideoTime(id, video_current_time);
-					} else {
-						state = END_OF_FILE;
+					}
+					else {
+						if (!nativeIsVideoBufferEmpty(id)) {
+							nativeSetVideoTime(id, video_current_time);
+						}
+						else {
+							state = END_OF_FILE;
+						}
 					}
 				}
 			}
@@ -307,8 +310,7 @@ void FFmpegMediaPlayer::_process(float delta) {
 
 void FFmpegMediaPlayer::_physics_process(float delta) {
 	int c = 0;
-	video_current_time = Time::get_singleton()->get_unix_time_from_system() - global_start_time;
-	if (playback != nullptr && playback.is_valid()) {
+	if (playback != nullptr && playback.is_valid() && audio_playback) {
 		c = playback->get_frames_available();
 	}
 	else {
@@ -325,7 +327,11 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 		* AV_SAMPLE_FMT_FLT will usually give us byte_per_sample = 4
 		*/
 		bool ready = false;
-		nativeGetAudioData(id, ready, &raw_audio_data, audio_size, channel, byte_per_sample);
+		double frameTime = nativeGetAudioData(id, ready, &raw_audio_data, audio_size, channel, byte_per_sample);
+		if (clock == 1) {
+			video_current_time = frameTime;
+			nativeSetVideoTime(id, video_current_time);
+		}
 		if (ready) {
 			PackedFloat32Array audio_data = PackedFloat32Array();
 			audio_data.resize(audio_size * byte_per_sample * channel);

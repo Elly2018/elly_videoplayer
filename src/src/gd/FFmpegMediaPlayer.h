@@ -1,5 +1,16 @@
 #pragma once
-
+/*
+  Godot engine dependent logic,
+  
+  Video part:
+    This will generate a reuseable texture and emit event to it,
+    User should register the signal in GDScript and apply to the material user want.
+  
+  Audio part:
+    it needs a AudioStreamPlayer with AudioStreamGenerator attach to it,
+    That will be the main audio output component.
+  
+*/
 #include <interface/MediaDecoderUtility.h>
 #include <string>
 
@@ -17,20 +28,20 @@ using namespace godot;
 
 
 /**
- * The control node for godot video player
+   The control node for godot video player
 */
 class FFmpegMediaPlayer : public Node {
 	GDCLASS(FFmpegMediaPlayer, Node);
 
 private:
 /**
- * The different stage for this video player,
- * each stage will change under behaviour of decoding processing
+   The different stage for this video player,
+   each stage will change under behaviour of decoding processing
 */
 	enum State {
 		/**
-		 * This means the media does not initialize yet.
-		 * It will trying to get the information it needs in order to start the decoding process.
+		   This means the media does not initialize yet.
+		   It will trying to get the information it needs in order to start the decoding process.
 		*/
 		FAILED = -1,
 		LOADING,
@@ -42,17 +53,44 @@ private:
 		END_OF_FILE,
 	};
 
-	// TODO: Implement audio.
+	/*
+	  The audio player component in the scene,
+	  User should call set_player(instance) to register the player.
+	*/
 	AudioStreamPlayer* player;
+	/*
+	  The Custom PCM data generator
+	*/
 	Ref<AudioStreamGenerator> generator;
+	/*
+	  Here is where we spit audio data to
+	*/
 	Ref<AudioStreamGeneratorPlayback> playback;
 
+	/*
+	  The texture we're sending to GDscript, user should take this resource and apply to the material it want
+	*/
 	Ref<ImageTexture> texture;
+	/*
+	  The raw image data, video player will write the bytes data to it
+	*/
 	Ref<Image> image;
+	/*
+	  User select path
+	*/
 	String path;
+	/*
+	  User select format (decklink support ?)
+	*/
 	String format;
 
+	/*
+	  Decoder id
+	*/
 	int id = 0;
+	/*
+	  Current state
+	*/
 	int state = UNINITIALIZED;
 
 	bool first_frame_v = true;
@@ -78,11 +116,12 @@ private:
 
 	double global_start_time = 0.0f;
 	double hang_time = 0.0f;
+	int clock = -1;
 
 	void _init_media();
 	/*
-	* User should call this method in _ready func in the gdscript
-	* To fill the buffer of audio stream (audio stream generator)
+	  User should call this method in _ready func in the gdscript
+	  To fill the buffer of audio stream (audio stream generator)
 	*/
 	void audio_init();
 
@@ -92,33 +131,33 @@ protected:
 
 public:
 	/*
-	* Loading path from local variable
+	  Loading path from local variable
 	*/
 	void load();
 	/*
-	* Async loading path from local variable
-	* "async_loaded" signal will trigger when finish
+	  Async loading path from local variable
+	  "async_loaded" signal will trigger when finish
 	*/
 	void load_async();
 	/*
-	* Loading path from string
+	  Loading path from string
 	*/
 	bool load_path(String path);
 	/*
-	* Async loading path from string
-	* "async_loaded" signal will trigger when finish
+	  Async loading path from string
+	  "async_loaded" signal will trigger when finish
 	*/
 	void load_path_async(String path);
 
 
 	/*
-	* Stop the player, this will destroy decoder object in the low level
-	* And reset every variable
+	  Stop the player, this will destroy decoder object in the low level
+	  And reset every variable
 	*/
 	void stop();
 	/*
-	* This method should called after media is loaded
-	* Otherwise this will do nothing
+	  This method should called after media is loaded
+	  Otherwise this will do nothing
 	*/
 	void play();
 	/*

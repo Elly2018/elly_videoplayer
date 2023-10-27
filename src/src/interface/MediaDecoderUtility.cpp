@@ -1,4 +1,7 @@
-﻿#include <interface/MediaDecoderUtility.h>
+﻿/*
+* Interface for the low level decoder control
+*/
+#include <interface/MediaDecoderUtility.h>
 #include <decoder/AVDecoderHandler.h>
 #include <gd/Logger.h>
 #include <stdio.h>
@@ -23,7 +26,7 @@ typedef struct _VideoContext {
 	float lastUpdateTimeV = -1.0f;
 	float lastUpdateTimeA = -1.0f;
 	float audioBufferTime = -1.0f;
-    bool videoFrameLocked = false;
+  bool videoFrameLocked = false;
 	bool audioFrameLocked = false;
 	bool isContentReady = false;	//	This flag is used to indicate the period that seek over until first data is got.
 									//	Usually used for AV sync problem, in pure audio case, it should be discard.
@@ -262,42 +265,22 @@ bool nativeSetAudioBufferTime(int id, float time)
 	videoCtx->audioBufferTime = time;
 }
 
-void nativeGetAudioData(int id, bool& frameReady, unsigned char** audioData, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
+double nativeGetAudioData(int id, bool& frameReady, unsigned char** audioData, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
 	frameReady = false;
     std::shared_ptr<VideoContext> videoCtx;
-	if (!getVideoContext(id, videoCtx)) { return; }
+	if (!getVideoContext(id, videoCtx)) { return -1.0; }
 	if (videoCtx->audioFrameLocked) {
 		LOG("[ViveMediaDecoder] Release last audio frame first");
-		return;
+		return -1.0;
 	}
 
 	AVDecoderHandler* localAVDecoderHandler = videoCtx->avhandler.get();
 
-	if (localAVDecoderHandler != nullptr &&
-		localAVDecoderHandler->getDecoderState() >= AVDecoderHandler::DecoderState::INITIALIZED &&
-		localAVDecoderHandler->getAudioInfo().isEnabled) {
-		double audioDecCurTime = localAVDecoderHandler->getAudioInfo().lastTime;
-		if (audioDecCurTime <= videoCtx->progressTime) {
-			double curFrameTime = -1;
-			double nextFrameTime = -1;
-			bool drop = true;
-			while (drop) {
-				curFrameTime = localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample);
-				nextFrameTime = localAVDecoderHandler->getNextAudioFrameTime();
-				drop = curFrameTime <= videoCtx->progressTime && nextFrameTime <= videoCtx->progressTime && nextFrameTime != -1 && curFrameTime != -1;
-				if (drop) {
-					drop = true;
-					nativeFreeAudioData(id);
-				}
-			}
-			bool pass = audioData != nullptr && curFrameTime != -1 && videoCtx->lastUpdateTimeA != curFrameTime;
-			if (pass) {
-				frameReady = true;
-				videoCtx->lastUpdateTimeA = (float)curFrameTime;
-				videoCtx->audioFrameLocked = true;
-			}
-		}
-	}
+	double curFrameTime = localAVDecoderHandler->getAudioFrame(audioData, frameSize, nb_channel, byte_per_sample);
+	frameReady = true;
+	videoCtx->lastUpdateTimeA = (float)curFrameTime;
+	videoCtx->audioFrameLocked = true;
+	return curFrameTime;
 }
 
 void nativeFreeAudioData(int id) {
@@ -344,6 +327,17 @@ bool nativeIsVideoBufferEmpty(int id) {
 	if (!getVideoContext(id, videoCtx)) { return false; }
 	
 	return videoCtx->avhandler->isVideoBufferEmpty();
+}
+
+int nativeGetClock(int id) 
+{
+	std::shared_ptr<VideoContext> videoCtx;
+	if (!getVideoContext(id, videoCtx)) { return -1; }
+	AVDecoderHandler* localAVDecoderHandler = videoCtx->avhandler.get();
+	if (localAVDecoderHandler == nullptr) return -1;
+	if (localAVDecoderHandler->getAudioInfo().isEnabled) return 1;
+	else if (localAVDecoderHandler->getVideoInfo().isEnabled) return -1;
+	else return -1;
 }
 
 int nativeGetMetaData(const char* filePath, char*** key, char*** value) {
@@ -398,13 +392,13 @@ void nativeSetAudioAllChDataEnable(int id, bool isEnable) {
 	videoCtx->avhandler->setAudioAllChDataEnable(isEnable);
 }
 
-void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady, int& width, int& height) {
+double nativeGrabVideoFrame(int id, void** frameData, bool& frameReady, int& width, int& height) {
     frameReady = false;
     std::shared_ptr<VideoContext> videoCtx;
-    if (!getVideoContext(id, videoCtx) || videoCtx->avhandler == nullptr) { return; }
+    if (!getVideoContext(id, videoCtx) || videoCtx->avhandler == nullptr) { return -1.0; }
     if (videoCtx->videoFrameLocked) {
         LOG_VERBOSE("[ViveMediaDecoder] Release last video frame first");
-        return;
+        return -1.0;
     }
 
 	AVDecoderHandler* localAVDecoderHandler = videoCtx->avhandler.get();
@@ -432,9 +426,11 @@ void nativeGrabVideoFrame(int id, void** frameData, bool& frameReady, int& width
               videoCtx->lastUpdateTimeV = (float)curFrameTime;
               videoCtx->isContentReady = true;
               videoCtx->videoFrameLocked = true;
+							return curFrameTime;
           }
       }
   }
+	return -1.0;
 }
 
 void nativeReleaseVideoFrame(int id) {
