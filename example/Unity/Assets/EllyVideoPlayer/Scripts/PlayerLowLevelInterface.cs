@@ -14,13 +14,10 @@ namespace Elly
             [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfaceDestroyPlayer", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void DestroyPlayer(int id);
 
-            [DllImport("unity_videoplayer-d.dll", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfaceAudioSampleCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void SetSubmitAudioSampleCallback(int id, IntPtr aCallback);
-
-            internal static void SetSubmitAudioSampleCallback(int id, object marshall)
-            {
-                throw new NotImplementedException();
-            }
+            [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfaceAudioSampleCallback_Clean", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            public static extern void CleanAudioSampleCallback(int id);
         }
 
         public struct Media

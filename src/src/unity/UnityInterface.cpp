@@ -36,6 +36,18 @@ void interfaceDestroyPlayer(int id)
 {
 
 }
+void interfaceAudioSampleCallback(int id, SubmitAudioSample func)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->RegisterAudioCallback(func);
+}
+void interfaceAudioSampleCallback_Clean(int id)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->CleanAudioCallback();
+}
 void interfacePlay(int id)
 {
 

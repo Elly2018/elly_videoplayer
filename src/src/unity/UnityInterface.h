@@ -16,6 +16,8 @@ extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UnityPluginUnload();
 // Application
 extern "C" UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceCreatePlayer();
 extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceDestroyPlayer(int id);
+extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioSampleCallback(int id, SubmitAudioSample func);
+extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioSampleCallback_Clean(int id);
 
 // Media
 extern "C" UNITY_INTERFACE_EXPORT double UNITY_INTERFACE_API interfaceMediaLength(int id);

@@ -2,7 +2,8 @@
 #include <string>
 #include <queue>
 
-#include <unity/IUnityInterface.h>
+#include <Unity/IUnityInterface.h>
+#include <unity/UnityInterface.h>
 
 struct Vector2 {
 	float x;
@@ -39,6 +40,8 @@ private:
 	//Ref<Image> image;
 	std::string path;
 	std::string format;
+
+	std::list<SubmitAudioSample> audioCallback;
 
 	bool first_frame_v = true;
 	bool first_frame_a = true;
@@ -179,6 +182,9 @@ public:
 	char* get_path() const;
 	void set_format(const char* _format);
 	char* get_format() const;
+
+	void RegisterAudioCallback(SubmitAudioSample func);
+	void CleanAudioCallback();
 
 	FFmpegMediaPlayer();
 	~FFmpegMediaPlayer();
