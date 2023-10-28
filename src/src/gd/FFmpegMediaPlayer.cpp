@@ -1,5 +1,6 @@
 #include <gd/Logger.h>
 #include "FFmpegMediaPlayer.h"
+#include <interface/MediaDecoderUtility.h>
 
 #include <cstring>
 #include <math.h>
@@ -46,6 +47,7 @@ void FFmpegMediaPlayer::_init_media() {
 	} 
 
 	clock = nativeGetClock(id);
+	LOG("Current clock: ", clock);
 	state = INITIALIZED;
 	LOG("start change to INITIALIZED");
 }
@@ -257,7 +259,6 @@ void FFmpegMediaPlayer::_process(float delta) {
 			if (video_playback) {
 				void *frame_data = nullptr;
 				bool frame_ready = false;
-
 				double frameTime = nativeGrabVideoFrame(id, &frame_data, frame_ready, width, height);
 				if (frame_ready) {
 					data_size = width * height * 3;
@@ -316,7 +317,7 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 	else {
 		return;
 	}
-	bool state_check = state == DECODING || state == BUFFERING;
+	bool state_check = (state == DECODING || state == BUFFERING) && audioFrame.size() < 1024;
 	if (state_check) {
 		// TODO: Implement audio.
 		unsigned char* raw_audio_data = nullptr;

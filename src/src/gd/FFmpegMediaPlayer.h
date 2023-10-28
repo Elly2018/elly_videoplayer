@@ -11,7 +11,6 @@
     That will be the main audio output component.
   
 */
-#include <interface/MediaDecoderUtility.h>
 #include <string>
 
 #include <godot_cpp/classes/audio_stream_playback.hpp>
