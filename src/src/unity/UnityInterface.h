@@ -9,25 +9,27 @@
 // raw float data, channel, sample rate
 typedef void (*SubmitAudioSample)(float*, int, int);
 
-// Plusin
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces * unityInterfaces);
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UnityPluginUnload();
+extern "C" {
+	// Plusin
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces* unityInterfaces);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API UnityPluginUnload();
 
-// Application
-extern "C" UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceCreatePlayer();
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceDestroyPlayer(int id);
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioSampleCallback(int id, SubmitAudioSample func);
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioSampleCallback_Clean(int id);
+	// Application
+	UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceCreatePlayer();
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceDestroyPlayer(int id);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioSampleCallback(int id, SubmitAudioSample func);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioSampleCallback_Clean(int id);
 
-// Media
-extern "C" UNITY_INTERFACE_EXPORT double UNITY_INTERFACE_API interfaceMediaLength(int id);
-extern "C" UNITY_INTERFACE_EXPORT double UNITY_INTERFACE_API interfaceGetCurrentTime(int id);
+	// Media
+	UNITY_INTERFACE_EXPORT double UNITY_INTERFACE_API interfaceMediaLength(int id);
+	UNITY_INTERFACE_EXPORT double UNITY_INTERFACE_API interfaceGetCurrentTime(int id);
 
-// Player
-extern "C" UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceGetPlayerState(int id);
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfacePlay(int id);
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfacePause(int id);
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceStop(int id);
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceSeek(int id, double time);
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceLoadPath(int id, const char* path);
-extern "C" UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceLoadPathAsync(int id, const char* path);
+	// Player
+	UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceGetPlayerState(int id);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfacePlay(int id);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfacePause(int id);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceStop(int id);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceSeek(int id, double time);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceLoadPath(int id, const char* path);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceLoadPathAsync(int id, const char* path);
+}
