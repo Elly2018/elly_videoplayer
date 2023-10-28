@@ -6,8 +6,10 @@
 #include "Unity/IUnityGraphics.h"
 #include <Logger.h>
 
-// raw float data, channel, sample rate
-typedef void (*SubmitAudioSample)(float*, int, int);
+// channel, sample rate
+typedef void (*SubmitAudioSample)(int, int);
+// raw float data
+typedef void (*SubmitAudioFormat)(float*);
 
 extern "C" {
 	// Plusin
@@ -19,6 +21,8 @@ extern "C" {
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceDestroyPlayer(int id);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioSampleCallback(int id, SubmitAudioSample func);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioSampleCallback_Clean(int id);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioFormatCallback(int id, SubmitAudioSample func);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioFormatCallback_Clean(int id);
 
 	// Media
 	UNITY_INTERFACE_EXPORT double UNITY_INTERFACE_API interfaceMediaLength(int id);

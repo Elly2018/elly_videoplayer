@@ -5,7 +5,8 @@ namespace Elly
 {
     internal struct PlayerLowLevelInterface
     {
-        public delegate void SubmitAudioSample(float[] audioData, int channel, int sampleRate);
+        public delegate void SubmitAudioSample(float[] data);
+        public delegate void SubmitAudioFormat(int channel, int sampleRate);
 
         public struct Application
         {
@@ -16,6 +17,8 @@ namespace Elly
 
             [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfaceAudioSampleCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void SetSubmitAudioSampleCallback(int id, IntPtr aCallback);
+            [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfaceAudioFormatCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            public static extern void SetSubmitAudioFormatCallback(int id, IntPtr aCallback);
             [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfaceAudioSampleCallback_Clean", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void CleanAudioSampleCallback(int id);
         }
@@ -44,6 +47,14 @@ namespace Elly
             public static extern void Load(int id, string path);
             [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfaceLoadPathAsync", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void LoadAsync(int id, string path);
+            [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfaceUpdate", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            public static extern void Update(int id);
+            [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfaceFixedUpdate", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            public static extern void FixedUpdate(int id);
+            [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfaceLength", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            public static extern float GetMediaLength(int id);
+            [DllImport("unity_videoplayer-d.dll", EntryPoint = "interfacePosition", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            public static extern float GetMediaPosition(int id);
         }
     }
 

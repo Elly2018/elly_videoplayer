@@ -4,6 +4,7 @@
 
 #include <Unity/IUnityInterface.h>
 #include <unity/UnityInterface.h>
+#include <RenderAPI.h>
 
 struct Vector2 {
 	float x;
@@ -42,11 +43,13 @@ private:
 	std::string format;
 
 	std::list<SubmitAudioSample> audioCallback;
+	std::list<SubmitAudioFormat> audioFormatCallback;
 
 	bool first_frame_v = true;
 	bool first_frame_a = true;
 	bool paused = false;
 	bool looping = false;
+
 
 	bool video_playback = false;
 	int width = 0;
@@ -183,6 +186,8 @@ public:
 	void set_format(const char* _format);
 	char* get_format() const;
 
+	void RegisterAudioFormatCallback(SubmitAudioFormat func);
+	void CleanAudioFormatCallback();
 	void RegisterAudioCallback(SubmitAudioSample func);
 	void CleanAudioCallback();
 
