@@ -20,6 +20,7 @@ bool getVideoContext(int id, std::shared_ptr<FFmpegMediaPlayer>& playerCtx) {
 	LOG("[ViveMediaDecoder] Decoder does not exist.");
 	return false;
 }
+
 int interfaceCreatePlayer() 
 {
   int newID = 0;
@@ -51,7 +52,7 @@ void interfaceAudioSampleCallback_Clean(int id)
 	if (!getVideoContext(id, playerCtx)) { return; }
 	playerCtx->CleanAudioCallback();
 }
-void interfaceAudioFormatCallback(int id, SubmitAudioSample func)
+void interfaceAudioFormatCallback(int id, SubmitAudioFormat func)
 {
 	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
 	if (!getVideoContext(id, playerCtx)) { return; }

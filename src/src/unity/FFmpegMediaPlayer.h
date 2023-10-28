@@ -38,17 +38,21 @@ private:
 	//Ref<AudioStreamGeneratorPlayback> playback;
 
 	//Ref<ImageTexture> texture;
-	//Ref<Image> image;
+	void* texturehandle;
+	int outRowPitch;
 	std::string path;
 	std::string format;
 
+	RenderAPI* api;
 	std::list<SubmitAudioSample> audioCallback;
 	std::list<SubmitAudioFormat> audioFormatCallback;
+	GetGlobalTime globalTime;
 
 	bool first_frame_v = true;
 	bool first_frame_a = true;
 	bool paused = false;
 	bool looping = false;
+	int clock = -1;
 
 
 	bool video_playback = false;
@@ -159,12 +163,12 @@ public:
 	* This will trying to update the video part
 	* And handle some stage of player events
 	*/
-	void _process(float delta);
+	void _Update();
 	/*
 	* Godot fixed update method
 	* This will trying to update the audio part
 	*/
-	void _physics_process(float delta);
+	void _FixedUpdate();
 
 
 	/*
@@ -186,6 +190,8 @@ public:
 	void set_format(const char* _format);
 	char* get_format() const;
 
+	void RegisterGlobalTimeCallback(GetGlobalTime func);
+	void CleanAudioFormatCallback();
 	void RegisterAudioFormatCallback(SubmitAudioFormat func);
 	void CleanAudioFormatCallback();
 	void RegisterAudioCallback(SubmitAudioSample func);

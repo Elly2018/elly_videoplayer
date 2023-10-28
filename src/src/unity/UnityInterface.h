@@ -7,9 +7,15 @@
 #include <Logger.h>
 
 // channel, sample rate
-typedef void (*SubmitAudioSample)(int, int);
+typedef void (*SubmitAudioFormat)(int, int);
 // raw float data
-typedef void (*SubmitAudioFormat)(float*);
+typedef void (*SubmitAudioSample)(float*);
+// width, height
+typedef void (*SubmitVideoFormat)(int, int);
+// raw byte data
+typedef void (*SubmitVideoSample)(char*);
+
+typedef double (*GetGlobalTime)();
 
 extern "C" {
 	// Plusin
@@ -21,7 +27,7 @@ extern "C" {
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceDestroyPlayer(int id);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioSampleCallback(int id, SubmitAudioSample func);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioSampleCallback_Clean(int id);
-	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioFormatCallback(int id, SubmitAudioSample func);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioFormatCallback(int id, SubmitAudioFormat func);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioFormatCallback_Clean(int id);
 
 	// Media
