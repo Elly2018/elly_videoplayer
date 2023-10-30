@@ -84,7 +84,7 @@ private:
 	void state_change(State _state);
 
 public:
-	int id = 0;
+	int id = -1;
 	int state = UNINITIALIZED;
 
 	/*

@@ -10,11 +10,11 @@ namespace Elly
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void SubmitAudioFormat(int channel, int sampleRate);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void SubmitAudioSample(int length, IntPtr ptr);
+        public delegate void SubmitAudioSample(int length, [MarshalAs(UnmanagedType.LPArray)] IntPtr ptr);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void SubmitVideoFormat(int width, int height);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void SubmitVideoSample(int length, IntPtr ptr);
+        public delegate void SubmitVideoSample(int length, [MarshalAs(UnmanagedType.LPArray)] IntPtr ptr);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void StateChanged(int state);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -34,36 +34,36 @@ namespace Elly
             public static extern void DestroyPlayer(int id);
 
             [DllImport(DLLNAME, EntryPoint = "interfaceAudioSampleCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void SetSubmitAudioSampleCallback(int id, IntPtr aCallback);
+            public static extern void SetSubmitAudioSampleCallback(int id, [MarshalAs(UnmanagedType.FunctionPtr)] IntPtr aCallback);
             [DllImport(DLLNAME, EntryPoint = "interfaceAudioSampleCallback_Clean", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void CleanAudioSampleCallback(int id);
             [DllImport(DLLNAME, EntryPoint = "interfaceAudioFormatCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void SetSubmitAudioFormatCallback(int id, IntPtr aCallback);
+            public static extern void SetSubmitAudioFormatCallback(int id, [MarshalAs(UnmanagedType.FunctionPtr)] IntPtr aCallback);
             [DllImport(DLLNAME, EntryPoint = "interfaceAudioFormatCallback_Clean", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void CleanAudioFormatCallback(int id);
 
             [DllImport(DLLNAME, EntryPoint = "interfaceVideoSampleCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void SetSubmitVideoSampleCallback(int id, IntPtr aCallback);
+            public static extern void SetSubmitVideoSampleCallback(int id, [MarshalAs(UnmanagedType.FunctionPtr)] IntPtr aCallback);
             [DllImport(DLLNAME, EntryPoint = "interfaceVideoSampleCallback_Clean", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void CleanVideoSampleCallback(int id);
             [DllImport(DLLNAME, EntryPoint = "interfaceVideoFormatCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void SetSubmitVideoFormatCallback(int id, IntPtr aCallback);
+            public static extern void SetSubmitVideoFormatCallback(int id, [MarshalAs(UnmanagedType.FunctionPtr)] IntPtr aCallback);
             [DllImport(DLLNAME, EntryPoint = "interfaceVideoFormatCallback_Clean", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void CleanVideoFormatCallback(int id);
 
             [DllImport(DLLNAME, EntryPoint = "interfaceStateChangedCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void SetStateChangedCallback(int id, IntPtr aCallback);
+            public static extern void SetStateChangedCallback(int id, [MarshalAs(UnmanagedType.FunctionPtr)] IntPtr aCallback);
             [DllImport(DLLNAME, EntryPoint = "interfaceStateChangedCallback_Clean", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void CleanStateChangedCallback(int id);
 
             [DllImport(DLLNAME, EntryPoint = "interfaceGlobalTimeCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void SetGetGlobalTime(int id, IntPtr aCallback);
+            public static extern void SetGetGlobalTime(int id, [MarshalAs(UnmanagedType.FunctionPtr)] IntPtr aCallback);
             [DllImport(DLLNAME, EntryPoint = "interfaceAsyncLoadCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void SetSubmitAsyncLoad(int id, IntPtr aCallback);
+            public static extern void SetSubmitAsyncLoad(int id, [MarshalAs(UnmanagedType.FunctionPtr)] IntPtr aCallback);
             [DllImport(DLLNAME, EntryPoint = "interfaceAudioBufferCountCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void SetAudioBufferCount(int id, IntPtr aCallback);
+            public static extern void SetAudioBufferCount(int id, [MarshalAs(UnmanagedType.FunctionPtr)] IntPtr aCallback);
             [DllImport(DLLNAME, EntryPoint = "interfaceAudioControlCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void SetAudioControl(int id, IntPtr aCallback);
+            public static extern void SetAudioControl(int id, [MarshalAs(UnmanagedType.FunctionPtr)] IntPtr aCallback);
         }
 
         public struct Media
@@ -87,11 +87,11 @@ namespace Elly
             [DllImport(DLLNAME, EntryPoint = "interfaceSeek", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void Seek(int id, double time);
             [DllImport(DLLNAME, EntryPoint = "interfaceLoadPath", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void Load(int id, IntPtr path);
+            public static extern void Load(int id, [MarshalAs(UnmanagedType.LPStr)] IntPtr path);
             [DllImport(DLLNAME, EntryPoint = "interfaceLoad", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void Load(int id);
             [DllImport(DLLNAME, EntryPoint = "interfaceLoadPathAsync", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
-            public static extern void LoadAsync(int id, IntPtr path);
+            public static extern void LoadAsync(int id, [MarshalAs(UnmanagedType.LPStr)] IntPtr path);
             [DllImport(DLLNAME, EntryPoint = "interfaceLoadAsync", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void LoadAsync(int id);
             [DllImport(DLLNAME, EntryPoint = "interfaceUpdate", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]

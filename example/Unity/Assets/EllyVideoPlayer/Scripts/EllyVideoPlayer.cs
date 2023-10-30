@@ -124,7 +124,6 @@ namespace Elly
         public void LoadMediaAsync(string _path) => PlayerLowLevelInterface.Player.LoadAsync(id, Marshal.StringToHGlobalAnsi(_path));
         public void LoadMediaAsync() => PlayerLowLevelInterface.Player.LoadAsync(id);
 
-        [MonoPInvokeCallback(typeof(PlayerLowLevelInterface.SubmitAudioFormat))]
         void SubmitAudioFormatCallback(int channel, int sampleRate)
         {
             Debug.Log($"Audio format: {channel}, {sampleRate}");
@@ -136,7 +135,6 @@ namespace Elly
             audioSource.Play();
         }
 
-        [MonoPInvokeCallback(typeof(PlayerLowLevelInterface.SubmitAudioSample))]
         void SubmitAudioSampleCallback(int length, IntPtr ptr)
         {
             Debug.Log($"Audio data count: {length}");
@@ -146,7 +144,6 @@ namespace Elly
                 audioFrame.Enqueue(data[i]);
         }
 
-        [MonoPInvokeCallback(typeof(PlayerLowLevelInterface.SubmitVideoFormat))]
         void SubmitVideoFormatCallback(int width, int height)
         {
             Debug.Log($"Video format: {width}x{height}");
@@ -154,7 +151,6 @@ namespace Elly
             if (ApplyTexture != null) ApplyTexture.Invoke(renderTarget);
         }
 
-        [MonoPInvokeCallback(typeof(PlayerLowLevelInterface.SubmitVideoSample))]
         void SubmitVideoSampleCallback(int length, IntPtr ptr)
         {
             Debug.Log($"Video data count: {length}");
@@ -216,7 +212,7 @@ namespace Elly
                 }
                 count++;
             }
-            Debug.Log($"Current position: {position}");
+            //Debug.Log($"Current position: {position}");
         }
 
         void OnAudioSetPosition(int newPosition)

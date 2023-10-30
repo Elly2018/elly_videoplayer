@@ -124,7 +124,7 @@ void FFmpegMediaPlayer::play() {
 		paused = false;
 	}
 	else {
-		nativeStartDecoding(id);
+		//nativeStartDecoding(id);
 		audioControl(0);
 	}
 
@@ -381,7 +381,7 @@ void FFmpegMediaPlayer::_Update()
 				char* frameData = (char*)malloc(size);
 				memcpy(frameData, frame_data, size);
 				for (SubmitVideoSample& submitVideoSample : videoCallback) {
-					submitVideoSample(size, (char*)frame_data);
+					submitVideoSample(int(size), (char*)frame_data);
 				}
 				//api->BeginModifyTexture(texturehandle, width, height, &outRowPitch);
 				//api->EndModifyTexture(texturehandle, width, height, outRowPitch, frame_data);
@@ -444,7 +444,7 @@ void FFmpegMediaPlayer::_FixedUpdate()
 			memcpy(audio_data, raw_audio_data, audio_data_length);
 			float s = 0;
 			for (SubmitAudioSample& submitAudioSample : audioCallback) {
-				submitAudioSample(audio_data_length / sizeof(float), audio_data);
+				submitAudioSample(int(audio_size * channel), audio_data);
 			}
 			first_frame_a = false;
 			nativeFreeAudioData(id);
