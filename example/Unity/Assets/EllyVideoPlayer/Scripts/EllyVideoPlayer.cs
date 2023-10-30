@@ -41,88 +41,99 @@ namespace Elly
         Texture2D renderTarget;
         Queue<float> audioFrame;
 
-        public float GetMediaLength => PlayerLowLevelInterface.Player.GetMediaLength(id);
-        public float GetMediaPosition => PlayerLowLevelInterface.Player.GetMediaPosition(id);
-        public PlayerState GetMediaState => (PlayerState)PlayerLowLevelInterface.Player.GetPlayerState(id);
+        public float GetMediaLength => Native.Player.GetMediaLength(id);
+        public float GetMediaPosition => Native.Player.GetMediaPosition(id);
+        public PlayerState GetMediaState => (PlayerState)Native.Player.GetPlayerState(id);
         public string Path
         {
             set
             {
-                PlayerLowLevelInterface.Player.SetPath(id, value);
+                Native.Player.SetPath(id, value);
             }
             get
             {
-                return PlayerLowLevelInterface.Player.GetPath(id);
+                return Native.Player.GetPath(id);
             }
         }
         public string Format
         {
             set
             {
-                PlayerLowLevelInterface.Player.SetFormat(id, value);
+                Native.Player.SetFormat(id, value);
             }
             get
             {
-                return PlayerLowLevelInterface.Player.GetFormat(id);
+                return Native.Player.GetFormat(id);
             }
         }
-        
-        private void Start()
+
+        // Store in here prevent GC clean them... NullReferencePointer and crash fixed
+        Native.SubmitAudioSample subSample;
+        Native.SubmitAudioFormat subFormat;
+        Native.SubmitVideoSample subvSample;
+        Native.SubmitVideoFormat subvFormat;
+        Native.StateChanged subChanged;
+        Native.GetGlobalTime subgTime;
+        Native.SubmitAsyncLoad subasync;
+        Native.AudioBufferCount subabuffer;
+        Native.AudioControl aControl;
+
+        private void Awake()
         {
             audioFrame = new Queue<float>();
-            id = PlayerLowLevelInterface.Application.CreatePlayer();
+            id = Native.Application.CreatePlayer();
             Debug.Log($"Create video player: ${id}");
-            PlayerLowLevelInterface.SubmitAudioSample subSample = new PlayerLowLevelInterface.SubmitAudioSample(SubmitAudioSampleCallback);
-            PlayerLowLevelInterface.Application.SetSubmitAudioSampleCallback(id, Marshal.GetFunctionPointerForDelegate(subSample));
-            PlayerLowLevelInterface.SubmitAudioFormat subFormat = new PlayerLowLevelInterface.SubmitAudioFormat(SubmitAudioFormatCallback);
-            PlayerLowLevelInterface.Application.SetSubmitAudioFormatCallback(id, Marshal.GetFunctionPointerForDelegate(subFormat));
+            subSample = new Native.SubmitAudioSample(SubmitAudioSampleCallback);
+            Native.Application.SetSubmitAudioSampleCallback(id, Marshal.GetFunctionPointerForDelegate(subSample));
+            subFormat = new Native.SubmitAudioFormat(SubmitAudioFormatCallback);
+            Native.Application.SetSubmitAudioFormatCallback(id, Marshal.GetFunctionPointerForDelegate(subFormat));
 
-            //PlayerLowLevelInterface.SubmitVideoSample subvSample = new PlayerLowLevelInterface.SubmitVideoSample(SubmitVideoSampleCallback);
-            //PlayerLowLevelInterface.Application.SetSubmitVideoSampleCallback(id, Marshal.GetFunctionPointerForDelegate(subvSample));
-            PlayerLowLevelInterface.SubmitVideoFormat subvFormat = new PlayerLowLevelInterface.SubmitVideoFormat(SubmitVideoFormatCallback);
-            PlayerLowLevelInterface.Application.SetSubmitVideoFormatCallback(id, Marshal.GetFunctionPointerForDelegate(subvFormat));
+            subvSample = new Native.SubmitVideoSample(SubmitVideoSampleCallback);
+            Native.Application.SetSubmitVideoSampleCallback(id, Marshal.GetFunctionPointerForDelegate(subvSample));
+            subvFormat = new Native.SubmitVideoFormat(SubmitVideoFormatCallback);
+            Native.Application.SetSubmitVideoFormatCallback(id, Marshal.GetFunctionPointerForDelegate(subvFormat));
 
-            PlayerLowLevelInterface.StateChanged subChanged = new PlayerLowLevelInterface.StateChanged((s) =>
+            subChanged = new Native.StateChanged((s) =>
             {
                 Debug.Log($"State changed: {(PlayerState)s}");
                 if(StateChanged != null) StateChanged.Invoke(s);
             });
-            PlayerLowLevelInterface.Application.SetStateChangedCallback(id, Marshal.GetFunctionPointerForDelegate(subChanged));
+            Native.Application.SetStateChangedCallback(id, Marshal.GetFunctionPointerForDelegate(subChanged));
 
-            PlayerLowLevelInterface.GetGlobalTime subgTime = new PlayerLowLevelInterface.GetGlobalTime(() => Time.time);
-            PlayerLowLevelInterface.Application.SetGetGlobalTime(id, Marshal.GetFunctionPointerForDelegate(subgTime));
-            PlayerLowLevelInterface.SubmitAsyncLoad subasync = new PlayerLowLevelInterface.SubmitAsyncLoad(AsyncLoadCallback);
-            PlayerLowLevelInterface.Application.SetSubmitAsyncLoad(id, Marshal.GetFunctionPointerForDelegate(subasync));
-            PlayerLowLevelInterface.AudioBufferCount subabuffer = new PlayerLowLevelInterface.AudioBufferCount(() => audioFrame.Count / channels);
-            PlayerLowLevelInterface.Application.SetAudioBufferCount(id, Marshal.GetFunctionPointerForDelegate(subabuffer));
-            PlayerLowLevelInterface.AudioControl aControl = new PlayerLowLevelInterface.AudioControl(AudioControlCallback);
-            PlayerLowLevelInterface.Application.SetAudioControl(id, Marshal.GetFunctionPointerForDelegate(aControl));
+            subgTime = new Native.GetGlobalTime(() => Time.time);
+            Native.Application.SetGetGlobalTime(id, Marshal.GetFunctionPointerForDelegate(subgTime));
+            subasync = new Native.SubmitAsyncLoad(AsyncLoadCallback);
+            Native.Application.SetSubmitAsyncLoad(id, Marshal.GetFunctionPointerForDelegate(subasync));
+            subabuffer = new Native.AudioBufferCount(() => audioFrame.Count / channels);
+            Native.Application.SetAudioBufferCount(id, Marshal.GetFunctionPointerForDelegate(subabuffer));
+            aControl = new Native.AudioControl(AudioControlCallback);
+            Native.Application.SetAudioControl(id, Marshal.GetFunctionPointerForDelegate(aControl));
         }
 
         protected virtual void Update()
         {
-            PlayerLowLevelInterface.Player.Update(id);
+            Native.Player.Update(id);
         }
 
         protected virtual void FixedUpdate()
         {
-            PlayerLowLevelInterface.Player.FixedUpdate(id);
+            Native.Player.FixedUpdate(id);
         }
 
         private void OnDestroy()
         {
             Debug.Log($"Destroy video player: ${id}");
-            PlayerLowLevelInterface.Application.DestroyPlayer(id);
+            Native.Application.DestroyPlayer(id);
         }
 
-        public void Play() => PlayerLowLevelInterface.Player.Play(id);
-        public void Pause(bool pause) => PlayerLowLevelInterface.Player.Pause(id, pause);
-        public void Stop() => PlayerLowLevelInterface.Player.Stop(id);
-        public void Seek(double time) => PlayerLowLevelInterface.Player.Seek(id, time);
-        public void LoadMedia(string _path) => PlayerLowLevelInterface.Player.Load(id, Marshal.StringToHGlobalAnsi(_path));
-        public void LoadMedia() => PlayerLowLevelInterface.Player.Load(id);
-        public void LoadMediaAsync(string _path) => PlayerLowLevelInterface.Player.LoadAsync(id, Marshal.StringToHGlobalAnsi(_path));
-        public void LoadMediaAsync() => PlayerLowLevelInterface.Player.LoadAsync(id);
+        public void Play() => Native.Player.Play(id);
+        public void Pause(bool pause) => Native.Player.Pause(id, pause);
+        public void Stop() => Native.Player.Stop(id);
+        public void Seek(double time) => Native.Player.Seek(id, time);
+        public void LoadMedia(string _path) => Native.Player.Load(id, Marshal.StringToHGlobalAnsi(_path));
+        public void LoadMedia() => Native.Player.Load(id);
+        public void LoadMediaAsync(string _path) => Native.Player.LoadAsync(id, Marshal.StringToHGlobalAnsi(_path));
+        public void LoadMediaAsync() => Native.Player.LoadAsync(id);
 
         void SubmitAudioFormatCallback(int channel, int sampleRate)
         {
@@ -183,7 +194,10 @@ namespace Elly
 
         void AsyncLoadCallback(int state)
         {
-            Play();
+            if((PlayerState)state == PlayerState.INITIALIZED)
+            {
+                Play();
+            }
         }
 
         void OnAudioRead(float[] data) // fill the data and sumbit to clip

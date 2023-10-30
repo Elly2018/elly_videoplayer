@@ -6,13 +6,12 @@
 static IUnityInterfaces* s_UnityInterfaces = 0;
 static IUnityGraphics* s_Graphics = 0;
 
-std::list<std::shared_ptr<FFmpegMediaPlayer>> playerContexts;
-typedef std::list<std::shared_ptr<FFmpegMediaPlayer>>::iterator PlayerContextIter;
+std::vector<std::shared_ptr<FFmpegMediaPlayer>> playerContexts;
 
 bool getVideoContext(int id, std::shared_ptr<FFmpegMediaPlayer>& playerCtx) {
-	for (PlayerContextIter it = playerContexts.begin(); it != playerContexts.end(); it++) {
-		if ((*it)->id == id) {
-			playerCtx = *it;
+	for (int it = 0; it < playerContexts.size(); it++) {
+		if ((playerContexts.at(it))->id == id) {
+			playerCtx = playerContexts.at(it);
 			return true;
 		}
 	}
@@ -20,13 +19,25 @@ bool getVideoContext(int id, std::shared_ptr<FFmpegMediaPlayer>& playerCtx) {
 	LOG("[UnityInterface] Player does not exist.");
 	return false;
 }
+int getVideoContextIndex(std::shared_ptr<FFmpegMediaPlayer> playerCtx) 
+{
+	for (int it = 0; it < playerContexts.size(); it++) {
+		if ((playerContexts.at(it))->id == playerCtx->id) {
+			return it;
+		}
+	}
+	return -1;
+}
 
 int interfaceCreatePlayer() 
 {
-  int newID = 0;
-  std::shared_ptr<FFmpegMediaPlayer> playerCtx;
-  while (getVideoContext(newID, playerCtx)) { newID++; }
-	playerCtx = std::make_shared<FFmpegMediaPlayer>();
+	int newID = 0;
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	while (getVideoContext(newID, playerCtx)) { newID++; }
+	bool haveEmpty = getVideoContext(-1, playerCtx);
+	if (!haveEmpty) {
+		playerCtx = std::make_shared<FFmpegMediaPlayer>();
+	}
 	playerCtx->id = newID;
 	playerContexts.push_back(playerCtx);
 	LOG("[UnityInterface] Player create: ", newID);
@@ -52,8 +63,9 @@ void interfaceDestroyPlayer(int id)
 {
 	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
 	if (!getVideoContext(id, playerCtx)) { return; }
+	int index = getVideoContextIndex(playerCtx);
+	playerContexts.erase(playerContexts.begin() + index);
 	playerCtx.reset();
-	playerContexts.remove(playerCtx);
 	LOG("[UnityInterface] Player destroy: ", id);
 }
 void interfaceAudioSampleCallback(int id, SubmitAudioSample func)

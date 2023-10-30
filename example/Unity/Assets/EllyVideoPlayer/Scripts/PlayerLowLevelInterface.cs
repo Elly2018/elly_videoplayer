@@ -1,28 +1,30 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace Elly
 {
-    internal struct PlayerLowLevelInterface
+    [SuppressUnmanagedCodeSecurity]
+    internal static class Native
     {
         internal const string DLLNAME = "unity_videoplayer-d.dll";
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void SubmitAudioFormat(int channel, int sampleRate);
+        public delegate void SubmitAudioFormat([In] int channel, [In] int sampleRate);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void SubmitAudioSample(int length, [MarshalAs(UnmanagedType.LPArray)] IntPtr ptr);
+        public delegate void SubmitAudioSample([In] int length, [In] IntPtr ptr);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void SubmitVideoFormat(int width, int height);
+        public delegate void SubmitVideoFormat([In] int width, [In] int height);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void SubmitVideoSample(int length, [MarshalAs(UnmanagedType.LPArray)] IntPtr ptr);
+        public delegate void SubmitVideoSample([In] int length, [In] IntPtr ptr);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void StateChanged(int state);
+        public delegate void StateChanged([In] int state);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate double GetGlobalTime();
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void SubmitAsyncLoad(int state);
+        public delegate void SubmitAsyncLoad([In] int state);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void AudioControl(int state);
+        public delegate void AudioControl([In] int state);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate int AudioBufferCount();
 

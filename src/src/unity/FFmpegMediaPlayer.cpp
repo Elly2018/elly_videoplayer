@@ -15,11 +15,11 @@ void FFmpegMediaPlayer::_init_media() {
 		nativeGetVideoFormat(id, width, height, framerate, video_length);
 		nativeGetOtherStreamIndex(id, 0, li, count, current);
 		LOG("Video info:");
-		LOG("\tStream Count: ", count);
-		LOG("\tCurrent Index: ", current);
-		LOG("\tWidth: ", width);
-		LOG("\tHeight: ", height);
-		LOG("\tFramerate: ", framerate);
+		LOG("\tStream Count: %d", count);
+		LOG("\tCurrent Index: %d", current);
+		LOG("\tWidth: %d", width);
+		LOG("\tHeight: %d", height);
+		LOG("\tFramerate: %d", framerate);
 		for (SubmitVideoFormat& submitVideoFormat : videoFormatCallback) {
 			submitVideoFormat(width, height);
 		}
@@ -31,12 +31,12 @@ void FFmpegMediaPlayer::_init_media() {
 		nativeGetAudioFormat(id, channels, sampleRate, audio_length);
 		nativeGetOtherStreamIndex(id, 1, li, count, current);
 		LOG("Audio info:");
-		LOG("\tStream Count: ", count);
-		LOG("\tCurrent Index: ", current);
-		LOG("\tChannel: ", channels);
-		LOG("\tSamplerate: ", sampleRate);
-		LOG("\tFLength: ", audio_length);
-		LOG("Audio info. channel: ", channels, ", samplerate: ", sampleRate, ", audio_length: ", audio_length);
+		LOG("\tStream Count: %d", count);
+		LOG("\tCurrent Index: %d", current);
+		LOG("\tChannel: %d", channels);
+		LOG("\tSamplerate: %d", sampleRate);
+		LOG("\tFLength: %d", audio_length);
+		LOG("Audio info. channel: %d, samplerate: %d, audio_length: %d", channels, sampleRate, audio_length);
 		nativeSetAudioBufferTime(id, sampleRate * 2);
 		for (SubmitAudioFormat& submitAudioFormat : audioFormatCallback) {
 			submitAudioFormat(channels, sampleRate);
@@ -45,7 +45,7 @@ void FFmpegMediaPlayer::_init_media() {
 	}
 
 	clock = nativeGetClock(id);
-	LOG("Current clock: ", clock);
+	LOG("Current clock: %d", clock);
 	state_change(INITIALIZED);
 	LOG("start change to INITIALIZED");
 }
@@ -377,16 +377,13 @@ void FFmpegMediaPlayer::_Update()
 			bool frame_ready = false;
 			double frameTime = nativeGrabVideoFrame(id, &frame_data, frame_ready, width, height);
 			if (frame_ready) {
-				size_t size = width * height * 3;
-				char* frameData = (char*)malloc(size);
-				memcpy(frameData, frame_data, size);
+				LOG("Video frame: %d %d", width, height);
 				for (SubmitVideoSample& submitVideoSample : videoCallback) {
-					submitVideoSample(int(size), (char*)frame_data);
+					submitVideoSample(width * height * 3, (char*)frame_data);
 				}
 				//api->BeginModifyTexture(texturehandle, width, height, &outRowPitch);
 				//api->EndModifyTexture(texturehandle, width, height, outRowPitch, frame_data);
 				nativeReleaseVideoFrame(id);
-				free(frameData);
 			}
 
 			if (clock == -1) {
@@ -422,7 +419,7 @@ void FFmpegMediaPlayer::_Update()
 
 void FFmpegMediaPlayer::_FixedUpdate()
 {
-	bool state_check = (state == DECODING || state == BUFFERING) && audioBufferCount() < 1024;
+	bool state_check = (state == DECODING || state == BUFFERING) && audioBufferCount() < 2048;
 	if (state_check) {
 		// TODO: Implement audio.
 		unsigned char* raw_audio_data = nullptr;
@@ -439,12 +436,11 @@ void FFmpegMediaPlayer::_FixedUpdate()
 			nativeSetVideoTime(id, video_current_time);
 		}
 		if (ready) {
-			size_t audio_data_length = audio_size * channel * byte_per_sample;
-			float* audio_data = (float*)malloc(audio_data_length);
-			memcpy(audio_data, raw_audio_data, audio_data_length);
-			float s = 0;
+			LOG("Audio frame: %d %d", audio_size, channel);
+			float* audio_data = (float*)malloc(audio_size * byte_per_sample * channel);
+			memcpy(audio_data, raw_audio_data, audio_size * channel * byte_per_sample);
 			for (SubmitAudioSample& submitAudioSample : audioCallback) {
-				submitAudioSample(int(audio_size * channel), audio_data);
+				submitAudioSample(audio_size * channel, (float*)audio_data);
 			}
 			first_frame_a = false;
 			nativeFreeAudioData(id);
