@@ -14,8 +14,8 @@ struct Vector2 {
 class FFmpegMediaPlayer{
 private:
 	/**
-	 * The different stage for this video player,
-	 * each stage will change under behaviour of decoding processing
+	   The different stage for this video player,
+	   each stage will change under behaviour of decoding processing
 	*/
 	enum State {
 		/**
@@ -46,7 +46,10 @@ private:
 	RenderAPI* api;
 	std::list<SubmitAudioSample> audioCallback;
 	std::list<SubmitAudioFormat> audioFormatCallback;
+	std::list<SubmitVideoSample> videoCallback;
+	std::list<SubmitVideoFormat> videoFormatCallback;
 	GetGlobalTime globalTime;
+	AsyncLoad asyncLoad;
 
 	bool first_frame_v = true;
 	bool first_frame_a = true;
@@ -90,37 +93,37 @@ public:
 	int state = UNINITIALIZED;
 
 	/*
-	* Loading path from local variable
+	  Loading path from local variable
 	*/
 	void load();
 	/*
-	* Async loading path from local variable
-	* "async_loaded" signal will trigger when finish
+	  Async loading path from local variable
+	  "async_loaded" signal will trigger when finish
 	*/
 	void load_async();
 	/*
-	* Loading path from string
+	  Loading path from string
 	*/
 	bool load_path(const char* path);
 	/*
-	* Async loading path from string
-	* "async_loaded" signal will trigger when finish
+	  Async loading path from string
+	  "async_loaded" signal will trigger when finish
 	*/
 	void load_path_async(const char* path);
 
 
 	/*
-	* Stop the player, this will destroy decoder object in the low level
-	* And reset every variable
+	  Stop the player, this will destroy decoder object in the low level
+	  And reset every variable
 	*/
 	void stop();
 	/*
-	* This method should called after media is loaded
-	* Otherwise this will do nothing
+	  This method should called after media is loaded
+	  Otherwise this will do nothing
 	*/
 	void play();
 	/*
-	* Check current state is playing media
+	  Check current state is playing media
 	*/
 	bool is_playing() const;
 
@@ -181,21 +184,21 @@ public:
 	*/
 	//AudioStreamPlayer* get_player() const;
 
-	void set_sample_rate(const int rate);
-	int get_sample_rate() const;
-	void set_buffer_length(const double second);
-	double get_buffer_length() const;
 	void set_path(const char* _path);
 	char* get_path() const;
 	void set_format(const char* _format);
 	char* get_format() const;
 
 	void RegisterGlobalTimeCallback(GetGlobalTime func);
-	void CleanAudioFormatCallback();
+	void RegisterAsyncLoadCallback(AsyncLoad func);
 	void RegisterAudioFormatCallback(SubmitAudioFormat func);
 	void CleanAudioFormatCallback();
 	void RegisterAudioCallback(SubmitAudioSample func);
 	void CleanAudioCallback();
+	void RegisterVideoFormatCallback(SubmitVideoFormat func);
+	void CleanVideoFormatCallback();
+	void RegisterVideoCallback(SubmitVideoSample func);
+	void CleanVideoCallback();
 
 	FFmpegMediaPlayer();
 	~FFmpegMediaPlayer();

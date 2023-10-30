@@ -11,6 +11,12 @@ extern "C" {
 #include <libavutil/hwcontext.h>
 }
 
+#ifdef UNITY
+#define COLORPIX AV_PIX_FMT_YUV420P
+#else
+#define COLORPIX AV_PIX_FMT_RGB24
+#endif
+
 #ifdef DECODER_HW
 static AVBufferRef* hw_device_ctx = NULL;
 static enum AVPixelFormat hw_pix_fmt;
@@ -657,7 +663,7 @@ void DecoderFFmpeg::updateVideoFrame() {
 	int width = srcFrame->width;
 	int height = srcFrame->height;
 
-	const AVPixelFormat dstFormat = AV_PIX_FMT_RGB24;
+	const AVPixelFormat dstFormat = COLORPIX;
 	LOG_VERBOSE("Video format. w: ", width, ", h: ", height, ", f: ", dstFormat);
 	AVFrame* dstFrame = av_frame_alloc();
 	av_frame_copy_props(dstFrame, srcFrame);

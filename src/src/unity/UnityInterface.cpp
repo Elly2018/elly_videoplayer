@@ -65,6 +65,42 @@ void interfaceAudioFormatCallback_Clean(int id)
 	if (!getVideoContext(id, playerCtx)) { return; }
 	playerCtx->CleanAudioFormatCallback();
 }
+void interfaceVideoSampleCallback(int id, SubmitVideoSample func)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->RegisterVideoCallback(func);
+}
+void interfaceVideoSampleCallback_Clean(int id)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->CleanVideoCallback();
+}
+void interfaceVideoFormatCallback(int id, SubmitVideoFormat func)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->RegisterVideoFormatCallback(func);
+}
+void interfaceVideoFormatCallback_Clean(int id)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->CleanVideoFormatCallback();
+}
+void interfaceGlobalTimeCallback(int id, GetGlobalTime func)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->RegisterGlobalTimeCallback(func);
+}
+void interfaceAsyncLoadCallback(int id, AsyncLoad func)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->RegisterAsyncLoadCallback(func);
+}
 void interfacePlay(int id)
 {
 	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
@@ -89,6 +125,18 @@ void interfaceSeek(int id, double time)
 	if (!getVideoContext(id, playerCtx)) { return; }
 	playerCtx->seek(time);
 }
+void interfaceLoad(int id)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->load();
+}
+void interfaceLoadAsync(int id)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->load_async();
+}
 double interfaceGetCurrentTime(int id)
 {
 	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
@@ -112,4 +160,32 @@ void interfaceLoadPathAsync(int id, const char* path)
 	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
 	if (!getVideoContext(id, playerCtx)) { return; }
 	playerCtx->load_path_async(path);
+}
+
+void interfaceSetPath(int id, const char* path)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->set_path(path);
+}
+
+const char* interfaceGetPath(int id)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return nullptr; }
+	return playerCtx->get_path();
+}
+
+void interfaceSetFormat(int id, const char* format)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->set_format(format);
+}
+
+const char* interfaceGetFormat(int id)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return nullptr; }
+	return playerCtx->get_format();
 }

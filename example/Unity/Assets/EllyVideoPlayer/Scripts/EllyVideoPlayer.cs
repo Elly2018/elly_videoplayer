@@ -26,6 +26,28 @@ namespace Elly
         public float GetMediaLength => PlayerLowLevelInterface.Player.GetMediaLength(id);
         public float GetMediaPosition => PlayerLowLevelInterface.Player.GetMediaPosition(id);
         public PlayerState GetMediaState => (PlayerState)PlayerLowLevelInterface.Player.GetPlayerState(id);
+        public string Path
+        {
+            set
+            {
+                PlayerLowLevelInterface.Player.SetPath(id, value);
+            }
+            get
+            {
+                return PlayerLowLevelInterface.Player.GetPath(id);
+            }
+        }
+        public string Format
+        {
+            set
+            {
+                PlayerLowLevelInterface.Player.SetFormat(id, value);
+            }
+            get
+            {
+                return PlayerLowLevelInterface.Player.GetFormat(id);
+            }
+        }
 
         private void Awake()
         {
@@ -34,6 +56,16 @@ namespace Elly
             PlayerLowLevelInterface.Application.SetSubmitAudioSampleCallback(id, Marshal.GetFunctionPointerForDelegate(subSample));
             PlayerLowLevelInterface.SubmitAudioFormat subFormat = new PlayerLowLevelInterface.SubmitAudioFormat(SubmitAudioFormatCallback);
             PlayerLowLevelInterface.Application.SetSubmitAudioFormatCallback(id, Marshal.GetFunctionPointerForDelegate(subFormat));
+
+            PlayerLowLevelInterface.SubmitVideoSample subvSample = new PlayerLowLevelInterface.SubmitVideoSample(SubmitVideoSampleCallback);
+            PlayerLowLevelInterface.Application.SetSubmitVideoSampleCallback(id, Marshal.GetFunctionPointerForDelegate(subvSample));
+            PlayerLowLevelInterface.SubmitVideoFormat subvFormat = new PlayerLowLevelInterface.SubmitVideoFormat(SubmitVideoFormatCallback);
+            PlayerLowLevelInterface.Application.SetSubmitVideoFormatCallback(id, Marshal.GetFunctionPointerForDelegate(subvFormat));
+
+            PlayerLowLevelInterface.GetGlobalTime subgTime = new PlayerLowLevelInterface.GetGlobalTime(() => Time.time);
+            PlayerLowLevelInterface.Application.SetGetGlobalTime(id, Marshal.GetFunctionPointerForDelegate(subgTime));
+            PlayerLowLevelInterface.SubmitAsyncLoad subasync = new PlayerLowLevelInterface.SubmitAsyncLoad(AsyncLoadCallback);
+            PlayerLowLevelInterface.Application.SetSubmitAsyncLoad(id, Marshal.GetFunctionPointerForDelegate(subasync));
         }
 
         protected virtual void Update()
@@ -56,7 +88,9 @@ namespace Elly
         public void Stop() => PlayerLowLevelInterface.Player.Stop(id);
         public void Seek(double time) => PlayerLowLevelInterface.Player.Seek(id, time);
         public void LoadMedia(string path) => PlayerLowLevelInterface.Player.Load(id, path);
+        public void LoadMedia() => PlayerLowLevelInterface.Player.Load(id);
         public void LoadMediaAsync(string path) => PlayerLowLevelInterface.Player.LoadAsync(id, path);
+        public void LoadMediaAsync() => PlayerLowLevelInterface.Player.LoadAsync(id);
 
         void SubmitAudioFormatCallback(int channel, int sampleRate)
         {
@@ -74,6 +108,22 @@ namespace Elly
                 audioFrame.Enqueue(data[i]);
         }
 
+        void SubmitVideoFormatCallback(int width, int height)
+        {
+            renderTarget = new Texture2D(width, height, TextureFormat.YUY2, false, false);
+        }
+
+        void SubmitVideoSampleCallback(byte[] bytes)
+        {
+            renderTarget.LoadRawTextureData(bytes);
+            renderTarget.Apply();
+        }
+
+        void AsyncLoadCallback(int state)
+        {
+
+        }
+
         void OnAudioRead(float[] data) // fill the data and sumbit to clip
         {
             int count = 0;
@@ -88,12 +138,6 @@ namespace Elly
         void OnAudioSetPosition(int newPosition)
         {
             position = newPosition;
-        }
-
-        void SubmitVideoSampleCallback(int width, int height, byte[] data)
-        {
-            renderTarget = new Texture2D(width, height, TextureFormat.YUY2, false, false);
-            renderTarget.LoadRawTextureData(data);
         }
     }
 }

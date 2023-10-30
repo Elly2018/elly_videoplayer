@@ -34,7 +34,7 @@ void FFmpegMediaPlayer::_init_media() {
 		LOG("\tSamplerate: ", sampleRate);
 		LOG("\tFLength: ", audio_length);
 		LOG("Audio info. channel: ", channels, ", samplerate: ", sampleRate, ", audio_length: ", audio_length);
-		nativeSetAudioBufferTime(id, get_buffer_length());
+		nativeSetAudioBufferTime(id, sampleRate * 2);
 		for (SubmitAudioFormat& submitAudioFormat : audioFormatCallback) {
 			submitAudioFormat(channels, sampleRate);
 		}
@@ -44,6 +44,185 @@ void FFmpegMediaPlayer::_init_media() {
 	LOG("Current clock: ", clock);
 	state = INITIALIZED;
 	LOG("start change to INITIALIZED");
+}
+
+
+void FFmpegMediaPlayer::load()
+{
+	load_path(path.c_str());
+}
+
+void FFmpegMediaPlayer::load_async()
+{
+	load_path_async(path.c_str());
+}
+
+bool FFmpegMediaPlayer::load_path(const char* p) {
+	path = p;
+	LOG("start load path: ", path);
+	if (player == nullptr) {
+		LOG_ERROR("You must register the player instance first");
+		return false;
+	}
+
+	int d_state = nativeGetDecoderState(id);
+	if (d_state > 1) {
+		stop();
+		//LOG_ERROR("Decoder state: ") + String(std::to_string(d_state).c_str()));
+		//return false;
+	}
+
+	nativeCreateDecoder(path.c_str(), id);
+
+	bool is_loaded = nativeGetDecoderState(id) == 1;
+	if (is_loaded) {
+		_init_media();
+	}
+	else {
+		LOG("nativeGetDecoderState is false");
+		LOG("State change to UNINITIALIZED");
+		state = UNINITIALIZED;
+	}
+
+	return is_loaded;
+}
+
+void FFmpegMediaPlayer::load_path_async(const char* p) {
+	path = p;
+	LOG("start load path: ", path);
+	int d_state = nativeGetDecoderState(id);
+	if (d_state > 1) {
+		LOG_ERROR("Decoder state: ", d_state);
+		return;
+	}
+
+	LOG("State change to LOADING");
+	state = LOADING;
+
+	nativeCreateDecoderAsync(path.c_str(), id);
+}
+
+void FFmpegMediaPlayer::play() {
+	if (state != INITIALIZED) {
+		LOG("play func failed, because state is not INITIALIZED");
+		return;
+	}
+
+	if (paused) {
+		paused = false;
+	}
+	else {
+		nativeStartDecoding(id);
+		player->play();
+	}
+
+	global_start_time = globalTime();
+
+	LOG("start change to Decoding");
+	state = DECODING;
+	audio_init();
+}
+
+void FFmpegMediaPlayer::stop() {
+	if (state < State::DECODING) {
+		LOG("Stop failed, decoder state currently is: ", state);
+		return;
+	}
+
+	nativeDestroyDecoder(id);
+
+	video_current_time = 0.0f;
+	audio_current_time = 0.0f;
+	paused = false;
+	player->stop();
+	audioFrame.clear();
+
+	PackedByteArray empty = PackedByteArray();
+	empty.append(0); empty.append(0); empty.append(0);
+	image->call_deferred("set_data", 1, 1, false, Image::FORMAT_RGB8, empty);
+	texture->set_deferred("image", image);
+	emit_signal("video_update", texture, Vector2i(1, 1));
+
+
+	LOG("start change to INITIALIZED");
+	state = INITIALIZED;
+}
+
+bool FFmpegMediaPlayer::is_playing() const {
+	return !paused && state == DECODING;
+}
+
+void FFmpegMediaPlayer::set_paused(bool p_paused) {
+	paused = p_paused;
+
+	if (paused) {
+		hang_time = GetGlobalTime() - global_start_time;
+	}
+	else {
+		global_start_time = GetGlobalTime() - hang_time;
+	}
+	player->set_stream_paused(p_paused);
+}
+
+bool FFmpegMediaPlayer::is_paused() const {
+	return paused;
+}
+
+float FFmpegMediaPlayer::get_length() const {
+	return video_playback && video_length > audio_length ? video_length : audio_length;
+}
+
+void FFmpegMediaPlayer::set_loop(bool p_enable) {
+	looping = p_enable;
+}
+
+bool FFmpegMediaPlayer::has_loop() const {
+	return looping;
+}
+
+float FFmpegMediaPlayer::get_playback_position() const {
+	return video_playback && video_current_time > audio_current_time ? video_current_time : audio_current_time;
+}
+
+void FFmpegMediaPlayer::seek(float p_time) {
+	if (state != DECODING && state != END_OF_FILE) {
+		return;
+	}
+
+	if (p_time < 0.0f) {
+		p_time = 0.0f;
+	}
+	else if ((video_playback && p_time > video_length) || (audio_playback && p_time > audio_length)) {
+		p_time = video_length;
+	}
+
+	nativeSetSeekTime(id, p_time);
+	nativeSetVideoTime(id, p_time);
+
+	hang_time = p_time;
+
+	audioFrame.clear();
+
+	state = SEEK;
+}
+
+
+void FFmpegMediaPlayer::set_path(const char* _path)
+{
+}
+
+char* FFmpegMediaPlayer::get_path() const
+{
+	return nullptr;
+}
+
+void FFmpegMediaPlayer::set_format(const char* _format)
+{
+}
+
+char* FFmpegMediaPlayer::get_format() const
+{
+	return nullptr;
 }
 
 void FFmpegMediaPlayer::RegisterGlobalTimeCallback(GetGlobalTime func)
@@ -61,6 +240,11 @@ void FFmpegMediaPlayer::CleanAudioFormatCallback()
 	audioFormatCallback.clear();
 }
 
+void FFmpegMediaPlayer::RegisterAsyncLoadCallback(AsyncLoad func)
+{
+	asyncLoad = func;
+}
+
 void FFmpegMediaPlayer::RegisterAudioCallback(SubmitAudioSample func)
 {
 	audioCallback.push_back(func);
@@ -69,6 +253,26 @@ void FFmpegMediaPlayer::RegisterAudioCallback(SubmitAudioSample func)
 void FFmpegMediaPlayer::CleanAudioCallback()
 {
 	audioCallback.clear();
+}
+
+void FFmpegMediaPlayer::RegisterVideoFormatCallback(SubmitVideoFormat func)
+{
+	videoFormatCallback.push_back(func);
+}
+
+void FFmpegMediaPlayer::CleanVideoFormatCallback()
+{
+	videoFormatCallback.clear();
+}
+
+void FFmpegMediaPlayer::RegisterVideoCallback(SubmitVideoSample func)
+{
+	videoCallback.push_back(func);
+}
+
+void FFmpegMediaPlayer::CleanVideoCallback()
+{
+	videoCallback.clear();
 }
 
 FFmpegMediaPlayer::FFmpegMediaPlayer()
@@ -164,6 +368,7 @@ void FFmpegMediaPlayer::_Update()
 void FFmpegMediaPlayer::_FixedUpdate()
 {
 	int c = 0;
+	/*
 	if (playback != nullptr && playback.is_valid() && audio_playback) {
 		c = playback->get_frames_available();
 	}
@@ -180,6 +385,7 @@ void FFmpegMediaPlayer::_FixedUpdate()
 		/*
 		* AV_SAMPLE_FMT_FLT will usually give us byte_per_sample = 4
 		*/
+		/*
 		bool ready = false;
 		double frameTime = nativeGetAudioData(id, ready, &raw_audio_data, audio_size, channel, byte_per_sample);
 		if (clock == 1) {
@@ -239,4 +445,5 @@ void FFmpegMediaPlayer::_FixedUpdate()
 			c -= 1;
 		}
 	}
+	*/
 }
