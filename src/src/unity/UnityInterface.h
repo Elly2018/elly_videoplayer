@@ -7,17 +7,21 @@
 #include <Logger.h>
 
 // channel, sample rate
-typedef void (*SubmitAudioFormat)(int, int);
+typedef void (UNITY_INTERFACE_API *SubmitAudioFormat)(int, int);
 // raw float data
-typedef void (*SubmitAudioSample)(float*);
+typedef void (UNITY_INTERFACE_API *SubmitAudioSample)(int, float*);
 // width, height
-typedef void (*SubmitVideoFormat)(int, int);
+typedef void (UNITY_INTERFACE_API *SubmitVideoFormat)(int, int);
 // raw byte data
-typedef void (*SubmitVideoSample)(char*);
+typedef void (UNITY_INTERFACE_API *SubmitVideoSample)(int, char*);
 // Get app time in second
-typedef double (*GetGlobalTime)();
+typedef double (UNITY_INTERFACE_API *GetGlobalTime)();
 // The callback for async load
-typedef void (*AsyncLoad)(int);
+typedef void (UNITY_INTERFACE_API *AsyncLoad)(int);
+// Control audio source
+typedef void (UNITY_INTERFACE_API *AudioControl)(int);
+typedef int (UNITY_INTERFACE_API *AudioBufferCount)();
+typedef void (UNITY_INTERFACE_API *StateChanged)(int);
 
 extern "C" {
 	//
@@ -42,8 +46,12 @@ extern "C" {
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceVideoSampleCallback_Clean(int id);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceVideoFormatCallback(int id, SubmitVideoFormat func);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceVideoFormatCallback_Clean(int id);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceStateChangedCallback(int id, StateChanged func);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceStateChangedCallback_Clean(int id);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceGlobalTimeCallback(int id, GetGlobalTime func);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAsyncLoadCallback(int id, AsyncLoad func);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioBufferCountCallback(int id, AudioBufferCount func);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceAudioControlCallback(int id, AudioControl func);
 	//
 	//
 	// Media
@@ -56,9 +64,11 @@ extern "C" {
 	// Player
 	//
 	//
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceUpdate(int id);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceFixedUpdate(int id);
 	UNITY_INTERFACE_EXPORT int UNITY_INTERFACE_API interfaceGetPlayerState(int id);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfacePlay(int id);
-	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfacePause(int id);
+	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfacePause(int id, bool pause);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceStop(int id);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceSeek(int id, double time);
 	UNITY_INTERFACE_EXPORT void UNITY_INTERFACE_API interfaceLoad(int id);

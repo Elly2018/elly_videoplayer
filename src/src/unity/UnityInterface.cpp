@@ -17,7 +17,7 @@ bool getVideoContext(int id, std::shared_ptr<FFmpegMediaPlayer>& playerCtx) {
 		}
 	}
 
-	LOG("[ViveMediaDecoder] Decoder does not exist.");
+	LOG("[UnityInterface] Player does not exist.");
 	return false;
 }
 
@@ -26,8 +26,23 @@ int interfaceCreatePlayer()
   int newID = 0;
   std::shared_ptr<FFmpegMediaPlayer> playerCtx;
   while (getVideoContext(newID, playerCtx)) { newID++; }
-
+	playerCtx = std::make_shared<FFmpegMediaPlayer>();
+	playerCtx->id = newID;
+	playerContexts.push_back(playerCtx);
+	LOG("[UnityInterface] Player create: ", newID);
 	return newID;
+}
+void interfaceUpdate(int id)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->_Update();
+}
+void interfaceFixedUpdate(int id)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->_FixedUpdate();
 }
 int interfaceGetPlayerState(int id)
 {
@@ -39,6 +54,7 @@ void interfaceDestroyPlayer(int id)
 	if (!getVideoContext(id, playerCtx)) { return; }
 	playerCtx.reset();
 	playerContexts.remove(playerCtx);
+	LOG("[UnityInterface] Player destroy: ", id);
 }
 void interfaceAudioSampleCallback(int id, SubmitAudioSample func)
 {
@@ -89,6 +105,18 @@ void interfaceVideoFormatCallback_Clean(int id)
 	if (!getVideoContext(id, playerCtx)) { return; }
 	playerCtx->CleanVideoFormatCallback();
 }
+void interfaceStateChangedCallback(int id, StateChanged func)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->RegisterStateChangedCallback(func);
+}
+void interfaceStateChangedCallback_Clean(int id)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->CleanStateChangedCallback();
+}
 void interfaceGlobalTimeCallback(int id, GetGlobalTime func)
 {
 	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
@@ -101,17 +129,29 @@ void interfaceAsyncLoadCallback(int id, AsyncLoad func)
 	if (!getVideoContext(id, playerCtx)) { return; }
 	playerCtx->RegisterAsyncLoadCallback(func);
 }
+void interfaceAudioBufferCountCallback(int id, AudioBufferCount func)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->RegisterAudioBufferCountCallback(func);
+}
+void interfaceAudioControlCallback(int id, AudioControl func)
+{
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return; }
+	playerCtx->RegisterAudioControlCallback(func);
+}
 void interfacePlay(int id)
 {
 	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
 	if (!getVideoContext(id, playerCtx)) { return; }
-	playerCtx->set_paused(false);
+	playerCtx->play();
 }
-void interfacePause(int id)
+void interfacePause(int id, bool pause)
 {
 	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
 	if (!getVideoContext(id, playerCtx)) { return; }
-	playerCtx->set_paused(true);
+	playerCtx->set_paused(pause);
 }
 void interfaceStop(int id)
 {

@@ -12,7 +12,8 @@ extern "C" {
 }
 
 #ifdef UNITY
-#define COLORPIX AV_PIX_FMT_YUV420P
+//#define COLORPIX AV_PIX_FMT_YUV420P
+#define COLORPIX AV_PIX_FMT_RGB24
 #else
 #define COLORPIX AV_PIX_FMT_RGB24
 #endif

@@ -44,12 +44,15 @@ private:
 	std::string format;
 
 	RenderAPI* api;
+	std::list<StateChanged> stateChangedCallback;
 	std::list<SubmitAudioSample> audioCallback;
 	std::list<SubmitAudioFormat> audioFormatCallback;
 	std::list<SubmitVideoSample> videoCallback;
 	std::list<SubmitVideoFormat> videoFormatCallback;
 	GetGlobalTime globalTime;
 	AsyncLoad asyncLoad;
+	AudioControl audioControl;
+	AudioBufferCount audioBufferCount;
 
 	bool first_frame_v = true;
 	bool first_frame_a = true;
@@ -78,15 +81,7 @@ private:
 	double hang_time = 0.0f;
 
 	void _init_media();
-	/*
-	* User should call this method in _ready func in the gdscript
-	* To fill the buffer of audio stream (audio stream generator)
-	*/
-	void audio_init();
-
-protected:
-	void _notification(int p_what);
-	static void _bind_methods();
+	void state_change(State _state);
 
 public:
 	int id = 0;
@@ -185,12 +180,16 @@ public:
 	//AudioStreamPlayer* get_player() const;
 
 	void set_path(const char* _path);
-	char* get_path() const;
+	const char* get_path();
 	void set_format(const char* _format);
-	char* get_format() const;
+	const char* get_format();
 
 	void RegisterGlobalTimeCallback(GetGlobalTime func);
 	void RegisterAsyncLoadCallback(AsyncLoad func);
+	void RegisterAudioControlCallback(AudioControl func);
+	void RegisterAudioBufferCountCallback(AudioBufferCount func);
+	void RegisterStateChangedCallback(StateChanged func);
+	void CleanStateChangedCallback();
 	void RegisterAudioFormatCallback(SubmitAudioFormat func);
 	void CleanAudioFormatCallback();
 	void RegisterAudioCallback(SubmitAudioSample func);
