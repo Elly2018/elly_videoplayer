@@ -21,6 +21,9 @@ namespace Elly
     // https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4
     // Bitbop ball for sync test
     // http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8
+	//
+	// Sync Test
+	// https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8
     //
     [AddComponentMenu("Elly/Video Player")]
     public class EllyVideoPlayer : MonoBehaviour
