@@ -80,6 +80,7 @@ namespace Elly
 
         private void Awake()
         {
+            audioSource.loop = true;
             audioFrame = new Queue<float>();
             id = Native.Application.CreatePlayer();
             Debug.Log($"Create video player: ${id}");
@@ -141,7 +142,7 @@ namespace Elly
             samplerate = sampleRate;
             channels = channel;
             audioSource.Stop();
-            clip = AudioClip.Create("AudioSample", samplerate * 2, channel, samplerate, true, OnAudioRead, OnAudioSetPosition);
+            clip = AudioClip.Create("AudioSample", samplerate / 10, channel, samplerate, true, OnAudioRead, OnAudioSetPosition);
             audioSource.clip = clip;
             audioSource.Play();
         }
@@ -165,15 +166,14 @@ namespace Elly
         void SubmitVideoSampleCallback(int length, IntPtr ptr)
         {
             Debug.Log($"Video data count: {length}");
-            byte[] bytes = new byte[length];
-            Marshal.Copy(ptr, bytes, 0, length);
-            renderTarget.LoadRawTextureData(bytes);
+            renderTarget.LoadRawTextureData(ptr, length);
             renderTarget.Apply();
             if (ApplyTexture != null) ApplyTexture.Invoke(renderTarget);
         }
 
         void AudioControlCallback(int control) // 0: play, 1: pause, 2: stop, 3: clean buffer
         {
+            Debug.Log($"Audio control: {control}");
             switch (control)
             {
                 case 0:
@@ -204,7 +204,8 @@ namespace Elly
         {
             int count = 0;
             int channelCount = 0;
-            while (count < data.Length && audioFrame.Count > 0)
+            Debug.Log($"Fill {data.Length}");
+            while (count < data.Length && audioFrame.Count > 0 && GetMediaState == PlayerState.DECODING)
             {
                 data[count] = audioFrame.Dequeue();
                 channelCount++;

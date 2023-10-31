@@ -124,7 +124,7 @@ void FFmpegMediaPlayer::play() {
 		paused = false;
 	}
 	else {
-		//nativeStartDecoding(id);
+		nativeStartDecoding(id);
 		audioControl(0);
 	}
 
@@ -377,6 +377,7 @@ void FFmpegMediaPlayer::_Update()
 			bool frame_ready = false;
 			double frameTime = nativeGrabVideoFrame(id, &frame_data, frame_ready, width, height);
 			if (frame_ready) {
+				first_frame_v = false;
 				LOG("Video frame: %d %d", width, height);
 				for (SubmitVideoSample& submitVideoSample : videoCallback) {
 					submitVideoSample(width * height * 3, (char*)frame_data);
@@ -402,7 +403,7 @@ void FFmpegMediaPlayer::_Update()
 			}
 		}
 
-		if (nativeIsVideoBufferEmpty(id) && !nativeIsEOF(id) && first_frame_a && first_frame_v) {
+		if (nativeIsVideoBufferEmpty(id) && !nativeIsEOF(id) && !first_frame_a && !first_frame_v) {
 			hang_time = globalTime() - global_start_time;
 			state_change(BUFFERING);
 		}
@@ -419,7 +420,7 @@ void FFmpegMediaPlayer::_Update()
 
 void FFmpegMediaPlayer::_FixedUpdate()
 {
-	bool state_check = (state == DECODING || state == BUFFERING) && audioBufferCount() < 2048;
+	bool state_check = (state == DECODING || state == BUFFERING) && audioBufferCount() < (1024 * channels);
 	if (state_check) {
 		// TODO: Implement audio.
 		unsigned char* raw_audio_data = nullptr;
@@ -437,14 +438,11 @@ void FFmpegMediaPlayer::_FixedUpdate()
 		}
 		if (ready) {
 			LOG("Audio frame: %d %d", audio_size, channel);
-			float* audio_data = (float*)malloc(audio_size * byte_per_sample * channel);
-			memcpy(audio_data, raw_audio_data, audio_size * channel * byte_per_sample);
 			for (SubmitAudioSample& submitAudioSample : audioCallback) {
-				submitAudioSample(audio_size * channel, (float*)audio_data);
+				submitAudioSample(audio_size * channel, (float*)raw_audio_data);
 			}
 			first_frame_a = false;
 			nativeFreeAudioData(id);
-			free(audio_data);
 		}
 	}
 }
