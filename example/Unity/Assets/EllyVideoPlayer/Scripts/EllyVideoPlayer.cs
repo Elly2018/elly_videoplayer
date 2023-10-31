@@ -234,5 +234,11 @@ namespace Elly
         {
             position = newPosition;
         }
+
+        public void MyPlay(string path)
+        {
+            LoadMedia(path);
+            Play();
+        }
     }
 }
