@@ -11,7 +11,6 @@ void FFmpegMediaPlayer::_init_media() {
 	LOG("start init media");
 	video_playback = nativeIsVideoEnabled(id);
 	if (video_playback) {
-		first_frame_v = true;
 		nativeGetVideoFormat(id, width, height, framerate, video_length);
 		nativeGetOtherStreamIndex(id, 0, li, count, current);
 		LOG("Video info:");
@@ -24,10 +23,10 @@ void FFmpegMediaPlayer::_init_media() {
 			submitVideoFormat(width, height);
 		}
 	}
+	first_frame_v = video_playback;
 
 	audio_playback = nativeIsAudioEnabled(id);
 	if (audio_playback) {
-		first_frame_a = true;
 		nativeGetAudioFormat(id, channels, sampleRate, audio_length);
 		nativeGetOtherStreamIndex(id, 1, li, count, current);
 		LOG("Audio info:");
@@ -43,6 +42,7 @@ void FFmpegMediaPlayer::_init_media() {
 		}
 		audioControl(0);
 	}
+	first_frame_a = audio_playback;
 
 	clock = nativeGetClock(id);
 	LOG("Current clock: %d", clock);

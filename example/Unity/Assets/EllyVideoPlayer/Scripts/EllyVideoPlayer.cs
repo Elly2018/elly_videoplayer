@@ -39,6 +39,7 @@ namespace Elly
         int id;
         AudioClip clip;
         int position = 0;
+        int lastposition = 0;
         int samplerate = 44100;
         int channels = 2;
         Texture2D renderTarget;
@@ -145,7 +146,7 @@ namespace Elly
             samplerate = sampleRate;
             channels = channel;
             audioSource.Stop();
-            clip = AudioClip.Create("AudioSample", samplerate / 10, channel, samplerate, true, OnAudioRead, OnAudioSetPosition);
+            clip = AudioClip.Create("AudioSample", samplerate * 2, channel, samplerate, true, OnAudioRead, OnAudioSetPosition);
             audioSource.clip = clip;
             audioSource.Play();
         }
@@ -205,36 +206,45 @@ namespace Elly
 
         void OnAudioRead(float[] data) // fill the data and sumbit to clip
         {
-            int count = 0;
-            int channelCount = 0;
-            Debug.Log($"Fill {data.Length}");
-            while (count < data.Length && audioFrame.Count > 0 && GetMediaState == PlayerState.DECODING)
+            int left = position - lastposition;
+            int space_left = 0;
+            if (left < 0)
             {
-                data[count] = audioFrame.Dequeue();
-                channelCount++;
-                if (channelCount == channels)
-                {
-                    position++;
-                    channelCount = 0;
-                }
-                count++;
+                space_left = data.Length + left - 1;
             }
-            while (count < data.Length)
+            else if (left == 0)
             {
-                data[count] = 0.0f;
-                channelCount++;
-                if (channelCount == channels)
-                {
-                    position++;
-                    channelCount = 0;
-                }
-                count++;
+                space_left = data.Length - 1;
             }
-            //Debug.Log($"Current position: {position}");
+            int data_left = data.Length - space_left - 1;
+            Debug.Log($"OnAudioRead: {data_left}");
+            int count = data_left;
+            if (count == 0) return;
+            int writepos = 0;
+            while (count > 0 && audioFrame.Count > 0 && GetMediaState == PlayerState.DECODING)
+            {
+                for (int i = 0; i < data_left; i++)
+                {
+                    if (audioFrame.Count == 0) break;
+                    data[lastposition + i] = audioFrame.Dequeue();
+                    writepos++;
+                    count--;
+                }
+            }
+            while (count > 0)
+            {
+                for(int i = 0; i < data_left - writepos; i++)
+                {
+                    data[lastposition + writepos + i] = 0.0f;
+                    count--;
+                }
+            }
+            lastposition = position;
         }
 
         void OnAudioSetPosition(int newPosition)
         {
+            Debug.Log($"OnAudioSetPosition: {newPosition}");
             position = newPosition;
         }
 
