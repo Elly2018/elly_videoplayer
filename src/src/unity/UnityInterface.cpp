@@ -57,7 +57,9 @@ void interfaceFixedUpdate(int id)
 }
 int interfaceGetPlayerState(int id)
 {
-	return -1;
+	std::shared_ptr<FFmpegMediaPlayer> playerCtx;
+	if (!getVideoContext(id, playerCtx)) { return -1; }
+	return playerCtx->state;
 }
 void interfaceDestroyPlayer(int id)
 {
@@ -86,7 +88,6 @@ void interfaceAudioFormatCallback(int id, SubmitAudioFormat func)
 	if (!getVideoContext(id, playerCtx)) { return; }
 	playerCtx->RegisterAudioFormatCallback(func);
 }
-
 void interfaceAudioFormatCallback_Clean(int id)
 {
 	std::shared_ptr<FFmpegMediaPlayer> playerCtx;

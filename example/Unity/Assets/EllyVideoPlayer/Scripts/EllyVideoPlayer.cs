@@ -146,7 +146,8 @@ namespace Elly
             samplerate = sampleRate;
             channels = channel;
             audioSource.Stop();
-            clip = AudioClip.Create("AudioSample", samplerate * 2, channel, samplerate, true, OnAudioRead, OnAudioSetPosition);
+            clip = AudioClip.Create("AudioSample", samplerate, channel, samplerate, true, OnAudioRead, OnAudioSetPosition);
+            audioSource.loop = true;
             audioSource.clip = clip;
             audioSource.Play();
         }
@@ -157,7 +158,9 @@ namespace Elly
             float[] data = new float[length];
             Marshal.Copy(ptr, data, 0, length);
             for (int i = 0; i < length; i++)
+            {
                 audioFrame.Enqueue(data[i]);
+            }
         }
 
         void SubmitVideoFormatCallback(int width, int height)
@@ -206,39 +209,55 @@ namespace Elly
 
         void OnAudioRead(float[] data) // fill the data and sumbit to clip
         {
-            int left = position - lastposition;
-            int space_left = 0;
-            if (left < 0)
-            {
-                space_left = data.Length + left - 1;
-            }
-            else if (left == 0)
-            {
-                space_left = data.Length - 1;
-            }
-            int data_left = data.Length - space_left - 1;
-            Debug.Log($"OnAudioRead: {data_left}");
+            Debug.Log($"OnAudioRead {data.Length}");
+            //int data_left = DataLeft(data.Length);
+            int data_left = data.Length;
             int count = data_left;
-            if (count == 0) return;
             int writepos = 0;
-            while (count > 0 && audioFrame.Count > 0 && GetMediaState == PlayerState.DECODING)
+            while (count > 0 && 
+                audioFrame.Count > 0 &&
+                GetMediaState == PlayerState.DECODING) // current cycle
             {
-                for (int i = 0; i < data_left; i++)
-                {
-                    if (audioFrame.Count == 0) break;
-                    data[lastposition + i] = audioFrame.Dequeue();
-                    writepos++;
-                    count--;
-                }
+                data[writepos] = audioFrame.Dequeue();
+                writepos++;
+                count--;
             }
-            while (count > 0)
+            while(count > 0 &&
+                audioFrame.Count > 0)
             {
-                for(int i = 0; i < data_left - writepos; i++)
-                {
-                    data[lastposition + writepos + i] = 0.0f;
-                    count--;
-                }
+                data[writepos] = 0.0f;
+                writepos++;
+                count--;
             }
+            /*
+            if(buffer.Count > 0)
+            {
+                for(int i = 0; i < buffer.Count; i++)
+                {
+                    data[i + lastposition] = buffer[i];
+                }
+                buffer.Clear();
+            }
+            writepos = 0;
+            count--;
+            while (count > 0 &&
+                audioFrame.Count > 0 &&
+                GetMediaState == PlayerState.DECODING &&
+                current > clip.samples - 1) // next cycle
+            {
+                buffer.Add(audioFrame.Dequeue());
+                writepos++;
+                count--;
+                current = writepos;
+            }
+            if (buffer.Count > 0)
+            {
+                Debug.Log($"{buffer.Count} {lastposition} {position}");
+                clip.SetData(buffer.ToArray(), 0);
+                buffer.Clear();
+            }
+            */
+            //Debug.Log($"Audio Position: {clip.samples} {position} {lastposition} {data_left}");
             lastposition = position;
         }
 
@@ -252,6 +271,25 @@ namespace Elly
         {
             LoadMedia(path);
             Play();
+        }
+
+        int DataLeft(int length)
+        {
+            int left = lastposition - position;
+            int space_left = 0;
+            if (left < 0) // if negative, current cycle
+            {
+                space_left = length + left - 1;
+            }
+            else if (left > 0) // If positive, another cycle
+            {
+                space_left = length - (position + (length - lastposition) - 1);
+            }
+            else if (left == 0)
+            {
+                space_left = length - 1;
+            }
+            return length - space_left - 1;
         }
     }
 }

@@ -403,7 +403,7 @@ void FFmpegMediaPlayer::_Update()
 			}
 		}
 
-		if (nativeIsVideoBufferEmpty(id) && !nativeIsEOF(id) && !first_frame_a && !first_frame_v) {
+		if (nativeIsVideoBufferEmpty(id) && !nativeIsEOF(id) && first_frame_a && first_frame_v) {
 			hang_time = globalTime() - global_start_time;
 			state_change(BUFFERING);
 		}
