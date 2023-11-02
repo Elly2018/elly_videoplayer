@@ -84,6 +84,9 @@ namespace Elly
 
         private void Awake()
         {
+            var config = AudioSettings.GetConfiguration();
+            config.dspBufferSize = 2;
+            AudioSettings.Reset(config);
             audioSource.loop = true;
             audioFrame = new Queue<float>();
             id = Native.Application.CreatePlayer();
@@ -127,8 +130,14 @@ namespace Elly
 
         private void OnDestroy()
         {
+            Native.Application.CleanAudioSampleCallback(id);
+            Native.Application.CleanAudioFormatCallback(id);
+            Native.Application.CleanVideoSampleCallback(id);
+            Native.Application.CleanVideoFormatCallback(id);
+            Native.Application.CleanStateChangedCallback(id);
             Debug.Log($"Destroy video player: ${id}");
             Native.Application.DestroyPlayer(id);
+            if (clip) Destroy(clip);
         }
 
         public void Play() => Native.Player.Play(id);
@@ -145,8 +154,9 @@ namespace Elly
             Debug.Log($"Audio format: {channel}, {sampleRate}");
             samplerate = sampleRate;
             channels = channel;
+            audioFrame.Clear();
             audioSource.Stop();
-            clip = AudioClip.Create("AudioSample", samplerate, channel, samplerate, true, OnAudioRead, OnAudioSetPosition);
+            clip = AudioClip.Create("AudioSample", samplerate / 10, channel, samplerate, true, OnAudioRead, OnAudioSetPosition);
             audioSource.loop = true;
             audioSource.clip = clip;
             audioSource.Play();
@@ -209,7 +219,7 @@ namespace Elly
 
         void OnAudioRead(float[] data) // fill the data and sumbit to clip
         {
-            Debug.Log($"OnAudioRead {data.Length}");
+            Debug.Log($"OnAudioRead {data.Length} {audioFrame.Count}");
             //int data_left = DataLeft(data.Length);
             int data_left = data.Length;
             int count = data_left;
@@ -222,42 +232,16 @@ namespace Elly
                 writepos++;
                 count--;
             }
+            /*
             while(count > 0 &&
-                audioFrame.Count > 0)
+                audioFrame.Count > 0 &&
+                GetMediaState != PlayerState.DECODING)
             {
                 data[writepos] = 0.0f;
                 writepos++;
                 count--;
             }
-            /*
-            if(buffer.Count > 0)
-            {
-                for(int i = 0; i < buffer.Count; i++)
-                {
-                    data[i + lastposition] = buffer[i];
-                }
-                buffer.Clear();
-            }
-            writepos = 0;
-            count--;
-            while (count > 0 &&
-                audioFrame.Count > 0 &&
-                GetMediaState == PlayerState.DECODING &&
-                current > clip.samples - 1) // next cycle
-            {
-                buffer.Add(audioFrame.Dequeue());
-                writepos++;
-                count--;
-                current = writepos;
-            }
-            if (buffer.Count > 0)
-            {
-                Debug.Log($"{buffer.Count} {lastposition} {position}");
-                clip.SetData(buffer.ToArray(), 0);
-                buffer.Clear();
-            }
             */
-            //Debug.Log($"Audio Position: {clip.samples} {position} {lastposition} {data_left}");
             lastposition = position;
         }
 
