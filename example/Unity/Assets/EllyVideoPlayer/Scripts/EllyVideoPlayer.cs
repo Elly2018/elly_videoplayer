@@ -134,8 +134,7 @@ namespace Elly
             int count = data_left;
             int writepos = 0;
             while (count > 0 &&
-                audioFrame.Count > 0 &&
-                st == PlayerState.DECODING) // current cycle
+                audioFrame.Count > 0) // current cycle
             {
                 data[writepos] = audioFrame.Dequeue();
                 writepos++;

@@ -420,7 +420,7 @@ void FFmpegMediaPlayer::_Update()
 
 void FFmpegMediaPlayer::_FixedUpdate()
 {
-	bool state_check = (state == DECODING || state == BUFFERING);
+	bool state_check = (state == DECODING || state == BUFFERING) && audioBufferCount() < (1024 * channels) * 3;
 	if (state_check) {
 		// TODO: Implement audio.
 		unsigned char* raw_audio_data = nullptr;
