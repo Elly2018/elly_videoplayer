@@ -219,6 +219,7 @@ namespace Elly
 
         void OnAudioRead(float[] data) // fill the data and sumbit to clip
         {
+            PlayerState st = GetMediaState;
             Debug.Log($"OnAudioRead {data.Length} {audioFrame.Count}");
             //int data_left = DataLeft(data.Length);
             int data_left = data.Length;
@@ -226,7 +227,7 @@ namespace Elly
             int writepos = 0;
             while (count > 0 && 
                 audioFrame.Count > 0 &&
-                GetMediaState == PlayerState.DECODING) // current cycle
+                st == PlayerState.DECODING) // current cycle
             {
                 data[writepos] = audioFrame.Dequeue();
                 writepos++;
