@@ -84,9 +84,6 @@ namespace Elly
 
         private void Awake()
         {
-            var config = AudioSettings.GetConfiguration();
-            config.dspBufferSize = 2;
-            AudioSettings.Reset(config);
             audioSource.loop = true;
             audioFrame = new Queue<float>();
             id = Native.Application.CreatePlayer();
@@ -128,6 +125,24 @@ namespace Elly
             Native.Player.FixedUpdate(id);
         }
 
+        private void OnAudioFilterRead(float[] data, int channels)
+        {
+            PlayerState st = GetMediaState;
+            Debug.Log($"OnAudioRead {data.Length} {audioFrame.Count}");
+            //int data_left = DataLeft(data.Length);
+            int data_left = data.Length;
+            int count = data_left;
+            int writepos = 0;
+            while (count > 0 &&
+                audioFrame.Count > 0 &&
+                st == PlayerState.DECODING) // current cycle
+            {
+                data[writepos] = audioFrame.Dequeue();
+                writepos++;
+                count--;
+            }
+        }
+
         private void OnDestroy()
         {
             Native.Application.CleanAudioSampleCallback(id);
@@ -156,7 +171,7 @@ namespace Elly
             channels = channel;
             audioFrame.Clear();
             audioSource.Stop();
-            clip = AudioClip.Create("AudioSample", samplerate / 10, channel, samplerate, true, OnAudioRead, OnAudioSetPosition);
+            clip = AudioClip.Create("AudioSample", samplerate, channel, samplerate, true, OnAudioRead, OnAudioSetPosition);
             audioSource.loop = true;
             audioSource.clip = clip;
             audioSource.Play();
@@ -219,36 +234,12 @@ namespace Elly
 
         void OnAudioRead(float[] data) // fill the data and sumbit to clip
         {
-            PlayerState st = GetMediaState;
-            Debug.Log($"OnAudioRead {data.Length} {audioFrame.Count}");
-            //int data_left = DataLeft(data.Length);
-            int data_left = data.Length;
-            int count = data_left;
-            int writepos = 0;
-            while (count > 0 && 
-                audioFrame.Count > 0 &&
-                st == PlayerState.DECODING) // current cycle
-            {
-                data[writepos] = audioFrame.Dequeue();
-                writepos++;
-                count--;
-            }
-            /*
-            while(count > 0 &&
-                audioFrame.Count > 0 &&
-                GetMediaState != PlayerState.DECODING)
-            {
-                data[writepos] = 0.0f;
-                writepos++;
-                count--;
-            }
-            */
-            lastposition = position;
+            position += data.Length;
+            position %= (samplerate * channels);
         }
 
         void OnAudioSetPosition(int newPosition)
         {
-            Debug.Log($"OnAudioSetPosition: {newPosition}");
             position = newPosition;
         }
 
@@ -256,25 +247,6 @@ namespace Elly
         {
             LoadMedia(path);
             Play();
-        }
-
-        int DataLeft(int length)
-        {
-            int left = lastposition - position;
-            int space_left = 0;
-            if (left < 0) // if negative, current cycle
-            {
-                space_left = length + left - 1;
-            }
-            else if (left > 0) // If positive, another cycle
-            {
-                space_left = length - (position + (length - lastposition) - 1);
-            }
-            else if (left == 0)
-            {
-                space_left = length - 1;
-            }
-            return length - space_left - 1;
         }
     }
 }
