@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.Events;
+using UnityEngine.UI;
 using UnityEngine.UIElements;
 
 namespace Elly
@@ -28,9 +30,14 @@ namespace Elly
     [AddComponentMenu("Elly/Video Player")]
     public class EllyVideoPlayer : MonoBehaviour
     {
+        [Header("Setting")]
+        [SerializeField] InputField sourceInput;
+        [Header("UI")]
+        [SerializeField] Transform groupUI;
         [Header("Video")]
         [SerializeField] RenderTexture target;
         [Header("Audio")]
+        [SerializeField] AudioMixerGroup outputGroup;
         [SerializeField] AudioSource audioSource;
         [Header("Event")]
         [SerializeField] UnityEvent<int> StateChanged;
@@ -242,10 +249,20 @@ namespace Elly
             position = newPosition;
         }
 
-        public void MyPlay(string path)
+        public void MyPlay()
         {
-            LoadMedia(path);
+            LoadMedia(sourceInput.text);
             Play();
+        }
+
+        public void SetAudio(float v)
+        {
+            outputGroup.audioMixer.SetFloat("MasterValue", v);
+        }
+
+        public void ShowHide()
+        {
+            groupUI.gameObject.SetActive(!groupUI.gameObject.activeInHierarchy);
         }
     }
 }
