@@ -328,6 +328,12 @@ bool nativeIsVideoBufferEmpty(int id) {
 	
 	return videoCtx->avhandler->isVideoBufferEmpty();
 }
+bool nativeIsAudioBufferEmpty(int id) {
+	std::shared_ptr<VideoContext> videoCtx;
+	if (!getVideoContext(id, videoCtx)) { return false; }
+
+	return videoCtx->avhandler->isAudioBufferEmpty();
+}
 
 int nativeGetClock(int id) 
 {
@@ -409,17 +415,9 @@ double nativeGrabVideoFrame(int id, void** frameData, bool& frameReady, int& wid
       double videoDecCurTime = localAVDecoderHandler->getVideoInfo().lastTime;
       if (videoDecCurTime <= videoCtx->progressTime) {
 		  bool drop = true;
-		  double curFrameTime = -1;
-		  double nextFrameTime = -1;
-		  while (drop) {
-			  curFrameTime = localAVDecoderHandler->getVideoFrame(frameData, width, height);
-			  nextFrameTime = localAVDecoderHandler->getNextVideoFrameTime();
-			  drop = curFrameTime <= videoCtx->progressTime && nextFrameTime <= videoCtx->progressTime && nextFrameTime != -1 && curFrameTime != -1;
-			  if (drop) {
-				  drop = true;
-				  nativeReleaseVideoFrame(id);
-			  }
-		  }
+		  double curFrameTime = -1.0;
+		  double nextFrameTime = -1.0;
+		  curFrameTime = localAVDecoderHandler->getVideoFrame(frameData, width, height);
 		  bool pass = frameData != nullptr && curFrameTime != -1 && videoCtx->lastUpdateTimeV != curFrameTime;
           if (pass) {
               frameReady = true;

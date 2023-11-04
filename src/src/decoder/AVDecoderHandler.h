@@ -48,6 +48,7 @@ public:
 	IDecoder::AudioInfo getAudioInfo();
 	IDecoder::SubtitleInfo getSubtitleInfo();
 	bool isVideoBufferEmpty();
+	bool isAudioBufferEmpty();
 	bool isVideoBufferFull();
 
 	int getMetaData(char**& key, char**& value);

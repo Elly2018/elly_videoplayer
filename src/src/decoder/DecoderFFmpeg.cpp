@@ -435,7 +435,7 @@ double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize,
 }
 
 double DecoderFFmpeg::getNextVideoFrameTime() {
-	if (mVideoFrames.size() <= 1) return -1;
+	if (!mIsInitialized || mVideoFrames.size() <= 1) return -1;
 	AVFrame* frame = mVideoFrames.front() + 1;
 	int64_t timeStamp = frame->pts;
 	double timeInSec = av_q2d(mVideoStream->time_base) * timeStamp;

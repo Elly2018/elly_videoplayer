@@ -107,6 +107,7 @@ private:
 	double video_current_time = 0.0f;
 	int data_size = 0;
 	
+	bool init_seek = false;
 	bool audio_playback = false;
 	int channels = 0;
 	int sampleRate = 0;

@@ -268,6 +268,11 @@ bool AVDecoderHandler::isVideoBufferEmpty() {
 	IDecoder::BufferState EMPTY = IDecoder::BufferState::EMPTY;
 	return videoInfo.isEnabled && videoInfo.bufferState == EMPTY;
 }
+bool AVDecoderHandler::isAudioBufferEmpty() {
+	IDecoder::AudioInfo audioInfo = mIDecoder->getAudioInfo();
+	IDecoder::BufferState EMPTY = IDecoder::BufferState::EMPTY;
+	return audioInfo.isEnabled && audioInfo.bufferState == EMPTY;
+}
 
 bool AVDecoderHandler::isVideoBufferFull() {
 	IDecoder::VideoInfo videoInfo = mIDecoder->getVideoInfo();

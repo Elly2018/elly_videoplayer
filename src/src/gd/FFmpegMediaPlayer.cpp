@@ -15,6 +15,7 @@ void FFmpegMediaPlayer::_init_media() {
 	int* li = nullptr;
 	int count = 0;
 	int current = 0;
+	init_seek = false;
 	LOG("start init media");
 	video_playback = nativeIsVideoEnabled(id);
 	if (video_playback) {
@@ -57,6 +58,7 @@ void FFmpegMediaPlayer::audio_init()
 	player->set_autoplay(true);
 	player->play();
 	playback = player->get_stream_playback();
+	return;
 	int c = playback->get_frames_available();
 	while (c > 0) {
 		playback->push_frame(Vector2(0, 0));

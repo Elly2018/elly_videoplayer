@@ -44,6 +44,7 @@ void nativeSetVideoTime(int id, float currentTime);
 bool nativeIsContentReady(int id);
 bool nativeIsVideoBufferFull(int id);
 bool nativeIsVideoBufferEmpty(int id);
+bool nativeIsAudioBufferEmpty(int id);
 //
 //
 //	Audio
