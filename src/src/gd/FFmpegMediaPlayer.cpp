@@ -243,6 +243,7 @@ void FFmpegMediaPlayer::_process(float delta) {
 			if (nativeIsVideoBufferFull(id) || nativeIsEOF(id)) {
 				global_start_time = Time::get_singleton()->get_unix_time_from_system() - hang_time;
 				state = DECODING;
+				audioFrame.clear();
 			}
 		} break;
 
