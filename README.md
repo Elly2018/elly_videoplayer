@@ -12,7 +12,9 @@ Some showcase in below
 The above demo use URL are all in the example project player file [link](https://github.com/Elly2018/gd_videoplayer/blob/main/example/Script/DemoMediaPlayer.gd)\
 And apply to VR sphere mesh and a viewport texture in front of player
  
-### Getting started:
+<hr />
+
+# Getting started:
 
 Windows, Linux platform build system use Visual Studio 17 2022
 
@@ -21,7 +23,7 @@ If you are using MSYS to build the linux version you can use build/msys_install.
 In order to setup the project\
 Check this page for build process
 
-#### 1. Open build/[Platform]_pull_submodule.[bat/sh]
+## 1. Open build/[Platform]_pull_submodule.[bat/sh]
 - This will clone the godot-cpp 4.1 in the root folder.
 - And it will download the ffmpeg 6.0 windows build from github and unzip in the src folder.
 - In the end your file structure will looks like below.
@@ -33,11 +35,11 @@ Check this page for build process
 		- ffmpeg (Add if desktop)
 	- godot-cpp (Add)
 	
-#### 2. Open build/[Platform]_codegen.[bat/sh]
+## 2. Open build/[Platform]_codegen.[bat/sh]
 
 - This will generate the solution in the `GDExtensionTemplate-build` folder.
 
-#### 3. Open GDExtensionTemplate-build/GDExtensionTemplate.sln.
+## 3. Open GDExtensionTemplate-build/GDExtensionTemplate.sln.
 
 - You cannot just build the solution for some reason, I can't find a way to change Runtime library from /MDd to /MD.
 - So first, open property of GDExtensionTemplate project.
@@ -52,12 +54,12 @@ Check this page for build process
 	- `src/` - Wrapper source code.
 - `godot-cpp/` - Submodule needed for GDExtension compilation.
 
-### known issues
+## known issues
 
 - HLS will stuck at buffering sometimes
 - hardware acceleration not include
 
-### Supported platfrom
+## Supported platfrom
 | Platform | Video | Audio | XR Support |
 |-|-|-|-|
 | Windows | O | O | △ |

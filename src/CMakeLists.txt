@@ -14,7 +14,7 @@ target_link_directories( ${PROJECT_NAME} PUBLIC
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gd_videoplayer")
-file (STRINGS "Platform.txt" Platform)
+file (STRINGS "platform.txt" Platform)
 message("Target platform: ${Platform}")
 if( "${Platform}" STREQUAL "Windows" )
 # Windows config
