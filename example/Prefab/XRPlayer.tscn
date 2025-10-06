@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://nepgy2yvue6r"]
 
-[ext_resource type="Script" path="res://Script/MouseController.gd" id="1_t31re"]
+[ext_resource type="Script" uid="uid://cm5a4d5jcrq52" path="res://Script/MouseController.gd" id="1_t31re"]
 
 [node name="Player" type="Node3D"]
 script = ExtResource("1_t31re")

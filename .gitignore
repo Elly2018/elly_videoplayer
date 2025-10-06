@@ -12,11 +12,13 @@ GDExtensionTemplate-build/
 # MacOS
 .DS_Store
 
+vs/
 x64/
 bin/
 VideoPlayer.dir/
 FFmpeg/
 godot-cpp/
+
 
 # Editors
 .vscode/

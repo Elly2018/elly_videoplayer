@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bkv1c68i42g81"]
 
-[ext_resource type="Script" path="res://Script/DemoMediaPlayer.gd" id="1_8ajqr"]
+[ext_resource type="Script" uid="uid://cbq3k73pk5872" path="res://Script/DemoMediaPlayer.gd" id="1_8ajqr"]
 
 [sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_cr308"]
 buffer_length = 0.2

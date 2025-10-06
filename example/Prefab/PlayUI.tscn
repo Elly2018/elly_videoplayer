@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bpf8brbbdrtls"]
 
-[ext_resource type="Script" path="res://Script/MediaController.gd" id="1_5vg8y"]
+[ext_resource type="Script" uid="uid://bp8g45efco8d4" path="res://Script/MediaController.gd" id="1_5vg8y"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_7rdpl"]
 

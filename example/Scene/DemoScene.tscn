@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://dn3rmx1bi81lv"]
 
-[ext_resource type="Script" path="res://Script/PlayerManager.gd" id="1_ymwss"]
+[ext_resource type="Script" uid="uid://jjcjvh0r5hnw" path="res://Script/PlayerManager.gd" id="1_ymwss"]
 [ext_resource type="PackedScene" uid="uid://cn0gndd2yedja" path="res://Prefab/2DPlayer.tscn" id="2_74c40"]
 [ext_resource type="PackedScene" uid="uid://bpf8brbbdrtls" path="res://Prefab/PlayUI.tscn" id="3_5iufy"]
 [ext_resource type="PackedScene" uid="uid://bkv1c68i42g81" path="res://Prefab/Plane.tscn" id="4_7ran5"]

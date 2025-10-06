@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://bn064jv76jmaw"]
 
-[ext_resource type="Script" path="res://Script/DemoMediaPlayer.gd" id="1_lg4ib"]
+[ext_resource type="Script" uid="uid://cbq3k73pk5872" path="res://Script/DemoMediaPlayer.gd" id="1_lg4ib"]
 [ext_resource type="Material" uid="uid://brmlmtpgp5cya" path="res://Material/shader_material.tres" id="2_ycshh"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_2ikhj"]
