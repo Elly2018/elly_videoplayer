@@ -25,6 +25,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE swresample.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE swscale.lib)
 target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-win64/include" )
 target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-win64/gen/include" )
+target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-win64/src" )
+target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-win64/gen/src" )
 else()
 # MacOS or Linux config
 target_link_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-linux64/lib" )
@@ -39,14 +41,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE libswresample.so)
 target_link_libraries(${PROJECT_NAME} PRIVATE libswscale.so)
 target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-linux64/include" )
 target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-linux64/gen/include" )
+target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-linux64/src" )
+target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-linux64/gen/src" )
 endif()
 
-target_include_directories( ${PROJECT_NAME}
-    PRIVATE
-        "src"
-)
-
-target_include_directories( ${PROJECT_NAME}
-	PUBLIC
-		"ffmpeg/include"
-)
+target_include_directories( ${PROJECT_NAME} PRIVATE "src" )
