@@ -7,6 +7,7 @@
 
 extern "C" {
 #include "libavutil/imgutils.h"
+#include "libavutil/channel_layout.h"
 }
 
 DecoderFFmpeg::DecoderFFmpeg() {

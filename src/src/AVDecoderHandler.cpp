@@ -3,7 +3,10 @@
 #include "AVDecoderHandler.h"
 #include "DecoderFFmpeg.h"
 #include "Logger.h"
-#include <Windows.h>
+#if defined(_WIN32) || defined(_WIN64)
+	#include <Windows.h>
+#else
+#endif
 
 AVDecoderHandler::AVDecoderHandler() {
 	mDecoderState = UNINITIALIZED;

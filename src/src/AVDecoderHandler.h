@@ -5,7 +5,7 @@
 #include <thread>
 #include <mutex>
 #include <memory>
- 
+
 class AVDecoderHandler {
 public:
 	AVDecoderHandler();

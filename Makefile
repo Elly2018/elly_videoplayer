@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /media/zhuelly/Project/GodotProject/elly_videoplayer
+CMAKE_SOURCE_DIR = /media/zhuelly/Project/GodotProject/Plugin-Videoplayer
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /media/zhuelly/Project/GodotProject/elly_videoplayer
+CMAKE_BINARY_DIR = /media/zhuelly/Project/GodotProject/Plugin-Videoplayer
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -132,9 +132,9 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /media/zhuelly/Project/GodotProject/elly_videoplayer/CMakeFiles /media/zhuelly/Project/GodotProject/elly_videoplayer//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /media/zhuelly/Project/GodotProject/Plugin-Videoplayer/CMakeFiles /media/zhuelly/Project/GodotProject/Plugin-Videoplayer//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /media/zhuelly/Project/GodotProject/elly_videoplayer/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /media/zhuelly/Project/GodotProject/Plugin-Videoplayer/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -158,7 +158,7 @@ preinstall/fast:
 
 # clear depends
 depend:
-	$(CMAKE_COMMAND) -P /media/zhuelly/Project/GodotProject/elly_videoplayer/CMakeFiles/VerifyGlobs.cmake
+	$(CMAKE_COMMAND) -P /media/zhuelly/Project/GodotProject/Plugin-Videoplayer/CMakeFiles/VerifyGlobs.cmake
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
@@ -187,6 +187,19 @@ templates: cmake_check_build_system
 templates/fast:
 	$(MAKE) $(MAKESILENT) -f templates/CMakeFiles/templates.dir/build.make templates/CMakeFiles/templates.dir/build
 .PHONY : templates/fast
+
+#=============================================================================
+# Target rules for targets named generate_bindings
+
+# Build rule for target.
+generate_bindings: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 generate_bindings
+.PHONY : generate_bindings
+
+# fast build rule for target.
+generate_bindings/fast:
+	$(MAKE) $(MAKESILENT) -f godot-cpp/CMakeFiles/generate_bindings.dir/build.make godot-cpp/CMakeFiles/generate_bindings.dir/build
+.PHONY : generate_bindings/fast
 
 #=============================================================================
 # Target rules for targets named godot-cpp
@@ -405,6 +418,7 @@ help:
 	@echo "... install/strip"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
+	@echo "... generate_bindings"
 	@echo "... templates"
 	@echo "... GDExtensionTemplate"
 	@echo "... godot-cpp"
@@ -443,7 +457,7 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	$(CMAKE_COMMAND) -P /media/zhuelly/Project/GodotProject/elly_videoplayer/CMakeFiles/VerifyGlobs.cmake
+	$(CMAKE_COMMAND) -P /media/zhuelly/Project/GodotProject/Plugin-Videoplayer/CMakeFiles/VerifyGlobs.cmake
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

@@ -17,13 +17,13 @@
 typedef struct _VideoContext {
 	int id = -1;
 	std::string path = "";
-  std::thread initThread;
-  bool initThreadRunning = false;
-  bool destroying = false;
-  std::unique_ptr<AVDecoderHandler> avhandler = nullptr;
+	std::thread initThread;
+	bool initThreadRunning = false;
+	bool destroying = false;
+	std::unique_ptr<AVDecoderHandler> avhandler = nullptr;
 	float progressTime = 0.0f;
 	float lastUpdateTime = -1.0f;
-  bool videoFrameLocked = false;
+	bool videoFrameLocked = false;
 	bool audioFrameLocked = false;
 	bool isContentReady = false;	//	This flag is used to indicate the period that seek over until first data is got.
 									//	Usually used for AV sync problem, in pure audio case, it should be discard.

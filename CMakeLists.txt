@@ -2,6 +2,12 @@
 
 cmake_minimum_required( VERSION 3.22 )
 
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
+    if (NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+    endif()
+endif()
+
 message( STATUS "Using CMake ${CMAKE_VERSION}" )
 
 # Require out-of-source builds
@@ -87,12 +93,9 @@ set( INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/" )
 
 message( STATUS "Install directory: ${INSTALL_DIR}")
 
-install( TARGETS ${PROJECT_NAME}
-    LIBRARY
-        DESTINATION ${INSTALL_DIR}/${LIB_DIR}
-    RUNTIME
-        DESTINATION ${INSTALL_DIR}/${LIB_DIR}
-)
+if(POLICY CMP0177)
+    cmake_policy(SET CMP0177 NEW)
+endif()
 
 add_subdirectory( templates )
 

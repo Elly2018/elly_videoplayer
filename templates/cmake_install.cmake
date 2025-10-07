@@ -1,4 +1,4 @@
-# Install script for directory: /media/zhuelly/Project/GodotProject/elly_videoplayer/templates
+# Install script for directory: /media/zhuelly/Project/GodotProject/Plugin-Videoplayer/templates
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -51,12 +51,12 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/usr/local/GDExtensionTemplate" TYPE FILE FILES "/media/zhuelly/Project/GodotProject/elly_videoplayer/GDExtensionTemplate//GDExtensionTemplate.gdextension")
+  file(INSTALL DESTINATION "/usr/local/GDExtensionTemplate" TYPE FILE FILES "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/GDExtensionTemplate//GDExtensionTemplate.gdextension")
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/media/zhuelly/Project/GodotProject/elly_videoplayer/templates/install_local_manifest.txt"
+  file(WRITE "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/templates/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

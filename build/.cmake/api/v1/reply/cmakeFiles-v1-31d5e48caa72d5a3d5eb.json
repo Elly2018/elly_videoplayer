@@ -1,0 +1,305 @@
+{
+	"globsDependent" : 
+	[
+		{
+			"expression" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/*.cpp",
+			"paths" : 
+			[
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/classes/editor_plugin_registration.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/classes/low_level.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/classes/wrapped.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/core/class_db.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/core/error_macros.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/core/memory.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/core/method_bind.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/core/object.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/core/print_string.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/godot.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/aabb.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/basis.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/callable_custom.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/callable_method_pointer.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/char_string.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/color.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/packed_arrays.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/plane.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/projection.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/quaternion.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/rect2.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/rect2i.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/transform2d.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/transform3d.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/variant.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/variant_internal.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/vector2.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/vector2i.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/vector3.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/vector3i.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/vector4.cpp",
+				"/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/src/variant/vector4i.cpp"
+			],
+			"recurse" : true
+		}
+	],
+	"inputs" : 
+	[
+		{
+			"path" : "CMakeLists.txt"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "build/CMakeFiles/3.31.6/CMakeSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/CMakeSystemSpecificInitialize.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Platform/Linux-Initialize.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "build/CMakeFiles/3.31.6/CMakeCXXCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/CMakeSystemSpecificInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/CMakeGenericSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/CMakeInitializeConfigs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Platform/Linux.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Platform/UnixPaths.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/CMakeCXXInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Compiler/GNU-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Compiler/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Platform/Linux-GNU-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Platform/Linux-GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Internal/CMakeCXXLinkerInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Internal/CMakeCommonLinkerInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Linker/GNU-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Linker/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Platform/Linker/Linux-GNU-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Platform/Linker/Linux-GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/Platform/Linker/GNU.cmake"
+		},
+		{
+			"path" : "cmake/CompilerWarnings.cmake"
+		},
+		{
+			"path" : "cmake/GitVersionInfo.cmake"
+		},
+		{
+			"path" : "cmake/GetGitRevisionDescription.cmake"
+		},
+		{
+			"path" : ".git/HEAD"
+		},
+		{
+			"path" : "cmake/GetGitRevisionDescription.cmake.in"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "build/CMakeFiles/git-data/grabRef.cmake"
+		},
+		{
+			"path" : ".git/refs/heads/main"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/FindGit.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/FindPackageHandleStandardArgs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/FindPackageMessage.cmake"
+		},
+		{
+			"path" : ".git/HEAD"
+		},
+		{
+			"path" : "cmake/GetGitRevisionDescription.cmake.in"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "build/CMakeFiles/git-data/grabRef.cmake"
+		},
+		{
+			"path" : ".git/refs/heads/main"
+		},
+		{
+			"path" : "src/Version.h.in"
+		},
+		{
+			"path" : "cmake/ccache.cmake"
+		},
+		{
+			"path" : "cmake/ClangFormat.cmake"
+		},
+		{
+			"path" : "src/CMakeLists.txt"
+		},
+		{
+			"path" : "templates/CMakeLists.txt"
+		},
+		{
+			"path" : "templates/template.debug.gdextension.in"
+		},
+		{
+			"path" : "godot-cpp/CMakeLists.txt"
+		},
+		{
+			"path" : "godot-cpp/cmake/godotcpp.cmake"
+		},
+		{
+			"path" : "godot-cpp/cmake/GodotCPPModule.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/FindPython3.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/FindPython/Support.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/FindPackageHandleStandardArgs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/FindPackageMessage.cmake"
+		},
+		{
+			"path" : "godot-cpp/cmake/common_compiler_flags.cmake"
+		},
+		{
+			"path" : "godot-cpp/cmake/android.cmake"
+		},
+		{
+			"path" : "godot-cpp/cmake/ios.cmake"
+		},
+		{
+			"path" : "godot-cpp/cmake/linux.cmake"
+		},
+		{
+			"path" : "godot-cpp/cmake/macos.cmake"
+		},
+		{
+			"path" : "godot-cpp/cmake/web.cmake"
+		},
+		{
+			"path" : "godot-cpp/cmake/windows.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/share/cmake-3.31/Modules/ProcessorCount.cmake"
+		},
+		{
+			"path" : "godot-cpp/cmake/emsdkHack.cmake"
+		}
+	],
+	"kind" : "cmakeFiles",
+	"paths" : 
+	{
+		"build" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/build",
+		"source" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer"
+	},
+	"version" : 
+	{
+		"major" : 1,
+		"minor" : 1
+	}
+}

@@ -1,4 +1,4 @@
-# Install script for directory: /media/zhuelly/Project/GodotProject/elly_videoplayer
+# Install script for directory: /media/zhuelly/Project/GodotProject/Plugin-Videoplayer
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -44,54 +44,23 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/media/zhuelly/Project/GodotProject/elly_videoplayer/src/cmake_install.cmake")
-endif()
-
-if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  if(EXISTS "$ENV{DESTDIR}/usr/local/GDExtensionTemplate/lib/Linux-x86_64/libgd_videoplayer.so" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/GDExtensionTemplate/lib/Linux-x86_64/libgd_videoplayer.so")
-    file(RPATH_CHECK
-         FILE "$ENV{DESTDIR}/usr/local/GDExtensionTemplate/lib/Linux-x86_64/libgd_videoplayer.so"
-         RPATH "")
-  endif()
-  list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/usr/local/GDExtensionTemplate/lib/Linux-x86_64/libgd_videoplayer.so")
-  if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
-    message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
-  endif()
-  if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
-    message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
-  endif()
-  file(INSTALL DESTINATION "/usr/local/GDExtensionTemplate/lib/Linux-x86_64" TYPE SHARED_LIBRARY FILES "/media/zhuelly/Project/GodotProject/elly_videoplayer/GDExtensionTemplate/lib/Linux-x86_64/libgd_videoplayer.so")
-  if(EXISTS "$ENV{DESTDIR}/usr/local/GDExtensionTemplate/lib/Linux-x86_64/libgd_videoplayer.so" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/GDExtensionTemplate/lib/Linux-x86_64/libgd_videoplayer.so")
-    file(RPATH_CHANGE
-         FILE "$ENV{DESTDIR}/usr/local/GDExtensionTemplate/lib/Linux-x86_64/libgd_videoplayer.so"
-         OLD_RPATH "/media/zhuelly/Project/GodotProject/elly_videoplayer/src/ffmpeg/lib:"
-         NEW_RPATH "")
-    if(CMAKE_INSTALL_DO_STRIP)
-      execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}/usr/local/GDExtensionTemplate/lib/Linux-x86_64/libgd_videoplayer.so")
-    endif()
-  endif()
-endif()
-
-if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  include("/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/media/zhuelly/Project/GodotProject/elly_videoplayer/templates/cmake_install.cmake")
+  include("/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/templates/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/media/zhuelly/Project/GodotProject/elly_videoplayer/godot-cpp/cmake_install.cmake")
+  include("/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/godot-cpp/cmake_install.cmake")
 endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/media/zhuelly/Project/GodotProject/elly_videoplayer/install_local_manifest.txt"
+  file(WRITE "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -107,6 +76,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/media/zhuelly/Project/GodotProject/elly_videoplayer/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
