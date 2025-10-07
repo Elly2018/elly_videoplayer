@@ -4,7 +4,7 @@ cmake_minimum_required( VERSION 3.22 )
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
     if (NOT CMAKE_BUILD_TYPE)
-        set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+        set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "" FORCE)
     endif()
 endif()
 
@@ -42,7 +42,6 @@ project( GDExtensionTemplate
 
 # Create our library
 add_library( ${PROJECT_NAME} SHARED )
-set_property(TARGET ${PROJECT_NAME} PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 target_compile_features( ${PROJECT_NAME}
     PRIVATE
