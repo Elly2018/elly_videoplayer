@@ -57,6 +57,6 @@ private:
 	
 	std::thread mDecodeThread;
 	std::thread mBufferThread;
-  bool mDecodeThreadRunning = false;
+	bool mDecodeThreadRunning = false;
 	bool mBufferThreadRunning = false;
 };

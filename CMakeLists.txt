@@ -42,6 +42,7 @@ project( GDExtensionTemplate
 
 # Create our library
 add_library( ${PROJECT_NAME} SHARED )
+set_property(TARGET ${PROJECT_NAME} PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 target_compile_features( ${PROJECT_NAME}
     PRIVATE

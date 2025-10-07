@@ -1,10 +1,10 @@
 #!/bin/sh
 cd ..
-cp -f "src\ffmpeg\bin\avcodec-60.dll" $projectpath
-cp -f "src\ffmpeg\bin\avdevice-60.dll" $projectpath
-cp -f "src\ffmpeg\bin\avfilter-9.dll" $projectpath
-cp -f "src\ffmpeg\bin\avformat-60.dll" $projectpath
-cp -f "src\ffmpeg\bin\avutil-58.dll" $projectpath
-cp -f "src\ffmpeg\bin\postproc-57.dll" $projectpath
-cp -f "src\ffmpeg\bin\swresample-4.dll" $projectpath
-cp -f "src\ffmpeg\bin\swscale-7.dll" $projectpath
+cp -f "lib\ffmpeg-linux64\bin\avcodec-60.dll" $projectpath
+cp -f "lib\ffmpeg-linux64\bin\avdevice-60.dll" $projectpath
+cp -f "lib\ffmpeg-linux64\bin\avfilter-9.dll" $projectpath
+cp -f "lib\ffmpeg-linux64\bin\avformat-60.dll" $projectpath
+cp -f "lib\ffmpeg-linux64\bin\avutil-58.dll" $projectpath
+cp -f "lib\ffmpeg-linux64\bin\postproc-57.dll" $projectpath
+cp -f "lib\ffmpeg-linux64\bin\swresample-4.dll" $projectpath
+cp -f "lib\ffmpeg-linux64\bin\swscale-7.dll" $projectpath
