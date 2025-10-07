@@ -5,6 +5,8 @@ CMakeFiles/
 GDExtensionTemplate/
 GDExtensionTemplate-build/
 
+lib/ffmpeg.zip
+lib/ffmpeg.tar.xz
 lib/ffmpeg-linux64/
 lib/ffmpeg-win64/
 
