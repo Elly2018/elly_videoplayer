@@ -5,6 +5,9 @@ CMakeFiles/
 GDExtensionTemplate/
 GDExtensionTemplate-build/
 
+lib/ffmpeg-linux64/
+lib/ffmpeg-win64/
+
 # SConstruct
 .sconf_temp
 .sconsign.dblite
