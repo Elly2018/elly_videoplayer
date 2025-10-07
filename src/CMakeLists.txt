@@ -9,15 +9,12 @@ target_sources( ${PROJECT_NAME}
 	${SRC}
 )
 
-target_link_directories( ${PROJECT_NAME} PUBLIC
-  "ffmpeg/lib"
-)
-
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "gd_videoplayer")
 file (STRINGS "platform.txt" Platform)
 message("Target platform: ${Platform}")
 if( "${Platform}" STREQUAL "Windows" )
 # Windows config
+target_link_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-win64/lib" )
 target_link_libraries(${PROJECT_NAME} PRIVATE avcodec.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE avdevice.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE avfilter.lib)
@@ -26,17 +23,22 @@ target_link_libraries(${PROJECT_NAME} PRIVATE avutil.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE postproc.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE swresample.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE swscale.lib)
+target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-win64/include" )
+target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-win64/gen/include" )
 else()
 # MacOS or Linux config
+target_link_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-linux64/lib" )
 set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-target_link_libraries(${PROJECT_NAME} PRIVATE libavcodec.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE libavdevice.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE libavfilter.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE libavformat.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE libavutil.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE libpostproc.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE libswresample.dll.a)
-target_link_libraries(${PROJECT_NAME} PRIVATE libswscale.dll.a)
+target_link_libraries(${PROJECT_NAME} PRIVATE libavcodec.so)
+target_link_libraries(${PROJECT_NAME} PRIVATE libavdevice.so)
+target_link_libraries(${PROJECT_NAME} PRIVATE libavfilter.so)
+target_link_libraries(${PROJECT_NAME} PRIVATE libavformat.so)
+target_link_libraries(${PROJECT_NAME} PRIVATE libavutil.so)
+target_link_libraries(${PROJECT_NAME} PRIVATE libpostproc.so)
+target_link_libraries(${PROJECT_NAME} PRIVATE libswresample.so)
+target_link_libraries(${PROJECT_NAME} PRIVATE libswscale.so)
+target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-linux64/include" )
+target_include_directories( ${PROJECT_NAME} PUBLIC "../lib/ffmpeg-linux64/gen/include" )
 endif()
 
 target_include_directories( ${PROJECT_NAME}
