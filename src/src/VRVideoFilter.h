@@ -37,11 +37,11 @@ public:
 	/*
 	* Add additional material to apply the uniform to
 	*/
-	void add_material(Ref<Material> mat);
+	void add_material(const Ref<Material> &mat);
 	/*
 	* Remove target material from the apply list.
 	*/
-	void remove_material(Ref<Material> mat);
+	void remove_material(const Ref<Material> &mat);
 	/*
 	* Clean the apply list
 	*/

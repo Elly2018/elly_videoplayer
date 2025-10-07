@@ -663,7 +663,7 @@ void DecoderFFmpeg::flushBuffer(std::queue<AVFrame*>* frameBuff, std::mutex* mut
 
 AVCodecContext* DecoderFFmpeg::getStreamCodecContext(int index)
 {
-	if (index < 0 || index > mAVFormatContext->nb_streams) {
+	if (index < 0 || index > static_cast<int>(mAVFormatContext->nb_streams)) {
 		LOG_ERROR("Index out of range: getStreamsCodecContext");
 		return nullptr;
 	}
@@ -683,7 +683,7 @@ void DecoderFFmpeg::getListType(AVFormatContext* format, std::vector<int>& v, st
 	v.clear();
 	a.clear();
 	s.clear();
-	for (int i = 0; i < format->nb_streams; i++) {
+	for (int i = 0; i < static_cast<int>(format->nb_streams); i++) {
 		int type = getStreamType(i);
 		if (type == AVMEDIA_TYPE_VIDEO) v.push_back(i);
 		else if (type == AVMEDIA_TYPE_AUDIO) a.push_back(i);
@@ -725,18 +725,13 @@ int DecoderFFmpeg::loadConfig() {
 	int buffVideoMax = 0, buffAudioMax = 0, tcp = 0, seekAny = 0;
 	std::string line;
 	while (configFile >> line) {
-		std::string token = line.substr(0, line.find("="));
+		std::string token = line.substr(0, line.find('='));
 		CONFIG config = NONE;
-		std::string value = line.substr(line.find("=") + 1);
-		try {
-			if (token == "USE_TCP") { tcp = stoi(value); }
-			else if (token == "BUFF_VIDEO_MAX") { buffVideoMax = stoi(value); }
-			else if (token == "BUFF_AUDIO_MAX") { buffAudioMax = stoi(value); }
-			else if (token == "SEEK_ANY") { seekAny = stoi(value); }
-		
-		} catch (...) {
-			return -1;
-		}
+		std::string value = line.substr(line.find('=') + 1);
+		if (token == "USE_TCP") { tcp = stoi(value); }
+		else if (token == "BUFF_VIDEO_MAX") { buffVideoMax = stoi(value); }
+		else if (token == "BUFF_AUDIO_MAX") { buffAudioMax = stoi(value); }
+		else if (token == "SEEK_ANY") { seekAny = stoi(value); }
 	}
 
 	mUseTCP = tcp != 0;

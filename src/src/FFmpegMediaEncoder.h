@@ -24,7 +24,7 @@ struct EncoderSetting {
  * The encoder node for godot
 */
 class FFmpegMediaEncoder : public Node {
-	GDCLASS(FFmpegMediaEncoder, Node);
+	GDCLASS(FFmpegMediaEncoder, Node)
 
 private:
 	enum State {

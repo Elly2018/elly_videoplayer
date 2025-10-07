@@ -5,10 +5,10 @@ CMakeFiles/
 GDExtensionTemplate/
 GDExtensionTemplate-build/
 
-lib/ffmpeg.zip
-lib/ffmpeg.tar.xz
-lib/ffmpeg-linux64/
-lib/ffmpeg-win64/
+src/lib/ffmpeg.zip
+src/lib/ffmpeg.tar.xz
+src/lib/ffmpeg-linux64/
+src/lib/ffmpeg-win64/
 
 # SConstruct
 .sconf_temp
@@ -23,6 +23,9 @@ x64/
 bin/
 VideoPlayer.dir/
 gen/
+.ninja_deps
+.ninja_lock
+.ninja_log
 cmake_install.cmake
 CMakeCache.txt
 compile_commands.json
@@ -30,4 +33,5 @@ Makefile
 
 # Editors
 .vscode/
+.idea
 /SDL-main

@@ -50,7 +50,13 @@
 			{
 				"command" : 2,
 				"file" : 1,
-				"line" : 32,
+				"line" : 31,
+				"parent" : 3
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 33,
 				"parent" : 3
 			},
 			{
@@ -96,12 +102,6 @@
 				"parent" : 3
 			},
 			{
-				"command" : 1,
-				"file" : 1,
-				"line" : 41,
-				"parent" : 3
-			},
-			{
 				"file" : 2
 			},
 			{
@@ -127,12 +127,6 @@
 				"parent" : 16
 			},
 			{
-				"command" : 4,
-				"file" : 1,
-				"line" : 5,
-				"parent" : 3
-			},
-			{
 				"command" : 5,
 				"file" : 0,
 				"line" : 87,
@@ -140,13 +134,19 @@
 			},
 			{
 				"file" : 4,
-				"parent" : 19
+				"parent" : 18
 			},
 			{
 				"command" : 6,
 				"file" : 4,
 				"line" : 35,
-				"parent" : 20
+				"parent" : 19
+			},
+			{
+				"command" : 6,
+				"file" : 1,
+				"line" : 41,
+				"parent" : 3
 			},
 			{
 				"command" : 6,
@@ -157,37 +157,19 @@
 			{
 				"command" : 6,
 				"file" : 1,
-				"line" : 43,
-				"parent" : 3
-			},
-			{
-				"command" : 6,
-				"file" : 1,
-				"line" : 44,
-				"parent" : 3
-			},
-			{
-				"command" : 6,
-				"file" : 1,
 				"line" : 45,
-				"parent" : 3
-			},
-			{
-				"command" : 6,
-				"file" : 1,
-				"line" : 48,
 				"parent" : 3
 			},
 			{
 				"command" : 7,
 				"file" : 4,
 				"line" : 27,
-				"parent" : 20
+				"parent" : 19
 			},
 			{
 				"command" : 7,
 				"file" : 1,
-				"line" : 7,
+				"line" : 5,
 				"parent" : 3
 			}
 		]
@@ -269,10 +251,6 @@
 					"fragment" : "-Wlogical-op"
 				},
 				{
-					"backtrace" : 18,
-					"fragment" : "/WX-"
-				},
-				{
 					"backtrace" : 2,
 					"fragment" : "-fno-exceptions"
 				},
@@ -317,27 +295,19 @@
 			"includes" : 
 			[
 				{
-					"backtrace" : 21,
+					"backtrace" : 20,
 					"path" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/gen"
 				},
 				{
+					"backtrace" : 21,
+					"path" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/lib/ffmpeg-linux64/include"
+				},
+				{
 					"backtrace" : 22,
-					"path" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/../lib/ffmpeg-linux64/include"
+					"path" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/lib/ffmpeg-linux64/gen/include"
 				},
 				{
 					"backtrace" : 23,
-					"path" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/../lib/ffmpeg-linux64/gen/include"
-				},
-				{
-					"backtrace" : 24,
-					"path" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/../lib/ffmpeg-linux64/src"
-				},
-				{
-					"backtrace" : 25,
-					"path" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/../lib/ffmpeg-linux64/gen/src"
-				},
-				{
-					"backtrace" : 26,
 					"path" : "/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/src"
 				},
 				{
@@ -370,12 +340,12 @@
 	"dependencies" : 
 	[
 		{
-			"backtrace" : 2,
-			"id" : "godot-cpp::@4487305cb972aeb5fb22"
-		},
-		{
 			"backtrace" : 14,
 			"id" : "templates::@9ed9d281467a41a1df88"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "godot-cpp::@4487305cb972aeb5fb22"
 		}
 	],
 	"id" : "GDExtensionTemplate::@6890427a1f51a3e7e1df",
@@ -400,11 +370,11 @@
 			},
 			{
 				"backtrace" : 4,
-				"fragment" : "-L/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/../lib/ffmpeg-linux64/lib",
+				"fragment" : "-L/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/lib/ffmpeg-linux64/lib",
 				"role" : "libraryPath"
 			},
 			{
-				"fragment" : "-Wl,-rpath,/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/../lib/ffmpeg-linux64/lib",
+				"fragment" : "-Wl,-rpath,/media/zhuelly/Project/GodotProject/Plugin-Videoplayer/src/lib/ffmpeg-linux64/lib",
 				"role" : "libraries"
 			},
 			{
@@ -502,115 +472,115 @@
 	"sources" : 
 	[
 		{
-			"backtrace" : 27,
+			"backtrace" : 24,
 			"path" : "src/Version.h.in",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 27,
+			"backtrace" : 24,
 			"path" : "gen/Version.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"compileGroupIndex" : 0,
 			"path" : "src/src/AVDecoderHandler.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/AVDecoderHandler.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/DecodeConfig.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"compileGroupIndex" : 0,
 			"path" : "src/src/DecoderFFmpeg.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/DecoderFFmpeg.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"compileGroupIndex" : 0,
 			"path" : "src/src/FFmpegMediaEncoder.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/FFmpegMediaEncoder.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"compileGroupIndex" : 0,
 			"path" : "src/src/FFmpegMediaPlayer.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/FFmpegMediaPlayer.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/IDecoder.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/Logger.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"compileGroupIndex" : 0,
 			"path" : "src/src/MediaDecoderUtility.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/MediaDecoderUtility.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"compileGroupIndex" : 0,
 			"path" : "src/src/MediaInfoUtility.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/MediaInfoUtility.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"compileGroupIndex" : 0,
 			"path" : "src/src/VRVideoFilter.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/VRVideoFilter.h",
 			"sourceGroupIndex" : 0
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"compileGroupIndex" : 0,
 			"path" : "src/src/register_types.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
-			"backtrace" : 28,
+			"backtrace" : 25,
 			"path" : "src/src/register_types.h",
 			"sourceGroupIndex" : 0
 		}

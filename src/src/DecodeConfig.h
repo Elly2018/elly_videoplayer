@@ -1,4 +1,4 @@
-
+#pragma once
 /* Synchronization functions which can time out return this value, if they time out. */
 #define MUTEX_TIMEDOUT  1
 /* This is the timeout value which corresponds to never time out. */

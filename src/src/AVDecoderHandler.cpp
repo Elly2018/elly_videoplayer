@@ -19,7 +19,7 @@ void AVDecoderHandler::init(const char* filePath) {
 	}
 }
 
-AVDecoderHandler::DecoderState AVDecoderHandler::getDecoderState() {
+AVDecoderHandler::DecoderState AVDecoderHandler::getDecoderState() const {
 	return mDecoderState;
 }
 
@@ -41,7 +41,7 @@ bool AVDecoderHandler::isDecoderRunning() const {
     return mDecodeThreadRunning;
 }
 
-double AVDecoderHandler::getVideoFrame(void** frameData) {
+double AVDecoderHandler::getVideoFrame(void** frameData) const {
 	bool decoder_null = mIDecoder == nullptr;
 	bool decoder_disable = !mIDecoder->getVideoInfo().isEnabled;
 	bool decoder_seek = mDecoderState == SEEK;
@@ -57,7 +57,7 @@ double AVDecoderHandler::getVideoFrame(void** frameData) {
 	return mIDecoder->getVideoFrame(frameData);
 }
 
-double AVDecoderHandler::getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample) {
+double AVDecoderHandler::getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample) const {
 	bool decoder_null = mIDecoder == nullptr;
 	bool decoder_disable = !mIDecoder->getAudioInfo().isEnabled;
 	bool decoder_seek = mDecoderState == SEEK;
@@ -73,8 +73,7 @@ double AVDecoderHandler::getAudioFrame(unsigned char** outputFrame, int& frameSi
 	return mIDecoder->getAudioFrame(outputFrame, frameSize, nb_channel, byte_per_sample);
 }
 
-bool AVDecoderHandler::getOtherIndex(MediaType type, int* li, int& count, int& current)
-{
+bool AVDecoderHandler::getOtherIndex(MediaType type, int* li, int& count, int& current) const {
 	switch (type)
 	{
 	case AVDecoderHandler::VIDEO:
@@ -82,31 +81,31 @@ bool AVDecoderHandler::getOtherIndex(MediaType type, int* li, int& count, int& c
 			IDecoder::VideoInfo info = getVideoInfo();
 			count = info.otherIndexCount;
 			current = info.currentIndex;
-			//memcpy(li, info.otherIndex, count * sizeof(int));
-			li = info.otherIndex;
+			memcpy(li, info.otherIndex, count * sizeof(int));
+			//li = info.otherIndex;
 		} return true;
 	case AVDecoderHandler::AUDIO:
 		{
 			IDecoder::AudioInfo info = getAudioInfo();
 			count = info.otherIndexCount;
 			current = info.currentIndex;
-			//memcpy(li, info.otherIndex, count * sizeof(int));
-			li = info.otherIndex;
+			memcpy(li, info.otherIndex, count * sizeof(int));
+			//li = info.otherIndex;
 		} return true;
 	case AVDecoderHandler::SUBTITLE:
 		{
 			IDecoder::SubtitleInfo info = getSubtitleInfo();
 			count = info.otherIndexCount;
 			current = info.currentIndex;
-			//memcpy(li, info.otherIndex, count * sizeof(int));
-			li = info.otherIndex;
+			memcpy(li, info.otherIndex, count * sizeof(int));
+			//li = info.otherIndex;
 		} return true;
 	}
 
 	return false;
 }
 
-void AVDecoderHandler::freeVideoFrame() {
+void AVDecoderHandler::freeVideoFrame() const {
 	if (mIDecoder == nullptr || !mIDecoder->getVideoInfo().isEnabled || mDecoderState == SEEK) {
 		LOG("[AVDecoderHandler] Video is not available.");
 		return;
@@ -115,7 +114,7 @@ void AVDecoderHandler::freeVideoFrame() {
 	mIDecoder->freeVideoFrame();
 }
 
-void AVDecoderHandler::freeAudioFrame() {
+void AVDecoderHandler::freeAudioFrame() const {
 	if (mIDecoder == nullptr || !mIDecoder->getAudioInfo().isEnabled || mDecoderState == SEEK) {
 		LOG("[AVDecoderHandler] Audio is not available.");
 		return;
@@ -141,6 +140,8 @@ void AVDecoderHandler::startDecoding() {
 		mDecoderState = DECODING;
 		while (mDecoderState != STOP) {
 			switch (mDecoderState) {
+				default:
+					break;
 			case DECODING:
 				if (!mIDecoder->decode()) {
 					mDecoderState = DECODE_EOF;
@@ -149,8 +150,6 @@ void AVDecoderHandler::startDecoding() {
 			case SEEK:
 				mIDecoder->seek(mSeekTime);
 				mDecoderState = DECODING;
-				break;
-			case DECODE_EOF:
 				break;
 			}
 		}
@@ -172,31 +171,31 @@ void AVDecoderHandler::setSeekTime(float sec) {
 	mDecoderState = SEEK;
 }
 
-IDecoder::VideoInfo AVDecoderHandler::getVideoInfo() {
+IDecoder::VideoInfo AVDecoderHandler::getVideoInfo() const {
 	return mIDecoder->getVideoInfo();
 }
 
-IDecoder::AudioInfo AVDecoderHandler::getAudioInfo() {
+IDecoder::AudioInfo AVDecoderHandler::getAudioInfo() const {
 	return mIDecoder->getAudioInfo();
 }
 
-IDecoder::SubtitleInfo AVDecoderHandler::getSubtitleInfo() {
+IDecoder::SubtitleInfo AVDecoderHandler::getSubtitleInfo() const {
 	return mIDecoder->getSubtitleInfo();
 }
 
-bool AVDecoderHandler::isVideoBufferEmpty() {
+bool AVDecoderHandler::isVideoBufferEmpty() const {
 	IDecoder::VideoInfo videoInfo = mIDecoder->getVideoInfo();
 	IDecoder::BufferState EMPTY = IDecoder::BufferState::EMPTY;
 	return videoInfo.isEnabled && videoInfo.bufferState == EMPTY;
 }
 
-bool AVDecoderHandler::isVideoBufferFull() {
+bool AVDecoderHandler::isVideoBufferFull() const {
 	IDecoder::VideoInfo videoInfo = mIDecoder->getVideoInfo();
 	IDecoder::BufferState FULL = IDecoder::BufferState::FULL;
 	return videoInfo.isEnabled && videoInfo.bufferState == FULL;
 }
 
-int AVDecoderHandler::getMetaData(char**& key, char**& value) {
+int AVDecoderHandler::getMetaData(char**& key, char**& value) const {
 	if (mIDecoder == nullptr ||mDecoderState <= UNINITIALIZED) {
 		return 0;
 	}
@@ -204,7 +203,7 @@ int AVDecoderHandler::getMetaData(char**& key, char**& value) {
 	return mIDecoder->getMetaData(key, value);
 }
 
-void AVDecoderHandler::setVideoEnable(bool isEnable) {
+void AVDecoderHandler::setVideoEnable(bool isEnable) const {
 	if (mIDecoder == nullptr) {
 		return;
 	}
@@ -212,7 +211,7 @@ void AVDecoderHandler::setVideoEnable(bool isEnable) {
 	mIDecoder->setVideoEnable(isEnable);
 }
 
-void AVDecoderHandler::setAudioEnable(bool isEnable) {
+void AVDecoderHandler::setAudioEnable(bool isEnable) const {
 	if (mIDecoder == nullptr) {
 		return;
 	}
@@ -220,7 +219,7 @@ void AVDecoderHandler::setAudioEnable(bool isEnable) {
 	mIDecoder->setAudioEnable(isEnable);
 }
 
-void AVDecoderHandler::setAudioAllChDataEnable(bool isEnable) {
+void AVDecoderHandler::setAudioAllChDataEnable(bool isEnable) const {
 	if (mIDecoder == nullptr) {
 		return;
 	}

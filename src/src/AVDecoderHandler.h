@@ -20,7 +20,7 @@ public:
 	enum MediaType {
 		VIDEO, AUDIO, SUBTITLE
 	};
-	DecoderState getDecoderState();
+	[[nodiscard]] DecoderState getDecoderState() const;
 
 	void init(const char* filePath);
 	void startDecoding();
@@ -28,26 +28,26 @@ public:
 
     void stop();
 
-    bool isDecoderRunning() const;
+    [[nodiscard]] bool isDecoderRunning() const;
 
 	void setSeekTime(float sec);
 	
-	double getVideoFrame(void** frameData);
-	double getAudioFrame(uint8_t** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample);
-	bool getOtherIndex(MediaType type, int* li, int& count, int& current);
-	void freeVideoFrame();
-	void freeAudioFrame();
-	void setVideoEnable(bool isEnable);
-	void setAudioEnable(bool isEnable);
-	void setAudioAllChDataEnable(bool isEnable);
+	double getVideoFrame(void** frameData) const;
+	double getAudioFrame(uint8_t** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample) const;
+	bool getOtherIndex(MediaType type, int* li, int& count, int& current) const;
+	void freeVideoFrame() const;
+	void freeAudioFrame() const;
+	void setVideoEnable(bool isEnable) const;
+	void setAudioEnable(bool isEnable) const;
+	void setAudioAllChDataEnable(bool isEnable) const;
 
-	IDecoder::VideoInfo getVideoInfo();
-	IDecoder::AudioInfo getAudioInfo();
-	IDecoder::SubtitleInfo getSubtitleInfo();
-	bool isVideoBufferEmpty();
-	bool isVideoBufferFull();
+	[[nodiscard]] IDecoder::VideoInfo getVideoInfo() const;
+	[[nodiscard]] IDecoder::AudioInfo getAudioInfo() const;
+	[[nodiscard]] IDecoder::SubtitleInfo getSubtitleInfo() const;
+	[[nodiscard]] bool isVideoBufferEmpty() const;
+	[[nodiscard]] bool isVideoBufferFull() const;
 
-	int getMetaData(char**& key, char**& value);
+	int getMetaData(char**& key, char**& value) const;
 
 private:
 	DecoderState mDecoderState;
