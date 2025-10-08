@@ -30,7 +30,7 @@ private:
 	enum State {
 		/**
 		 * This means the media does not initialize yet.
-		 * It will trying to get the information it needs in order to start the decoding process.
+		 * It will try to get the information it needs in order to start the decoding process.
 		*/
 		FAILED = -1,
 		LOADING,
@@ -83,7 +83,7 @@ private:
 	void _init_media();
 	/*
 	* User should call this method in _ready func in the gdscript
-	* To fill the buffer of audio stream (audio stream generator)
+	* To fill the buffer with audio stream (audio stream generator)
 	*/
 	void audio_init();
 
@@ -118,7 +118,7 @@ public:
 	*/
 	void stop();
 	/*
-	* This method should called after media is loaded
+	* This method should call after media is loaded
 	* Otherwise this will do nothing
 	*/
 	void play();
@@ -140,7 +140,7 @@ public:
 
 	/*
 	* Set the loop trigger
-	* Looping will decide if end of file will causing seek to start
+	* Looping will decide if end of file will cause seek to start
 	*/
 	void set_loop(bool p_enable);
 	/*
@@ -163,13 +163,13 @@ public:
 
 	/*
 	* Godot update method
-	* This will trying to update the video part
+	* This will try to update the video part
 	* And handle some stage of player events
 	*/
 	void _process(float delta);
 	/*
 	* Godot fixed update method
-	* This will trying to update the audio part
+	* This will try to update the audio part
 	*/
  	void _physics_process(float delta);
 

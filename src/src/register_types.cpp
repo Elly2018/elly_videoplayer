@@ -14,7 +14,7 @@ using namespace godot;
 
 //static MySingleton *_my_singleton;
 
-void gdextension_initialize(ModuleInitializationLevel p_level)
+void GDExtension_Initialize(ModuleInitializationLevel p_level)
 {
 	LOG("FFmpeg extension initialize");
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
@@ -29,27 +29,28 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 	//Engine::get_singleton()->register_singleton("MySingleton", MySingleton::get_singleton());
 }
 
-void gdextension_terminate(ModuleInitializationLevel p_level)
+void GDExtension_Terminate(ModuleInitializationLevel p_level)
 {
 	LOG("FFmpeg extension terminate");
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
+		return;
 	}
 }
 
-void gdextension_startup()
+void GDExtension_Startup()
 {
 	LOG("FFmpeg extension startup !");
 }
 
-void gdextension_shutdown()
+void GDExtension_Shutdown()
 {
 	LOG("FFmpeg extension shutdown !");
 }
 
-void gdextension_frame()
+void GDExtension_Frame()
 {
-	//LOG("FFmpeg extension frame");
+	// LOG("FFmpeg extension frame");
 }
 
 extern "C"
@@ -61,11 +62,11 @@ extern "C"
 	) {
 		const GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, p_initialization);
 
-		init_obj.register_initializer(&gdextension_initialize);
-		init_obj.register_terminator(&gdextension_terminate);
-		init_obj.register_startup_callback(&gdextension_startup);
-		init_obj.register_shutdown_callback(&gdextension_shutdown);
-		init_obj.register_frame_callback(&gdextension_frame);
+		init_obj.register_initializer(&GDExtension_Initialize);
+		init_obj.register_terminator(&GDExtension_Terminate);
+		init_obj.register_startup_callback(&GDExtension_Startup);
+		init_obj.register_shutdown_callback(&GDExtension_Shutdown);
+		init_obj.register_frame_callback(&GDExtension_Frame);
 		init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_SCENE);
 
 		return init_obj.init();
