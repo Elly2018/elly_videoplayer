@@ -16,6 +16,7 @@ using namespace godot;
 
 void gdextension_initialize(ModuleInitializationLevel p_level)
 {
+	LOG("FFmpeg extension initialize");
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
@@ -30,9 +31,25 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 
 void gdextension_terminate(ModuleInitializationLevel p_level)
 {
+	LOG("FFmpeg extension terminate");
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
 	}
+}
+
+void gdextension_startup()
+{
+	LOG("FFmpeg extension startup !");
+}
+
+void gdextension_shutdown()
+{
+	LOG("FFmpeg extension shutdown !");
+}
+
+void gdextension_frame()
+{
+	//LOG("FFmpeg extension frame");
 }
 
 extern "C"
@@ -46,6 +63,9 @@ extern "C"
 
 		init_obj.register_initializer(&gdextension_initialize);
 		init_obj.register_terminator(&gdextension_terminate);
+		init_obj.register_startup_callback(&gdextension_startup);
+		init_obj.register_shutdown_callback(&gdextension_shutdown);
+		init_obj.register_frame_callback(&gdextension_frame);
 		init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_SCENE);
 
 		return init_obj.init();

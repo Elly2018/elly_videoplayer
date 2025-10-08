@@ -5,13 +5,13 @@
 [sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_cr308"]
 buffer_length = 0.2
 
-[node name="Plane" type="Node3D" node_paths=PackedStringArray("texture_rect", "player", "audio_stream")]
-transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0.203564, -0.109128, 0.122446)
+[node name="Plane" type="Node" node_paths=PackedStringArray("texture_rect", "player", "audio_stream")]
 script = ExtResource("1_8ajqr")
 loop = true
 texture_rect = NodePath("Container/TextureRect")
 player = NodePath("FFmpegMediaPlayer")
 audio_stream = NodePath("Player")
+metadata/_custom_type_script = "uid://cbq3k73pk5872"
 
 [node name="Player" type="AudioStreamPlayer" parent="."]
 stream = SubResource("AudioStreamGenerator_cr308")

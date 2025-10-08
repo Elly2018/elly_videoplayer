@@ -9,10 +9,6 @@ using namespace godot;
 #define ENABLE_LOG
 #define ENABLE_LOG_VERBOSE
 
-void s() {
-    godot::UtilityFunctions::print
-}
-
 #ifdef ENABLE_LOG
 #define LOG(...) godot::UtilityFunctions::print( __VA_ARGS__ )
 #define LOG_ERROR(...) godot::UtilityFunctions::printerr( __VA_ARGS__ )

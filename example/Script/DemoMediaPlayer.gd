@@ -1,4 +1,4 @@
-extends Node
+class_name DemoMediaPlayer extends Node
 
 @export var play_on_start: bool;
 @export var loop: bool;
