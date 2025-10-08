@@ -7,6 +7,7 @@
 
 #include "FFmpegMediaPlayer.h"
 #include "FFmpegMediaEncoder.h"
+#include "Logger.h"
 #include "VRVideoFilter.h"
 
 using namespace godot;
@@ -15,23 +16,22 @@ using namespace godot;
 
 void gdextension_initialize(ModuleInitializationLevel p_level)
 {
-	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
-	{
-		ClassDB::register_class<FFmpegMediaPlayer>();
-		ClassDB::register_class<FFmpegMediaEncoder>();
-		ClassDB::register_class<VRVideoFilter>();
-		//ClassDB::register_class<MySingleton>();
-		//_my_singleton = memnew(MySingleton);
-		//Engine::get_singleton()->register_singleton("MySingleton", MySingleton::get_singleton());
+	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
+		return;
 	}
+
+	GDREGISTER_CLASS(FFmpegMediaPlayer);
+	GDREGISTER_CLASS(FFmpegMediaEncoder);
+	GDREGISTER_CLASS(VRVideoFilter);
+	//ClassDB::register_class<MySingleton>();
+	//_my_singleton = memnew(MySingleton);
+	//Engine::get_singleton()->register_singleton("MySingleton", MySingleton::get_singleton());
 }
 
 void gdextension_terminate(ModuleInitializationLevel p_level)
 {
-	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
+	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
-		//Engine::get_singleton()->unregister_singleton("MySingleton");
-		//memdelete(_my_singleton);
 	}
 }
 
@@ -46,7 +46,6 @@ extern "C"
 
 		init_obj.register_initializer(&gdextension_initialize);
 		init_obj.register_terminator(&gdextension_terminate);
-
 		init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_SCENE);
 
 		return init_obj.init();

@@ -2,7 +2,7 @@
 #include "Logger.h"
 
 #include <cstring>
-#include <math.h>
+#include <cmath>
 
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -72,8 +72,8 @@ void FFmpegMediaPlayer::load_async()
 	load_path_async(path);
 }
 
-bool FFmpegMediaPlayer::load_path(String path) {
-	LOG("start load path: ", path);
+bool FFmpegMediaPlayer::load_path(const String &p_path) {
+	LOG("start load path: ", p_path);
 	if (player == nullptr) {
 		LOG_ERROR("You must register the player instance first");
 		return false;
@@ -82,11 +82,11 @@ bool FFmpegMediaPlayer::load_path(String path) {
 	int d_state = nativeGetDecoderState(id);
 	if (d_state > 1) {
 		stop();
-		//LOG_ERROR("Decoder state: ") + String(std::to_string(d_state).c_str()));
-		//return false;
+		LOG_ERROR("Decoder state: " + String(std::to_string(d_state).c_str()));
+		return false;
 	}
 
-	CharString utf8 = path.utf8();
+	CharString utf8 = p_path.utf8();
 	const char *cstr = utf8.get_data();
 
 	nativeCreateDecoder(cstr, id);
@@ -103,8 +103,8 @@ bool FFmpegMediaPlayer::load_path(String path) {
 	return is_loaded;
 }
 
-void FFmpegMediaPlayer::load_path_async(String path) {
-	LOG("start load path: ", path);
+void FFmpegMediaPlayer::load_path_async(const String &p_path) {
+	LOG("start load path: ", p_path);
 	int d_state = nativeGetDecoderState(id);
 	if (d_state > 1) {
 		LOG_ERROR("Decoder state: ", d_state);
@@ -112,7 +112,7 @@ void FFmpegMediaPlayer::load_path_async(String path) {
 		return;
 	}
 
-	CharString utf8 = path.utf8();
+	CharString utf8 = p_path.utf8();
 	const char *cstr = utf8.get_data();
 
 	nativeCreateDecoderAsync(cstr, id);
@@ -346,7 +346,7 @@ void FFmpegMediaPlayer::_physics_process(float delta) {
 				audio_data.resize(audio_size * byte_per_sample * channel);
 				memcpy(audio_data.ptrw(), raw_audio_data, audio_size * channel * byte_per_sample);
 				emit_signal("audio_update", audio_data, audio_size, channel);
-				//LOG("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
+				LOG_VERBOSE("Audio info, sample size: %d, channel: %d, byte per sample: %d \n", audio_size, channel, byte_per_sample);
 				float s = 0;
 
 				for (int i = 0; i < audio_size * channel; i += channel) {
@@ -420,17 +420,17 @@ AudioStreamPlayer* FFmpegMediaPlayer::get_player() const
 	return player;
 }
 
-void FFmpegMediaPlayer::set_sample_rate(const int rate)
+void FFmpegMediaPlayer::set_sample_rate(const int rate) const
 {
-	generator->set_mix_rate(rate);
+	generator->set_mix_rate(static_cast<float>(rate));
 }
 
 int FFmpegMediaPlayer::get_sample_rate() const
 {
-	return generator->get_mix_rate();
+	return static_cast<int>(generator->get_mix_rate());
 }
 
-void FFmpegMediaPlayer::set_buffer_length(const float second)
+void FFmpegMediaPlayer::set_buffer_length(const float second) const
 {
 	generator->set_buffer_length(second);
 }
@@ -455,7 +455,7 @@ String FFmpegMediaPlayer::get_format() const
 {
 	return format;
 }
-FFmpegMediaPlayer::FFmpegMediaPlayer() {
+FFmpegMediaPlayer::FFmpegMediaPlayer() : player(nullptr) {
 	image = Image::create(1, 1, false, Image::FORMAT_RGB8);
 	texture = ImageTexture::create_from_image(image);
 	audioFrame = List<Vector2>();

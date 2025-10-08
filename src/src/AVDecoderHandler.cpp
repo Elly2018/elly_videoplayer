@@ -191,8 +191,7 @@ bool AVDecoderHandler::isVideoBufferEmpty() const {
 
 bool AVDecoderHandler::isVideoBufferFull() const {
 	IDecoder::VideoInfo videoInfo = mIDecoder->getVideoInfo();
-	IDecoder::BufferState FULL = IDecoder::BufferState::FULL;
-	return videoInfo.isEnabled && videoInfo.bufferState == FULL;
+	return videoInfo.isEnabled && videoInfo.bufferState == IDecoder::BufferState::FULL;
 }
 
 int AVDecoderHandler::getMetaData(char**& key, char**& value) const {

@@ -1,7 +1,7 @@
 [configuration]
 
 entry_symbol = "gdextension_init"
-compatibility_minimum = 4.1
+compatibility_minimum = 4.5
 
 [dependencies]
 
@@ -11,23 +11,21 @@ windows.x86_64 = {
 "lib/Dep/avfilter-9.dll":".",
 "lib/Dep/avformat-60.dll":".",
 "lib/Dep/avutil-58.dll":".",
-"lib/Dep/postproc-57.dll":".",
 "lib/Dep/swresample-4.dll":".",
 "lib/Dep/swscale-7.dll":"."
 }
 Linux-AMD64 = {
-"lib/Dep/avcodec-60.dll":".",
-"lib/Dep/avdevice-60.dll":".",
-"lib/Dep/avfilter-9.dll":".",
-"lib/Dep/avformat-60.dll":".",
-"lib/Dep/avutil-58.dll":".",
-"lib/Dep/postproc-57.dll":".",
-"lib/Dep/swresample-4.dll":".",
-"lib/Dep/swscale-7.dll":"."
+"lib/Dep/libavcodec.so":".",
+"lib/Dep/libavdevice.so":".",
+"lib/Dep/libavfilter.so":".",
+"lib/Dep/libavformat.so":".",
+"lib/Dep/libavutil.so":".",
+"lib/Dep/libswresample.so":".",
+"lib/Dep/libswscale.so":"."
 }
 
 [libraries]
 
 windows.x86_64 = "lib/Windows-AMD64/gd_videoplayer-d.dll"
-linux.x86_64 = "lib/Linux-AMD64/gd_videoplayer-d.dll"
+linux.x86_64 = "lib/Linux-AMD64/libgd_videoplayer.so"
 

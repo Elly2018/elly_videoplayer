@@ -104,12 +104,12 @@ public:
 	/*
 	* Loading path from string
 	*/
-	bool load_path(String path);
+	bool load_path(const String &p_path);
 	/*
 	* Async loading path from string
 	* "async_loaded" signal will trigger when finish
 	*/
-	void load_path_async(String path);
+	void load_path_async(const String &p_path);
 
 
 	/*
@@ -125,7 +125,7 @@ public:
 	/*
 	* Check current state is playing media
 	*/
-	bool is_playing() const;
+	[[nodiscard]] bool is_playing() const;
 
 
 	/*
@@ -135,7 +135,7 @@ public:
 	/*
 	* Check pause state
 	*/
-	bool is_paused() const;
+	[[nodiscard]] bool is_paused() const;
 
 
 	/*
@@ -146,15 +146,15 @@ public:
 	/*
 	* Check loop state
 	*/
-	bool has_loop() const;
+	[[nodiscard]] bool has_loop() const;
 	/*
 	* Get the media length (second)
 	*/
-	float get_length() const;
+	[[nodiscard]] float get_length() const;
 	/*
 	* Get current play position (second)
 	*/
-	float get_playback_position() const;
+	[[nodiscard]] float get_playback_position() const;
 	/*
 	* Seeking to particular position within the loaded media
 	*/
@@ -182,17 +182,17 @@ public:
 	/*
 	* Get current use audio player
 	*/
-	AudioStreamPlayer* get_player() const;
+	[[nodiscard]] AudioStreamPlayer* get_player() const;
 
-	void set_sample_rate(const int rate);
-	int get_sample_rate() const;
-	void set_buffer_length(const float second);
-	float get_buffer_length() const;
+	void set_sample_rate(const int rate) const;
+	[[nodiscard]] int get_sample_rate() const;
+	void set_buffer_length(const float second) const;
+	[[nodiscard]] float get_buffer_length() const;
 	void set_path(const String _path);
-	String get_path() const;
+	[[nodiscard]] String get_path() const;
 	void set_format(const String _format);
-	String get_format() const;
+	[[nodiscard]] String get_format() const;
 
 	FFmpegMediaPlayer();
-	~FFmpegMediaPlayer();
+	~FFmpegMediaPlayer() override;
 };
