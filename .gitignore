@@ -23,6 +23,7 @@ x64/
 bin/
 VideoPlayer.dir/
 gen/
+.cmake
 .ninja_deps
 .ninja_lock
 .ninja_log
