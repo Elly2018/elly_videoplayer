@@ -1,8 +1,8 @@
-extends Node
+class_name DemoMediaPlayer extends Node
 
 @export var play_on_start: bool;
 @export var loop: bool;
-@export var uri: String = "https://test-streams.mux.dev/x36xhzz/url_6/193039199_mp4_h264_aac_hq_7.m3u8";
+@export var uri: String = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 @export var geo: GeometryInstance3D;
 @export var texture_rect: TextureRect;
 
@@ -91,8 +91,8 @@ func stop_trigger():
 	player.stop()
 	
 func load_trigger(p:String):
-	print("Loading: ", p)
-	player.load_path(p);
+	var l = player.load_path(p);
+	print("Loading: ", p, "  ",  l)
 	player.play();
 		
 func async_load_finish(result):

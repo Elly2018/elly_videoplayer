@@ -1,0 +1,43 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"templates/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 32,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "/usr/local/GDExtensionTemplate",
+			"paths" : 
+			[
+				"GDExtensionTemplate//GDExtensionTemplate.gdextension"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "templates",
+		"source" : "templates"
+	}
+}

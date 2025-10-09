@@ -16,29 +16,29 @@ class DecoderFFmpeg : public virtual IDecoder
 {
 public:
 	DecoderFFmpeg();
-	~DecoderFFmpeg();
+	virtual ~DecoderFFmpeg();
 
-	bool init(const char* filePath);
+	bool init(const char* filePath) override;
 	bool init(const char* format, const char* filePath);
-	bool decode();
-	bool buffering();
-	void seek(double time);
-	void destroy();
+	bool decode() override;
+	bool buffering() override;
+	void seek(double time) override;
+	void destroy() override;
 
-	VideoInfo getVideoInfo();
-	AudioInfo getAudioInfo();
-	SubtitleInfo getSubtitleInfo();
-	bool isBufferingFinish();
-	void setVideoEnable(bool isEnable);
-	void setAudioEnable(bool isEnable);
-	void setAudioAllChDataEnable(bool isEnable);
-	double getVideoFrame(void** frameData);
-	double getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample);
-	void freeVideoFrame();
-	void freeAudioFrame();
+	VideoInfo getVideoInfo() override;
+	AudioInfo getAudioInfo() override;
+	SubtitleInfo getSubtitleInfo() override;
+	bool isBufferingFinish() override;
+	void setVideoEnable(bool isEnable) override;
+	void setAudioEnable(bool isEnable) override;
+	void setAudioAllChDataEnable(bool isEnable) override;
+	double getVideoFrame(void** frameData) override;
+	double getAudioFrame(unsigned char** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample) override;
+	void freeVideoFrame() override;
+	void freeAudioFrame() override;
 	void print_stream_maps();
 
-	int getMetaData(char**& key, char**& value);
+	int getMetaData(char**& key, char**& value) override;
 	int getStreamCount();
 	/**
 	 * 
@@ -58,13 +58,13 @@ private:
 	AVFormatContext* mAVFormatContext;
 	AVStream*		mVideoStream;
 	AVStream*		mAudioStream;
-	AVStream*		mSubtitleStream;
+	AVStream*		mSubtitleStream{};
 	const AVCodec*		mVideoCodec;
 	const AVCodec*		mAudioCodec;
-	const AVCodec*		mSubtitleCodec;
+	const AVCodec*		mSubtitleCodec{};
 	AVCodecContext*	mVideoCodecContext;
 	AVCodecContext*	mAudioCodecContext;
-	AVCodecContext*	mSubtitleCodecContext;
+	AVCodecContext*	mSubtitleCodecContext{};
 
 	AVPacket*	mPacket;
 	std::queue<AVFrame*> mVideoFrames;
@@ -72,17 +72,17 @@ private:
 	std::queue<AVFrame*> mSubtitleFrames;
 	unsigned int mVideoBuffMax;
 	unsigned int mAudioBuffMax;
-	unsigned int mSubtitleBuffMax;
+	unsigned int mSubtitleBuffMax{};
 
 	SwrContext*	mSwrContext;
 	int initSwrContext();
 
-	VideoInfo	mVideoInfo;
-	AudioInfo	mAudioInfo;
-	SubtitleInfo	mSubtitleInfo;
+	VideoInfo	mVideoInfo{};
+	AudioInfo	mAudioInfo{};
+	SubtitleInfo	mSubtitleInfo{};
 	void updateBufferState();
 
-	int mFrameBufferNum;
+	int mFrameBufferNum{};
 
 	bool isBuffBlocked();
 	void updateVideoFrame();

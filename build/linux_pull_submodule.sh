@@ -1,8 +1,6 @@
 #!/bin/sh
-cd ..
-git clone -b 4.1 https://github.com/godotengine/godot-cpp.git
-cd src
-curl --output ffmpeg.zip -L -O https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip
-unzip ffmpeg.zip
-mv ffmpeg-master-latest-win64-gpl-shared ffmpeg
-rm ./ffmpeg.zip
+cd ../src/lib
+curl --output ffmpeg.tar.xz -L -O https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2025-10-06-13-37/ffmpeg-N-121334-g6231fa7fb7-linux64-gpl-shared.tar.xz
+tar -xf ffmpeg.tar.xz
+mv ffmpeg-N-121334-g6231fa7fb7-linux64-gpl-shared ffmpeg-linux64
+rm ./ffmpeg.tar.xz

@@ -181,12 +181,17 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 	std::vector<int> audioIndex = std::vector<int>();
 	std::vector<int> subtitleIndex = std::vector<int>();
 	getListType(mAVFormatContext, videoIndex, audioIndex, subtitleIndex);
-	mVideoInfo.otherIndex = videoIndex.data();
-	mVideoInfo.otherIndexCount = videoIndex.size();
-	mAudioInfo.otherIndex = audioIndex.data();
-	mAudioInfo.otherIndexCount = audioIndex.size();
-	mSubtitleInfo.otherIndex = subtitleIndex.data();
-	mSubtitleInfo.otherIndexCount = subtitleIndex.size();
+	mVideoInfo.otherIndex = static_cast<int*>(malloc(videoIndex.size() * sizeof(int)));
+	memcpy(mVideoInfo.otherIndex, videoIndex.data(), videoIndex.size() * sizeof(int));
+	mVideoInfo.otherIndexCount = static_cast<int>(videoIndex.size());
+
+	mAudioInfo.otherIndex = static_cast<int*>(malloc(audioIndex.size() * sizeof(int)));
+	memcpy(mAudioInfo.otherIndex, audioIndex.data(), audioIndex.size() * sizeof(int));
+	mAudioInfo.otherIndexCount = static_cast<int>(audioIndex.size());
+
+	mSubtitleInfo.otherIndex = static_cast<int*>(malloc(subtitleIndex.size() * sizeof(int)));
+	memcpy(mSubtitleInfo.otherIndex, subtitleIndex.data(), subtitleIndex.size() * sizeof(int));
+	mSubtitleInfo.otherIndexCount = static_cast<int>(subtitleIndex.size());
 
 	LOG("Finished initialization");
 	mIsInitialized = true;
@@ -284,8 +289,10 @@ int DecoderFFmpeg::initSwrContext() {
 	}
 
 	int errorCode = 0;
-	int64_t inChannelLayout = av_get_default_channel_layout(mAudioCodecContext->channels);
-	uint64_t outChannelLayout = mIsAudioAllChEnabled ? inChannelLayout : AV_CH_LAYOUT_STEREO;
+	AVChannelLayout inChannelLayout;
+	av_channel_layout_default(&inChannelLayout, mAudioCodecContext->ch_layout.nb_channels);
+	AVChannelLayout outChannelLayout;
+	av_channel_layout_default(&outChannelLayout, mIsAudioAllChEnabled ? inChannelLayout.nb_channels : AV_CH_LAYOUT_STEREO);
 	AVSampleFormat inSampleFormat = mAudioCodecContext->sample_fmt;
 	AVSampleFormat outSampleFormat = AV_SAMPLE_FMT_FLT;
 	int inSampleRate = mAudioCodecContext->sample_rate;
@@ -298,10 +305,9 @@ int DecoderFFmpeg::initSwrContext() {
 	}
 
 	mSwrContext = swr_alloc();
-	swr_alloc_set_opts(mSwrContext,
-		outChannelLayout, outSampleFormat, outSampleRate,
-		inChannelLayout, inSampleFormat, inSampleRate,
-		0, nullptr);
+	swr_alloc_set_opts2(&mSwrContext, 
+		&outChannelLayout, outSampleFormat, outSampleRate,
+		&inChannelLayout, inSampleFormat, inSampleRate, 0, nullptr);
 
 	
 	if (swr_is_initialized(mSwrContext) == 0) {
@@ -309,7 +315,7 @@ int DecoderFFmpeg::initSwrContext() {
 	}
 
 	//	Save the output audio format
-	mAudioInfo.channels = av_get_channel_layout_nb_channels(outChannelLayout);
+	mAudioInfo.channels = outChannelLayout.nb_channels;
 	mAudioInfo.sampleRate = outSampleRate;
 	mAudioInfo.totalTime = mAudioStream->duration <= 0 ? (double)(mAVFormatContext->duration) / AV_TIME_BASE : mAudioStream->duration * av_q2d(mAudioStream->time_base);
 	
@@ -345,7 +351,7 @@ double DecoderFFmpeg::getAudioFrame(unsigned char** outputFrame, int& frameSize,
 	}
 
 	AVFrame* frame = mAudioFrames.front();
-	nb_channel = frame->channels;
+	nb_channel = frame->ch_layout.nb_channels;
 	frameSize = frame->nb_samples;
 	*outputFrame = frame->data[0];
 	byte_per_sample = (size_t)av_get_bytes_per_sample(mAudioCodecContext->sample_fmt);
@@ -424,12 +430,12 @@ int DecoderFFmpeg::getStreamType(int index)
 
 void DecoderFFmpeg::destroy() {
 	if (mVideoCodecContext != nullptr) {
-		avcodec_close(mVideoCodecContext);
+		avcodec_free_context(&mVideoCodecContext);
 		mVideoCodecContext = nullptr;
 	}
 	
 	if (mAudioCodecContext != nullptr) {
-		avcodec_close(mAudioCodecContext);
+		avcodec_free_context(&mAudioCodecContext);
 		mAudioCodecContext = nullptr;
 	}
 	
@@ -556,7 +562,7 @@ void DecoderFFmpeg::updateAudioFrame() {
 
 		AVFrame* frame = av_frame_alloc();
 		frame->sample_rate = frameDecoded->sample_rate;
-		frame->channel_layout = av_get_default_channel_layout(mAudioInfo.channels);
+		av_channel_layout_default(&frame->ch_layout, mAudioInfo.channels);
 		frame->format = AV_SAMPLE_FMT_FLT;	//	For Unity format.
 		frame->best_effort_timestamp = frameDecoded->best_effort_timestamp;
 
@@ -625,7 +631,7 @@ void DecoderFFmpeg::print_stream_maps()
 	}
 	LOG("  Audio info: ");
 	if (mAudioCodecContext != nullptr) {
-		LOG("    Channel_count: ", mAudioCodecContext->channels);
+		LOG("    Channel_count: ", mAudioCodecContext->ch_layout.nb_channels);
 		LOG("    Bitrate: ", mAudioCodecContext->bit_rate);
 		LOG("    Codec_id: ", mAudioCodec->id);
 	}
@@ -662,7 +668,7 @@ void DecoderFFmpeg::flushBuffer(std::queue<AVFrame*>* frameBuff, std::mutex* mut
 
 AVCodecContext* DecoderFFmpeg::getStreamCodecContext(int index)
 {
-	if (index < 0 || index > mAVFormatContext->nb_streams) {
+	if (index < 0 || index > static_cast<int>(mAVFormatContext->nb_streams)) {
 		LOG_ERROR("Index out of range: getStreamsCodecContext");
 		return nullptr;
 	}
@@ -674,7 +680,7 @@ AVCodecContext* DecoderFFmpeg::getStreamCodecContext(int index)
 void DecoderFFmpeg::freeStreamCodecContext(AVCodecContext* codec) {
 	if (codec != nullptr)
 	{
-		avcodec_close(codec);
+		avcodec_free_context(&codec);
 	}
 }
 
@@ -682,7 +688,7 @@ void DecoderFFmpeg::getListType(AVFormatContext* format, std::vector<int>& v, st
 	v.clear();
 	a.clear();
 	s.clear();
-	for (int i = 0; i < format->nb_streams; i++) {
+	for (int i = 0; i < static_cast<int>(format->nb_streams); i++) {
 		int type = getStreamType(i);
 		if (type == AVMEDIA_TYPE_VIDEO) v.push_back(i);
 		else if (type == AVMEDIA_TYPE_AUDIO) a.push_back(i);
@@ -724,18 +730,13 @@ int DecoderFFmpeg::loadConfig() {
 	int buffVideoMax = 0, buffAudioMax = 0, tcp = 0, seekAny = 0;
 	std::string line;
 	while (configFile >> line) {
-		std::string token = line.substr(0, line.find("="));
+		std::string token = line.substr(0, line.find('='));
 		CONFIG config = NONE;
-		std::string value = line.substr(line.find("=") + 1);
-		try {
-			if (token == "USE_TCP") { tcp = stoi(value); }
-			else if (token == "BUFF_VIDEO_MAX") { buffVideoMax = stoi(value); }
-			else if (token == "BUFF_AUDIO_MAX") { buffAudioMax = stoi(value); }
-			else if (token == "SEEK_ANY") { seekAny = stoi(value); }
-		
-		} catch (...) {
-			return -1;
-		}
+		std::string value = line.substr(line.find('=') + 1);
+		if (token == "USE_TCP") { tcp = stoi(value); }
+		else if (token == "BUFF_VIDEO_MAX") { buffVideoMax = stoi(value); }
+		else if (token == "BUFF_AUDIO_MAX") { buffAudioMax = stoi(value); }
+		else if (token == "SEEK_ANY") { seekAny = stoi(value); }
 	}
 
 	mUseTCP = tcp != 0;

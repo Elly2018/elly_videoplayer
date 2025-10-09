@@ -1,3 +1,3 @@
 #!/bin/sh
 cd ..
-cp -f "GDExtensionTemplate-build\GDExtensionTemplate\lib\Linux-AMD64\Debug\gd_videoplayer-d.dll" $projectpath
+cp --verbose -f "GDExtensionTemplate/lib/Linux-x86_64/libgd_videoplayer.so" $1

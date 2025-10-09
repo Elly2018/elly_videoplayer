@@ -14,17 +14,24 @@ void VRVideoFilter::_bind_methods()
 	ADD_SIGNAL(MethodInfo("received_texture", PropertyInfo(Variant::RID, "image", PROPERTY_HINT_RESOURCE_TYPE, "ImageTexture"), PropertyInfo(Variant::VECTOR2I, "size"), PropertyInfo(Variant::INT, "mode")));
 }
 
-void VRVideoFilter::add_material(Ref<Material> mat)
+void VRVideoFilter::add_material(const Ref<Material> &mat)
 {
-	Ref<Material> f = mats.find(mat);
-	if (f.is_valid()) return;
-	mats.push_back(mat);
+	Ref<Material> f;
+	for(auto m : mats){
+		if(m == mat){
+			mats.push_back(mat);
+		}
+	}
 }
 
-void VRVideoFilter::remove_material(Ref<Material> mat)
+void VRVideoFilter::remove_material(const Ref<Material> &mat)
 {
-	Ref<Material> f = mats.find(mat);
-	if (f.is_null()) return;
+	for(auto m : mats){
+		if(m == mat){
+			mats.erase(m);
+			break;
+		}
+	}
 }
 
 void VRVideoFilter::clean_material()

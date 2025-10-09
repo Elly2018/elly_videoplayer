@@ -1,4 +1,4 @@
-extends Node
+class_name MediaController extends Control
 
 signal ToPlay
 signal ToPlayPause

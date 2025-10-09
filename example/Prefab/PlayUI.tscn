@@ -14,6 +14,7 @@ grow_vertical = 2
 script = ExtResource("1_5vg8y")
 input_uri = NodePath("Container/TextEdit")
 Con = NodePath("Container")
+metadata/_custom_type_script = "uid://bp8g45efco8d4"
 
 [node name="Container" type="Control" parent="."]
 layout_mode = 1

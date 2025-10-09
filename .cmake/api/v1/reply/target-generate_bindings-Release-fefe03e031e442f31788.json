@@ -1,0 +1,92 @@
+{
+	"backtrace" : 3,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_custom_target",
+			"binding_generator_generate_bindings",
+			"godotcpp_generate"
+		],
+		"files" : 
+		[
+			"godot-cpp/cmake/GodotCPPModule.cmake",
+			"godot-cpp/cmake/godotcpp.cmake",
+			"godot-cpp/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 2
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 64,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 272,
+				"parent" : 1
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 119,
+				"parent" : 2
+			}
+		]
+	},
+	"folder" : 
+	{
+		"name" : "godot-cpp"
+	},
+	"id" : "generate_bindings::@4487305cb972aeb5fb22",
+	"name" : "generate_bindings",
+	"paths" : 
+	{
+		"build" : "godot-cpp",
+		"source" : "godot-cpp"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				0,
+				2
+			]
+		},
+		{
+			"name" : "CMake Rules",
+			"sourceIndexes" : 
+			[
+				1
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 3,
+			"isGenerated" : true,
+			"path" : "godot-cpp/CMakeFiles/generate_bindings",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "godot-cpp/CMakeFiles/generate_bindings.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"path" : "godot-cpp/gdextension/extension_api.json",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "UTILITY"
+}

@@ -30,7 +30,7 @@ private:
 	enum State {
 		/**
 		 * This means the media does not initialize yet.
-		 * It will trying to get the information it needs in order to start the decoding process.
+		 * It will try to get the information it needs in order to start the decoding process.
 		*/
 		FAILED = -1,
 		LOADING,
@@ -83,7 +83,7 @@ private:
 	void _init_media();
 	/*
 	* User should call this method in _ready func in the gdscript
-	* To fill the buffer of audio stream (audio stream generator)
+	* To fill the buffer with audio stream (audio stream generator)
 	*/
 	void audio_init();
 
@@ -104,12 +104,12 @@ public:
 	/*
 	* Loading path from string
 	*/
-	bool load_path(String path);
+	bool load_path(const String &p_path);
 	/*
 	* Async loading path from string
 	* "async_loaded" signal will trigger when finish
 	*/
-	void load_path_async(String path);
+	void load_path_async(const String &p_path);
 
 
 	/*
@@ -118,14 +118,14 @@ public:
 	*/
 	void stop();
 	/*
-	* This method should called after media is loaded
+	* This method should call after media is loaded
 	* Otherwise this will do nothing
 	*/
 	void play();
 	/*
 	* Check current state is playing media
 	*/
-	bool is_playing() const;
+	[[nodiscard]] bool is_playing() const;
 
 
 	/*
@@ -135,26 +135,26 @@ public:
 	/*
 	* Check pause state
 	*/
-	bool is_paused() const;
+	[[nodiscard]] bool is_paused() const;
 
 
 	/*
 	* Set the loop trigger
-	* Looping will decide if end of file will causing seek to start
+	* Looping will decide if end of file will cause seek to start
 	*/
 	void set_loop(bool p_enable);
 	/*
 	* Check loop state
 	*/
-	bool has_loop() const;
+	[[nodiscard]] bool has_loop() const;
 	/*
 	* Get the media length (second)
 	*/
-	float get_length() const;
+	[[nodiscard]] float get_length() const;
 	/*
 	* Get current play position (second)
 	*/
-	float get_playback_position() const;
+	[[nodiscard]] float get_playback_position() const;
 	/*
 	* Seeking to particular position within the loaded media
 	*/
@@ -163,13 +163,13 @@ public:
 
 	/*
 	* Godot update method
-	* This will trying to update the video part
+	* This will try to update the video part
 	* And handle some stage of player events
 	*/
 	void _process(float delta);
 	/*
 	* Godot fixed update method
-	* This will trying to update the audio part
+	* This will try to update the audio part
 	*/
  	void _physics_process(float delta);
 
@@ -182,17 +182,17 @@ public:
 	/*
 	* Get current use audio player
 	*/
-	AudioStreamPlayer* get_player() const;
+	[[nodiscard]] AudioStreamPlayer* get_player() const;
 
-	void set_sample_rate(const int rate);
-	int get_sample_rate() const;
-	void set_buffer_length(const float second);
-	float get_buffer_length() const;
+	void set_sample_rate(const int rate) const;
+	[[nodiscard]] int get_sample_rate() const;
+	void set_buffer_length(const float second) const;
+	[[nodiscard]] float get_buffer_length() const;
 	void set_path(const String _path);
-	String get_path() const;
+	[[nodiscard]] String get_path() const;
 	void set_format(const String _format);
-	String get_format() const;
+	[[nodiscard]] String get_format() const;
 
 	FFmpegMediaPlayer();
-	~FFmpegMediaPlayer();
+	~FFmpegMediaPlayer() override;
 };

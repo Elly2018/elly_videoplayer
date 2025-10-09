@@ -4,7 +4,7 @@ cmake_minimum_required( VERSION 3.22 )
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/CMakeCache.txt)
     if (NOT CMAKE_BUILD_TYPE)
-        set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+        set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "" FORCE)
     endif()
 endif()
 
@@ -19,6 +19,16 @@ endif()
 
 # Add paths to modules
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/" )
+
+# Enable some option for compiler
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+endif()
+
+# Ignore PCL errors in Clang
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wno-gnu-anonymous-struct -Wno-nested-anon-types)
+endif()
 
 # Turn on link time optimization for everything
 set( CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON )
@@ -107,19 +117,11 @@ include( ccache )
 # Adds a custom target to format all the code at once
 include( ClangFormat )
 
-# godot-cpp
-# From here: https://github.com/godotengine/godot-cpp
-if ( NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/godot-cpp/Makefile" )
-    message(
-        FATAL_ERROR
-            "[${PROJECT_NAME}] The godot-cpp submodule was not downloaded. Please update submodules: git submodule update --init --recursive."
-    )
-endif()
-
 set( GODOT_CPP_SYSTEM_HEADERS ON CACHE BOOL "" FORCE )
 
 add_subdirectory( godot-cpp )
 
+set_property(TARGET godot-cpp PROPERTY C_EXTENSIONS ON)
 set_target_properties( godot-cpp
     PROPERTIES
         CXX_VISIBILITY_PRESET hidden    # visibility needs to be the same as the main library
