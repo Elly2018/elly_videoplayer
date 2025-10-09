@@ -8,6 +8,8 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include "AVDecoderHandler.h"
+
 using namespace godot;
 
 void FFmpegMediaPlayer::_init_media() {
@@ -19,7 +21,10 @@ void FFmpegMediaPlayer::_init_media() {
 	if (video_playback) {
 		first_frame = true;
 		nativeGetVideoFormat(id, width, height, framerate, video_length);
-		nativeGetOtherStreamIndex(id, 0, li, count, current);
+		if (!nativeGetOtherStreamIndex(id, AVDecoderHandler::MediaType::VIDEO, li, count, current)) {
+			LOG_ERROR("[Video Decoder] nativeGetOtherStreamIndex Failed");
+			return;
+		}
 		LOG("Video info:");
 		LOG("\tStream Count: ", count);
 		LOG("\tCurrent Index: ",current);
@@ -29,11 +34,13 @@ void FFmpegMediaPlayer::_init_media() {
 		//delay_frame = Math::ceil(framerate / 4.0f);
 		data_size = width * height * 3;
 	}
-
 	audio_playback = nativeIsAudioEnabled(id);
 	if (audio_playback) {
 		nativeGetAudioFormat(id, channels, sampleRate, audio_length);
-		nativeGetOtherStreamIndex(id, 1, li, count, current);
+		if (!nativeGetOtherStreamIndex(id, AVDecoderHandler::MediaType::AUDIO, li, count, current)) {
+			LOG_ERROR("[Audio Decoder] nativeGetOtherStreamIndex Failed");
+			return;
+		}
 		generator->set_mix_rate(sampleRate);
 		LOG("Audio info:");
 		LOG("\tStream Count: ", count);

@@ -181,12 +181,17 @@ bool DecoderFFmpeg::init(const char* format, const char* filePath) {
 	std::vector<int> audioIndex = std::vector<int>();
 	std::vector<int> subtitleIndex = std::vector<int>();
 	getListType(mAVFormatContext, videoIndex, audioIndex, subtitleIndex);
-	mVideoInfo.otherIndex = videoIndex.data();
-	mVideoInfo.otherIndexCount = videoIndex.size();
-	mAudioInfo.otherIndex = audioIndex.data();
-	mAudioInfo.otherIndexCount = audioIndex.size();
-	mSubtitleInfo.otherIndex = subtitleIndex.data();
-	mSubtitleInfo.otherIndexCount = subtitleIndex.size();
+	mVideoInfo.otherIndex = static_cast<int*>(malloc(videoIndex.size() * sizeof(int)));
+	memcpy(mVideoInfo.otherIndex, videoIndex.data(), videoIndex.size() * sizeof(int));
+	mVideoInfo.otherIndexCount = static_cast<int>(videoIndex.size());
+
+	mAudioInfo.otherIndex = static_cast<int*>(malloc(audioIndex.size() * sizeof(int)));
+	memcpy(mAudioInfo.otherIndex, audioIndex.data(), audioIndex.size() * sizeof(int));
+	mAudioInfo.otherIndexCount = static_cast<int>(audioIndex.size());
+
+	mSubtitleInfo.otherIndex = static_cast<int*>(malloc(subtitleIndex.size() * sizeof(int)));
+	memcpy(mSubtitleInfo.otherIndex, subtitleIndex.data(), subtitleIndex.size() * sizeof(int));
+	mSubtitleInfo.otherIndexCount = static_cast<int>(subtitleIndex.size());
 
 	LOG("Finished initialization");
 	mIsInitialized = true;

@@ -34,7 +34,7 @@ public:
 	
 	double getVideoFrame(void** frameData) const;
 	double getAudioFrame(uint8_t** outputFrame, int& frameSize, int& nb_channel, size_t& byte_per_sample) const;
-	bool getOtherIndex(MediaType type, int* li, int& count, int& current) const;
+	bool getOtherIndex(MediaType type, const int* li, int& count, int& current) const;
 	void freeVideoFrame() const;
 	void freeAudioFrame() const;
 	void setVideoEnable(bool isEnable) const;

@@ -91,8 +91,8 @@ func stop_trigger():
 	player.stop()
 	
 func load_trigger(p:String):
-	print("Loading: ", p)
-	player.load_path(p);
+	var l = player.load_path(p);
+	print("Loading: ", p, "  ",  l)
 	player.play();
 		
 func async_load_finish(result):
